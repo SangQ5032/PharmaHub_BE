@@ -29,3 +29,6 @@ coverage/
 
 # Docker
 docker-data/
+
+# Dùng yarn không dùng npm
+rm package-lock.json
