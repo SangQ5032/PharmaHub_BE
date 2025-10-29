@@ -1,24 +1,24 @@
-import express from "express";
-import morgan from "morgan";
-import dotenv from "dotenv";
-import errorHandler from "./src/middlewares/errorHandler.js";
-import routes from "./src/routes/index.js";
-dotenv.config();
+import express from 'express'
+import morgan from 'morgan'
+import dotenv from 'dotenv'
+import errorHandler from './src/middlewares/errorHandler.js'
+import routes from './src/routes/index.js'
+dotenv.config()
 
-const app = express();
+const app = express()
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 // Logger (chỉ dev)
-if (process.env.NODE_ENV === "development") {
-  app.use(morgan("dev"));
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'))
 }
 
 // Mount module routes
-app.use("/api", routes);
+app.use('/api', routes)
 
-app.use(errorHandler); // luôn để cuối cùng
+app.use(errorHandler) // luôn để cuối cùng
 
-export default app;
+export default app
