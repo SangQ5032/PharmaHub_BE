@@ -1,5 +1,5 @@
-import { User } from "./users.model.js";
+import { User } from './users.model.js'
 
 export const findAll = () => {
-  return User.find().lean();
-};
+  return User.find().lean()
+}
