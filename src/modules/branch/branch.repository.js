@@ -1,4 +1,4 @@
-const Branch = require('./branch.model')
+import Branch from './branch.model.js'
 class BranchRepository {
   async getAllBranches() {
     return await Branch.find()

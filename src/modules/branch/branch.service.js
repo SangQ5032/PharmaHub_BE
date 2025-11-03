@@ -6,5 +6,4 @@ class BranchService {
     return branches
   }
 }
-
-module.exports = new BranchService()
+export default new BranchService()
