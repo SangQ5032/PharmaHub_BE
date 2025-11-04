@@ -7,5 +7,8 @@ class BranchRepository {
     const branch = new Branch(data)
     return await branch.save()
   }
+  async updateBranch(id, data) {
+    return await Branch.findByIdAndUpdate(id, data, { new: true })
+  }
 }
 export default new BranchRepository()

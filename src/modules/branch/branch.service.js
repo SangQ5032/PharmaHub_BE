@@ -8,5 +8,8 @@ class BranchService {
   async createBranch(data) {
     return await branchRepository.createBranch(data)
   }
+  async updateBranch(id, data) {
+    return await branchRepository.updateBranch(id, data)
+  }
 }
 export default new BranchService()
