@@ -18,6 +18,9 @@ if (process.env.NODE_ENV === 'development') {
 
 // Mount module routes
 app.use('/api', routes)
+app.get('/ping', (req, res) => {
+  res.status(200).json({ message: 'pong' })
+})
 
 app.use(errorHandler) // luôn để cuối cùng
 
