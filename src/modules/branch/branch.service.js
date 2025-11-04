@@ -14,5 +14,8 @@ class BranchService {
   async deleteBranch(id) {
     return await branchRepository.deleteBranch(id)
   }
+  async getBranchById(id) {
+    return await branchRepository.getBranchById(id)
+  }
 }
 export default new BranchService()
