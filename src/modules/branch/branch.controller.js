@@ -64,6 +64,22 @@ class BranchController {
       res.status(500).json({ success: false, message: 'Internal server error' })
     }
   }
+  async delete(req, res) {
+    try {
+      const { id } = req.params
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: 'Invalid branch id' })
+      }
+      const deleted = await branchService.deleteBranch(id)
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: 'Branch not found' })
+      }
+      res.status(200).json({ success: true, message: 'Branch deleted' })
+    } catch (error) {
+      console.error('Error deleting branch:', error)
+      res.status(500).json({ success: false, message: 'Internal server error' })
+    }
+  }
 }
 
 export default new BranchController()

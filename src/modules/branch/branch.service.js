@@ -11,5 +11,8 @@ class BranchService {
   async updateBranch(id, data) {
     return await branchRepository.updateBranch(id, data)
   }
+  async deleteBranch(id) {
+    return await branchRepository.deleteBranch(id)
+  }
 }
 export default new BranchService()

@@ -10,5 +10,8 @@ class BranchRepository {
   async updateBranch(id, data) {
     return await Branch.findByIdAndUpdate(id, data, { new: true })
   }
+  async deleteBranch(id) {
+    return await Branch.findByIdAndDelete(id)
+  }
 }
 export default new BranchRepository()
