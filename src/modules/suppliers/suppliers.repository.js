@@ -21,5 +21,9 @@ class SupplierRepository {
   async getById(id) {
     return await Supplier.findById(id)
   }
+  async create(data) {
+    const supplier = new Supplier(data)
+    return await supplier.save()
+  }
 }
 export default new SupplierRepository()

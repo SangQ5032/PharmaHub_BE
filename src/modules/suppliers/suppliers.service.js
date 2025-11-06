@@ -7,5 +7,8 @@ class SupplierService {
   async getById(id) {
     return await SupplierRepository.getById(id)
   }
+  async create(data) {
+    return await SupplierRepository.create(data)
+  }
 }
 export default new SupplierService()

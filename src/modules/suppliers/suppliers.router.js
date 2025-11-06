@@ -5,5 +5,6 @@ const router = express.Router()
 
 router.get('/', SuppliersController.getAll)
 router.get('/:id', SuppliersController.getById)
+router.post('/', SuppliersController.create)
 
 export default router

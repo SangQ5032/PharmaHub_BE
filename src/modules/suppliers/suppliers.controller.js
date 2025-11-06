@@ -25,5 +25,15 @@ class SuppliersController {
       res.status(500).json({ success: false, message: 'Internal server error' })
     }
   }
+  async create(req, res) {
+    try {
+      const data = req.body
+      const newSupplier = await SupplierService.create(data)
+      res.status(200).json({ success: true, data: newSupplier })
+    } catch (err) {
+      console.error('Create supplier error', err)
+      res.status(500).json({ success: false, message: 'Internal server error' })
+    }
+  }
 }
 export default new SuppliersController()
