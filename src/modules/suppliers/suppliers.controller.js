@@ -35,5 +35,19 @@ class SuppliersController {
       res.status(500).json({ success: false, message: 'Internal server error' })
     }
   }
+  async update(req, res) {
+    try {
+      const { id } = req.params
+      const data = req.body
+      const updatedSupplier = await SupplierService.update(id, data)
+      if (!updatedSupplier) {
+        return res.status(404).json({ success: false, message: 'Supplier not found' })
+      }
+      res.status(200).json({ success: true, data: updatedSupplier })
+    } catch (err) {
+      console.error('Update supplier error', err)
+      res.status(500).json({ success: false, message: 'Internal server error' })
+    }
+  }
 }
 export default new SuppliersController()

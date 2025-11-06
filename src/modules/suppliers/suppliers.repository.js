@@ -25,5 +25,8 @@ class SupplierRepository {
     const supplier = new Supplier(data)
     return await supplier.save()
   }
+  async update(id, data) {
+    return await Supplier.findByIdAndUpdate(id, data, { new: true })
+  }
 }
 export default new SupplierRepository()

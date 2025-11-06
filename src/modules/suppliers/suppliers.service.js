@@ -10,5 +10,8 @@ class SupplierService {
   async create(data) {
     return await SupplierRepository.create(data)
   }
+  async update(id, data) {
+    return await SupplierRepository.update(id, data)
+  }
 }
 export default new SupplierService()
