@@ -49,5 +49,18 @@ class SuppliersController {
       res.status(500).json({ success: false, message: 'Internal server error' })
     }
   }
+  async delete(req, res) {
+    try {
+      const { id } = req.params
+      const deletedSupplier = await SupplierService.delete(id)
+      if (!deletedSupplier) {
+        return res.status(404).json({ success: false, message: 'Supplier not found' })
+      }
+      res.status(200).json({ success: true, data: deletedSupplier })
+    } catch (err) {
+      console.error('Delete supplier error', err)
+      res.status(500).json({ success: false, message: 'Internal server error' })
+    }
+  }
 }
 export default new SuppliersController()

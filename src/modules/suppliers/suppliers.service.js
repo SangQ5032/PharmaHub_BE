@@ -13,5 +13,8 @@ class SupplierService {
   async update(id, data) {
     return await SupplierRepository.update(id, data)
   }
+  async delete(id) {
+    return await SupplierRepository.delete(id)
+  }
 }
 export default new SupplierService()

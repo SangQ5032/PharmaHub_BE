@@ -28,5 +28,8 @@ class SupplierRepository {
   async update(id, data) {
     return await Supplier.findByIdAndUpdate(id, data, { new: true })
   }
+  async delete(id) {
+    return await Supplier.findByIdAndDelete(id)
+  }
 }
 export default new SupplierRepository()
