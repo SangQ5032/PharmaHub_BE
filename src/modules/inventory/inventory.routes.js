@@ -15,4 +15,17 @@ router.use(protect)
  */
 router.get('/', authorizeRoles('system-admin'), inventoryController.getAllInventory)
 
+/**
+ * @route   GET /api/branches/:id/inventory
+ * @desc    Lấy tồn kho theo chi nhánh
+ * @access  Private (employee, branch-manager, system-admin)
+ * @query   medicine_id, low_stock
+ */
+router.get(
+  '/:id/inventory',
+  protect,
+  authorizeRoles('employee', 'branch-manager', 'system-admin'),
+  inventoryController.getInventoryByBranch
+)
+
 export default router
