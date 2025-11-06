@@ -9,7 +9,7 @@ router.use(protect)
 
 /**
  * @route   POST /api/imports
- * @desc    Tạo phiếu nhập hàng mới
+ * @desc    Tạo phiếuh nhập àng mới
  * @access  Private (employee, branch-manager, supplier-manager)
  */
 router.post(
@@ -24,22 +24,14 @@ router.post(
  * @access  Private (branch-manager, system-admin)
  * @query   branch_id, supplier_id, from_date, to_date, page, limit
  */
-router.get(
-  '/',
-  authorizeRoles('branch-manager', 'system-admin'),
-  importController.getImports
-)
+router.get('/', authorizeRoles('branch-manager', 'system-admin'), importController.getImports)
 
 /**
  * @route   GET /api/imports/:id
  * @desc    Lấy chi tiết phiếu nhập
  * @access  Private (branch-manager, system-admin)
  */
-router.get(
-  '/:id',
-  authorizeRoles('branch-manager', 'system-admin'),
-  importController.getImportById
-)
+router.get('/:id', authorizeRoles('branch-manager', 'system-admin'), importController.getImportById)
 
 /**
  * @route   GET /api/imports/stats/:branchId
@@ -53,4 +45,3 @@ router.get(
 )
 
 export default router
-
