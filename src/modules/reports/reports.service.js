@@ -5,7 +5,7 @@
 // - Transform/format dữ liệu trước khi trả về controller
 
 import reportsRepository from './reports.repository.js'
-import AppError from '../../utils/AppError.js'
+import { AppError } from '../../utils/AppError.js'
 
 class ReportsService {
   /**

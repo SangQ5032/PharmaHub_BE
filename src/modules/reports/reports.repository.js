@@ -4,7 +4,7 @@
 // - Không chứa business logic, chỉ truy vấn dữ liệu
 
 import { Inventory } from '../inventory/inventory.model.js'
-import { Branch } from '../branch/branch.model.js'
+import Branch from '../branch/branch.model.js'
 
 class ReportsRepository {
   /**
