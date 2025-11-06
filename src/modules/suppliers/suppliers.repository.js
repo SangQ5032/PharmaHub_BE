@@ -18,5 +18,8 @@ class SupplierRepository {
     ])
     return { data, total, page: Number(page) || 1, limit: Number(limit) || 20 }
   }
+  async getById(id) {
+    return await Supplier.findById(id)
+  }
 }
 export default new SupplierRepository()
