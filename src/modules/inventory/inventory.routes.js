@@ -1,11 +1,15 @@
 import express from 'express'
 import inventoryController from './inventory.controller.js'
+import reportsRoutes from '../reports/reports.routes.js'
 import { protect, authorizeRoles } from '../../middlewares/authMiddleware.js'
 
 const router = express.Router()
 
 // Tất cả routes đều yêu cầu authentication
 router.use(protect)
+
+// Mount reports routes (phải đặt trước route '/' để tránh conflict)
+router.use(reportsRoutes)
 
 /**
  * @route   GET /api/inventory
@@ -14,18 +18,5 @@ router.use(protect)
  * @query   branch_id, medicine_id, low_stock
  */
 router.get('/', authorizeRoles('system-admin'), inventoryController.getAllInventory)
-
-/**
- * @route   GET /api/branches/:id/inventory
- * @desc    Lấy tồn kho theo chi nhánh
- * @access  Private (employee, branch-manager, system-admin)
- * @query   medicine_id, low_stock
- */
-router.get(
-  '/:id/inventory',
-  protect,
-  authorizeRoles('employee', 'branch-manager', 'system-admin'),
-  inventoryController.getInventoryByBranch
-)
 
 export default router
