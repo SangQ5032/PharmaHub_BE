@@ -32,3 +32,6 @@ docker-data/
 
 # Dùng yarn không dùng npm
 rm package-lock.json
+
+firebase-service-account.json
+
