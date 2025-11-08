@@ -1,0 +1,229 @@
+[{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "username": "nv_1",
+  "password_hash": "hash1",
+  "name": "Nhân viên 1",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "contact": {
+    "phone": "0900000001",
+    "email": "nv1@pharmahub.vn"
+  },
+  "salary": 8200000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26dc"
+  },
+  "username": "nv_2",
+  "password_hash": "hash2",
+  "name": "Nhân viên 2",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "contact": {
+    "phone": "0900000002",
+    "email": "nv2@pharmahub.vn"
+  },
+  "salary": 8400000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26dd"
+  },
+  "username": "nv_3",
+  "password_hash": "hash3",
+  "name": "Nhân viên 3",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "contact": {
+    "phone": "0900000003",
+    "email": "nv3@pharmahub.vn"
+  },
+  "salary": 8600000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26de"
+  },
+  "username": "nv_4",
+  "password_hash": "hash4",
+  "name": "Nhân viên 4",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "contact": {
+    "phone": "0900000004",
+    "email": "nv4@pharmahub.vn"
+  },
+  "salary": 8800000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26df"
+  },
+  "username": "nv_5",
+  "password_hash": "hash5",
+  "name": "Nhân viên 5",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "contact": {
+    "phone": "0900000005",
+    "email": "nv5@pharmahub.vn"
+  },
+  "salary": 9000000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26e0"
+  },
+  "username": "nv_6",
+  "password_hash": "hash6",
+  "name": "Nhân viên 6",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "contact": {
+    "phone": "0900000006",
+    "email": "nv6@pharmahub.vn"
+  },
+  "salary": 9200000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26e1"
+  },
+  "username": "nv_7",
+  "password_hash": "hash7",
+  "name": "Nhân viên 7",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "contact": {
+    "phone": "0900000007",
+    "email": "nv7@pharmahub.vn"
+  },
+  "salary": 9400000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26e2"
+  },
+  "username": "nv_8",
+  "password_hash": "hash8",
+  "name": "Nhân viên 8",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "contact": {
+    "phone": "0900000008",
+    "email": "nv8@pharmahub.vn"
+  },
+  "salary": 9600000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "username": "manager_q1",
+  "password_hash": "hash999",
+  "name": "Quản lý chi nhánh Q1",
+  "role": "branch_manager",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "contact": {
+    "phone": "0909999999",
+    "email": "manager.q1@pharmahub.vn"
+  },
+  "salary": 15000000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68e65d38b457382fa35d26e4"
+  },
+  "username": "admin",
+  "password_hash": "hash000",
+  "name": "Admin hệ thống",
+  "role": "system_admin",
+  "branch_id": null,
+  "contact": {
+    "phone": "0900000000",
+    "email": "admin@pharmahub.vn"
+  },
+  "salary": 30000000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68eaff0f8799509be2562e9f"
+  },
+  "username": "test_emp",
+  "password_hash": "pwd",
+  "name": "Test Emp",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "contact": {
+    "phone": "0900001111"
+  },
+  "salary": 7000000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68eaffdb15663a3940bd4f57"
+  },
+  "username": "test_emp",
+  "password_hash": "pwd",
+  "name": "Test Emp",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "contact": {
+    "phone": "0900001111"
+  },
+  "salary": 7000000,
+  "status": "active"
+},
+{
+  "_id": {
+    "$oid": "68efa74d5904f410fa4cbf17"
+  },
+  "username": "test_emp",
+  "password_hash": "pwd",
+  "name": "Test Emp",
+  "role": "employee",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "contact": {
+    "phone": "0900001111"
+  },
+  "salary": 7000000,
+  "status": "active"
+}]

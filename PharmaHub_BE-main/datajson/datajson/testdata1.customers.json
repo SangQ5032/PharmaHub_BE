@@ -1,0 +1,90 @@
+[{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "name": "Khách hàng 1",
+  "phone": "0910000001",
+  "address": "1 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 1000000
+},
+{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26f4"
+  },
+  "name": "Khách hàng 2",
+  "phone": "0910000002",
+  "address": "2 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 2000000
+},
+{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26f5"
+  },
+  "name": "Khách hàng 3",
+  "phone": "0910000003",
+  "address": "3 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 3000000
+},
+{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26f6"
+  },
+  "name": "Khách hàng 4",
+  "phone": "0910000004",
+  "address": "4 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 4000000
+},
+{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26f7"
+  },
+  "name": "Khách hàng 5",
+  "phone": "0910000005",
+  "address": "5 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 5000000
+},
+{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26f8"
+  },
+  "name": "Khách hàng 6",
+  "phone": "0910000006",
+  "address": "6 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 6000000
+},
+{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26f9"
+  },
+  "name": "Khách hàng 7",
+  "phone": "0910000007",
+  "address": "7 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 7000000
+},
+{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26fa"
+  },
+  "name": "Khách hàng 8",
+  "phone": "0910000008",
+  "address": "8 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 8000000
+},
+{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26fb"
+  },
+  "name": "Khách hàng 9",
+  "phone": "0910000009",
+  "address": "9 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 9000000
+},
+{
+  "_id": {
+    "$oid": "68e65dc9b457382fa35d26fc"
+  },
+  "name": "Khách hàng 10",
+  "phone": "0910000010",
+  "address": "10 Lê Lợi, Q1, TP.HCM",
+  "total_spent": 10000000
+}]

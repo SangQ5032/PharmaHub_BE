@@ -1,0 +1,450 @@
+[{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d272a"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d272b"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d272c"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d272d"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d272e"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d272f"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a06"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a06"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d2730"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a07"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a07"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d2731"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a08"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a08"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d2732"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e31b457382fa35d2733"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a10"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a10"
+      },
+      "quantity": 500,
+      "unit_price": 1500
+    }
+  ],
+  "total_cost": 750000,
+  "created_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68eafc57c16d5f1153280b6b"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": null,
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "quantity": 100,
+      "unit_price": 1600
+    }
+  ],
+  "total_cost": 160000,
+  "created_at": {
+    "$date": "2025-10-12T00:54:47.651Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafcedfc9eec101dd90170"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": null,
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "quantity": 100,
+      "unit_price": 1600
+    }
+  ],
+  "total_cost": 160000,
+  "created_at": {
+    "$date": "2025-10-12T00:57:17.659Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafd9fdacbf6e3e6dd3db9"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": null,
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "quantity": 100,
+      "unit_price": 1600
+    }
+  ],
+  "total_cost": 160000,
+  "created_at": {
+    "$date": "2025-10-12T01:00:15.270Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafdebdeb905eb2e8c91cd"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": null,
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "quantity": 100,
+      "unit_price": 1600
+    }
+  ],
+  "total_cost": 160000,
+  "created_at": {
+    "$date": "2025-10-12T01:01:31.906Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafe7ddf377fcb77497fe6"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": null,
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "quantity": 100,
+      "unit_price": 1600
+    }
+  ],
+  "total_cost": 160000,
+  "created_at": {
+    "$date": "2025-10-12T01:03:57.643Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eaff0f8799509be2562e9c"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": null,
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "quantity": 100,
+      "unit_price": 1600
+    }
+  ],
+  "total_cost": 160000,
+  "created_at": {
+    "$date": "2025-10-12T01:06:23.609Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eaffdb15663a3940bd4f54"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": null,
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "quantity": 100,
+      "unit_price": 1600
+    }
+  ],
+  "total_cost": 160000,
+  "created_at": {
+    "$date": "2025-10-12T01:09:47.760Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68efa74d5904f410fa4cbf14"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": null,
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "quantity": 100,
+      "unit_price": 1600
+    }
+  ],
+  "total_cost": 160000,
+  "created_at": {
+    "$date": "2025-10-15T13:53:17.390Z"
+  }
+}]

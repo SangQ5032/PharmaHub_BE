@@ -1,0 +1,876 @@
+[{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d2714"
+  },
+  "invoice_code": "HD2025100001",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+      },
+      "name": "Thuốc 1",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d2715"
+  },
+  "invoice_code": "HD2025100002",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+      },
+      "name": "Thuốc 2",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d2716"
+  },
+  "invoice_code": "HD2025100003",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+      },
+      "name": "Thuốc 3",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d2717"
+  },
+  "invoice_code": "HD2025100004",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+      },
+      "name": "Thuốc 4",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d2718"
+  },
+  "invoice_code": "HD2025100005",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a06"
+      },
+      "name": "Thuốc 5",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d2719"
+  },
+  "invoice_code": "HD2025100006",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a06"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a06"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a07"
+      },
+      "name": "Thuốc 6",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d271a"
+  },
+  "invoice_code": "HD2025100007",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a07"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a07"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a08"
+      },
+      "name": "Thuốc 7",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d271b"
+  },
+  "invoice_code": "HD2025100008",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a08"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a08"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+      },
+      "name": "Thuốc 8",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d271c"
+  },
+  "invoice_code": "HD2025100009",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a10"
+      },
+      "name": "Thuốc 9",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e65e0cb457382fa35d271d"
+  },
+  "invoice_code": "HD2025100010",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a10"
+  },
+  "customer_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a10"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+      },
+      "name": "Thuốc 10",
+      "quantity": 2,
+      "unit_price": 2000,
+      "total": 4000
+    }
+  ],
+  "total_amount": 4000,
+  "payment_method": "cash",
+  "created_at": "2025-10-08T12:44:23.563995",
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e6660f151a600675edd727"
+  },
+  "invoice_code": "HD20251008247",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-08T13:24:31.654Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e66eccc9245c57f0453fc9"
+  },
+  "invoice_code": "HD20251008565",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-08T14:01:48.318Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e67185e5c1829c78aa63bf"
+  },
+  "invoice_code": "HD20251008798",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-08T14:13:25.066Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e671e0c18caafbf050590a"
+  },
+  "invoice_code": "HD20251008571",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-08T14:14:56.437Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e673866abe892bb1543a77"
+  },
+  "invoice_code": "HD20251008899",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-08T14:21:58.361Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e673fde1ea26282a0b1319"
+  },
+  "invoice_code": "HD20251008849",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-08T14:23:57.749Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68e7cb451a39d2ed05d88dfe"
+  },
+  "invoice_code": "HD20251009928",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-09T14:48:37.375Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68eaf957a8bddf9f5192d81e"
+  },
+  "invoice_code": "HD20251012189",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-12T00:41:59.001Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68eafba6af8331b4f1b74f30"
+  },
+  "invoice_code": "HD20251012494",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-12T00:51:50.765Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68eafc57c16d5f1153280b6a"
+  },
+  "invoice_code": "HD20251012141",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-12T00:54:47.635Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68eafcedfc9eec101dd9016f"
+  },
+  "invoice_code": "HD20251012413",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-12T00:57:17.643Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68eafd9fdacbf6e3e6dd3db8"
+  },
+  "invoice_code": "HD20251012224",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-12T01:00:15.254Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68eafdebdeb905eb2e8c91cc"
+  },
+  "invoice_code": "HD20251012387",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-12T01:01:31.884Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68eafe7ddf377fcb77497fe5"
+  },
+  "invoice_code": "HD20251012204",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-12T01:03:57.620Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68eaff0f8799509be2562e9b"
+  },
+  "invoice_code": "HD20251012534",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-12T01:06:23.582Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68eaffdb15663a3940bd4f53"
+  },
+  "invoice_code": "HD20251012900",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-12T01:09:47.729Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68efa711afb083b96197e854"
+  },
+  "invoice_code": "HD20251015139",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-15T13:52:17.200Z"
+  },
+  "exported": true
+},
+{
+  "_id": {
+    "$oid": "68efa74d5904f410fa4cbf13"
+  },
+  "invoice_code": "HD20251015733",
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "employee_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "customer_id": {
+    "$oid": "68e65dc9b457382fa35d26f3"
+  },
+  "items": [
+    {
+      "medicine_id": {
+        "$oid": "68e65d9ab457382fa35d26e7"
+      },
+      "name": "Thuốc 1",
+      "quantity": 3,
+      "unit_price": 1600,
+      "total": 4800
+    }
+  ],
+  "total_amount": 4800,
+  "payment_method": "cash",
+  "created_at": {
+    "$date": "2025-10-15T13:53:17.365Z"
+  },
+  "exported": true
+}]

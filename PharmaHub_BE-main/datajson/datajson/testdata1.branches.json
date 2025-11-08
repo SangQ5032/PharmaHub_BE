@@ -1,0 +1,63 @@
+[{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "name": "Nhà thuốc Quận 1",
+  "address": "123 Nguyễn Huệ, Quận 1, TP.HCM",
+  "phone": "0281111111",
+  "revenue_target": 200000000
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "name": "Nhà thuốc Quận 3",
+  "address": "456 CMT8, Quận 3, TP.HCM",
+  "phone": "0282222222",
+  "revenue_target": 150000000
+},
+{
+  "_id": {
+    "$oid": "68eafcedfc9eec101dd90171"
+  },
+  "name": "Nhà thuốc Thử Nghiệm",
+  "address": "1 Test St",
+  "phone": "0282020202",
+  "revenue_target": 60000000
+},
+{
+  "_id": {
+    "$oid": "68eafe7ddf377fcb77497fe7"
+  },
+  "name": "Nhà thuốc Thử Nghiệm",
+  "address": "1 Test St",
+  "phone": "0282020202",
+  "revenue_target": 60000000
+},
+{
+  "_id": {
+    "$oid": "68eaff0f8799509be2562e9d"
+  },
+  "name": "Nhà thuốc Thử Nghiệm",
+  "address": "1 Test St",
+  "phone": "0282020202",
+  "revenue_target": 60000000
+},
+{
+  "_id": {
+    "$oid": "68eaffdb15663a3940bd4f55"
+  },
+  "name": "Nhà thuốc Thử Nghiệm",
+  "address": "1 Test St",
+  "phone": "0282020202",
+  "revenue_target": 60000000
+},
+{
+  "_id": {
+    "$oid": "68efa74d5904f410fa4cbf15"
+  },
+  "name": "Nhà thuốc Thử Nghiệm",
+  "address": "1 Test St",
+  "phone": "0282020202",
+  "revenue_target": 60000000
+}]

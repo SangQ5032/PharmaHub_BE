@@ -1,0 +1,120 @@
+[{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "name": "Công ty Dược A",
+  "contact": {
+    "phone": "02899999001",
+    "email": "contact1@duoc.vn",
+    "address": "1 Đường số 1, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "name": "Công ty Dược B",
+  "contact": {
+    "phone": "02899999002",
+    "email": "contact2@duoc.vn",
+    "address": "2 Đường số 2, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "name": "Công ty Dược C",
+  "contact": {
+    "phone": "02899999003",
+    "email": "contact3@duoc.vn",
+    "address": "3 Đường số 3, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "name": "Công ty Dược D",
+  "contact": {
+    "phone": "02899999004",
+    "email": "contact4@duoc.vn",
+    "address": "4 Đường số 4, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "name": "Công ty Dược E",
+  "contact": {
+    "phone": "02899999005",
+    "email": "contact5@duoc.vn",
+    "address": "5 Đường số 5, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a06"
+  },
+  "name": "Công ty Dược F",
+  "contact": {
+    "phone": "02899999006",
+    "email": "contact6@duoc.vn",
+    "address": "6 Đường số 6, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a07"
+  },
+  "name": "Công ty Dược G",
+  "contact": {
+    "phone": "02899999007",
+    "email": "contact7@duoc.vn",
+    "address": "7 Đường số 7, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a08"
+  },
+  "name": "Công ty Dược H",
+  "contact": {
+    "phone": "02899999008",
+    "email": "contact8@duoc.vn",
+    "address": "8 Đường số 8, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  },
+  "name": "Công ty Dược I",
+  "contact": {
+    "phone": "02899999009",
+    "email": "contact9@duoc.vn",
+    "address": "9 Đường số 9, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+},
+{
+  "_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a10"
+  },
+  "name": "Công ty Dược J",
+  "contact": {
+    "phone": "02899999010",
+    "email": "contact10@duoc.vn",
+    "address": "10 Đường số 10, TP.HCM"
+  },
+  "note": "Cung cấp thuốc phổ biến"
+}]

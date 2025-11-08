@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo "🧪 Running tests before push..."
+yarn test

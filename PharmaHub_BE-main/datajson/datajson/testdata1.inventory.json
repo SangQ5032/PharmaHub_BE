@@ -1,0 +1,145 @@
+[{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d271f"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "quantity": 195,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d2720"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "quantity": 190,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d2721"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "quantity": 185,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d2722"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "quantity": 180,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d2723"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "quantity": 175,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d2724"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a06"
+  },
+  "quantity": 170,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d2725"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a07"
+  },
+  "quantity": 165,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d2726"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a08"
+  },
+  "quantity": 160,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d2727"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  },
+  "quantity": 155,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e1db457382fa35d2728"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "medicine_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a10"
+  },
+  "quantity": 150,
+  "last_updated": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e6660f151a600675edd728"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "medicine_id": {
+    "$oid": "68e65d9ab457382fa35d26e7"
+  },
+  "quantity": 746,
+  "last_updated": {
+    "$date": "2025-10-15T13:53:17.392Z"
+  }
+}]

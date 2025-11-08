@@ -1,0 +1,492 @@
+[{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d2709"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d270a"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d270b"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d270c"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d270d"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d270e"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a06"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d270f"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a07"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d2710"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a08"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d2711"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e65df5b457382fa35d2712"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a10"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": "2025-10-08T03:44:23.563995",
+  "checkout_time": "2025-10-08T11:44:23.563995",
+  "working_hours": 8,
+  "status": "completed"
+},
+{
+  "_id": {
+    "$oid": "68e66ec7c9245c57f0453fc7"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": {
+    "$date": "2025-10-08T14:01:43.278Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-08T14:01:48.285Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68e670d16ab885dcea29148c"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": {
+    "$date": "2025-10-08T14:10:25.532Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-08T14:10:30.537Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68e67180e5c1829c78aa63be"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": {
+    "$date": "2025-10-08T14:13:20.023Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-08T14:13:25.033Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68e671dbc18caafbf0505909"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": {
+    "$date": "2025-10-08T14:14:51.412Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-08T14:14:56.416Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68e673816abe892bb1543a76"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": {
+    "$date": "2025-10-08T14:21:53.330Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-08T14:21:58.337Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68e673f8e1ea26282a0b1318"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": {
+    "$date": "2025-10-08T14:23:52.724Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-08T14:23:57.727Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68e7cb401a39d2ed05d88dfd"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": {
+    "$date": "2025-10-09T14:48:32.338Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-09T14:48:37.348Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68eaf951a8bddf9f5192d81d"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": {
+    "$date": "2025-10-12T00:41:53.834Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-12T00:41:58.851Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68eafba1af8331b4f1b74f2e"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": {
+    "$date": "2025-10-12T00:51:45.735Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-12T00:51:50.739Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68eafc52c16d5f1153280b68"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": {
+    "$date": "2025-10-12T00:54:42.612Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-12T00:54:47.617Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68eafce8fc9eec101dd9016d"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": {
+    "$date": "2025-10-12T00:57:12.620Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-12T00:57:17.624Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68eafd9adacbf6e3e6dd3db6"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": {
+    "$date": "2025-10-12T01:00:10.228Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-12T01:00:15.231Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68eafde6deb905eb2e8c91ca"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": {
+    "$date": "2025-10-12T01:01:26.856Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-12T01:01:31.860Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68eafe78df377fcb77497fe3"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": {
+    "$date": "2025-10-12T01:03:52.591Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-12T01:03:57.597Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68eaff0a8799509be2562e99"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": {
+    "$date": "2025-10-12T01:06:18.542Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-12T01:06:23.547Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68eaffd615663a3940bd4f51"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": {
+    "$date": "2025-10-12T01:09:42.700Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-12T01:09:47.704Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68efa70cafb083b96197e853"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "checkin_time": {
+    "$date": "2025-10-15T13:52:12.154Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-15T13:52:17.167Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+},
+{
+  "_id": {
+    "$oid": "68efa7485904f410fa4cbf11"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "checkin_time": {
+    "$date": "2025-10-15T13:53:12.336Z"
+  },
+  "checkout_time": {
+    "$date": "2025-10-15T13:53:17.339Z"
+  },
+  "status": "completed",
+  "working_hours": 8
+}]

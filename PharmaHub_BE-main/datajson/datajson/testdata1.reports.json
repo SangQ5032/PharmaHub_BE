@@ -1,0 +1,180 @@
+[{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d2735"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 10000000,
+    "total_invoices": 101
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d2736"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 20000000,
+    "total_invoices": 102
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d2737"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 30000000,
+    "total_invoices": 103
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d2738"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 40000000,
+    "total_invoices": 104
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d2739"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 50000000,
+    "total_invoices": 105
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d273a"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 60000000,
+    "total_invoices": 106
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d273b"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 70000000,
+    "total_invoices": 107
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d273c"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 80000000,
+    "total_invoices": 108
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d273d"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 90000000,
+    "total_invoices": 109
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+},
+{
+  "_id": {
+    "$oid": "68e65e42b457382fa35d273e"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "type": "revenue",
+  "period": {
+    "from": "2025-09-08T12:44:23.563995",
+    "to": "2025-10-08T12:44:23.563995"
+  },
+  "data": {
+    "total_revenue": 100000000,
+    "total_invoices": 110
+  },
+  "generated_at": "2025-10-08T12:44:23.563995"
+}]

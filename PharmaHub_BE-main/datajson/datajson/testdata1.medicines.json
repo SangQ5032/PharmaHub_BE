@@ -1,0 +1,150 @@
+[{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26e7"
+  },
+  "name": "Thuốc 1",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Kháng sinh",
+  "unit": "viên",
+  "price": 1600,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "warning_threshold": 50
+},
+{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26e8"
+  },
+  "name": "Thuốc 2",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Giảm đau",
+  "unit": "viên",
+  "price": 1700,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "warning_threshold": 50
+},
+{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26e9"
+  },
+  "name": "Thuốc 3",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Kháng sinh",
+  "unit": "viên",
+  "price": 1800,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "warning_threshold": 50
+},
+{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26ea"
+  },
+  "name": "Thuốc 4",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Giảm đau",
+  "unit": "viên",
+  "price": 1900,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "warning_threshold": 50
+},
+{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26eb"
+  },
+  "name": "Thuốc 5",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Kháng sinh",
+  "unit": "viên",
+  "price": 2000,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "warning_threshold": 50
+},
+{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26ec"
+  },
+  "name": "Thuốc 6",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Giảm đau",
+  "unit": "viên",
+  "price": 2100,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "warning_threshold": 50
+},
+{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26ed"
+  },
+  "name": "Thuốc 7",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Kháng sinh",
+  "unit": "viên",
+  "price": 2200,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "warning_threshold": 50
+},
+{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26ee"
+  },
+  "name": "Thuốc 8",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Giảm đau",
+  "unit": "viên",
+  "price": 2300,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "warning_threshold": 50
+},
+{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26ef"
+  },
+  "name": "Thuốc 9",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Kháng sinh",
+  "unit": "viên",
+  "price": 2400,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "warning_threshold": 50
+},
+{
+  "_id": {
+    "$oid": "68e65d9ab457382fa35d26f0"
+  },
+  "name": "Thuốc 10",
+  "description": "Mô tả thuốc mẫu",
+  "category": "Giảm đau",
+  "unit": "viên",
+  "price": 2500,
+  "expiry_date": "2027-10-08T12:44:23.563995",
+  "supplier_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "warning_threshold": 50
+}]

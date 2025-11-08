@@ -1,0 +1,373 @@
+[{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d26fe"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "date": "2025-10-09T12:44:23.563995",
+  "shift": "evening",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d26ff"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": "2025-10-10T12:44:23.563995",
+  "shift": "morning",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d2700"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a03"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "date": "2025-10-11T12:44:23.563995",
+  "shift": "evening",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d2701"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a04"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": "2025-10-12T12:44:23.563995",
+  "shift": "morning",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d2702"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a05"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "date": "2025-10-13T12:44:23.563995",
+  "shift": "evening",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d2703"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a06"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": "2025-10-14T12:44:23.563995",
+  "shift": "morning",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d2704"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a07"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "date": "2025-10-15T12:44:23.563995",
+  "shift": "evening",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d2705"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a08"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": "2025-10-16T12:44:23.563995",
+  "shift": "morning",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d2706"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a02"
+  },
+  "date": "2025-10-17T12:44:23.563995",
+  "shift": "evening",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e65de3b457382fa35d2707"
+  },
+  "user_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a10"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": "2025-10-18T12:44:23.563995",
+  "shift": "morning",
+  "created_by": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a09"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e6660f151a600675edd726"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-09T13:24:31.641Z"
+  },
+  "shift": "morning",
+  "created_by": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "created_at": {
+    "$date": "2025-10-08T13:24:31.641Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68e66eccc9245c57f0453fc8"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26db"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-09T14:01:48.309Z"
+  },
+  "shift": "morning",
+  "created_by": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "created_at": {
+    "$date": "2025-10-08T14:01:48.310Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafba6af8331b4f1b74f2f"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-12T00:51:50.753Z"
+  },
+  "shift": "Ca sáng",
+  "note": "Tạo tự động để test",
+  "created_at": {
+    "$date": "2025-10-12T00:51:50.753Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafc57c16d5f1153280b69"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-12T00:54:47.629Z"
+  },
+  "shift": "Ca sáng",
+  "note": "Tạo tự động để test",
+  "created_at": {
+    "$date": "2025-10-12T00:54:47.629Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafcedfc9eec101dd9016e"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-12T00:57:17.637Z"
+  },
+  "shift": "Ca sáng",
+  "note": "Tạo tự động để test",
+  "created_at": {
+    "$date": "2025-10-12T00:57:17.637Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafd9fdacbf6e3e6dd3db7"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-12T01:00:15.246Z"
+  },
+  "shift": "Ca sáng",
+  "note": "Tạo tự động để test",
+  "created_at": {
+    "$date": "2025-10-12T01:00:15.246Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafdebdeb905eb2e8c91cb"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-12T01:01:31.875Z"
+  },
+  "shift": "Ca sáng",
+  "note": "Tạo tự động để test",
+  "created_at": {
+    "$date": "2025-10-12T01:01:31.875Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eafe7ddf377fcb77497fe4"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-12T01:03:57.611Z"
+  },
+  "shift": "Ca sáng",
+  "note": "Tạo tự động để test",
+  "created_at": {
+    "$date": "2025-10-12T01:03:57.611Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eaff0f8799509be2562e9a"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-12T01:06:23.569Z"
+  },
+  "shift": "Ca sáng",
+  "note": "Tạo tự động để test",
+  "created_at": {
+    "$date": "2025-10-12T01:06:23.569Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68eaffdb15663a3940bd4f52"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-12T01:09:47.721Z"
+  },
+  "shift": "Ca sáng",
+  "note": "Tạo tự động để test",
+  "created_at": {
+    "$date": "2025-10-12T01:09:47.721Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68efa74d5904f410fa4cbf12"
+  },
+  "user_id": {
+    "$oid": "68e65d38b457382fa35d26e3"
+  },
+  "branch_id": {
+    "$oid": "652f1a1a1a1a1a1a1a1a1a01"
+  },
+  "date": {
+    "$date": "2025-10-15T13:53:17.356Z"
+  },
+  "shift": "Ca sáng",
+  "note": "Tạo tự động để test",
+  "created_at": {
+    "$date": "2025-10-15T13:53:17.356Z"
+  }
+}]
