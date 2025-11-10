@@ -37,6 +37,12 @@ const MedicineSchema = new mongoose.Schema(
       required: [true, 'Giá bán là bắt buộc'],
       min: [0, 'Giá bán phải lớn hơn 0'],
     },
+    // Số lượng tồn kho (bắt buộc khi thêm)
+    quantity: {
+      type: Number,
+      required: [true, 'Số lượng là bắt buộc'],
+      min: [0, 'Số lượng phải lớn hơn hoặc bằng 0'],
+    },
     // Hạn sử dụng
     expiry_date: {
       type: Date,

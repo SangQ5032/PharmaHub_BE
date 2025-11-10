@@ -52,7 +52,8 @@ class MedicinesRepository {
 
   // Cập nhật 1 thuốc theo id
   async updateById(id, update) {
-    return await Medicine.findByIdAndUpdate(id, update, { new: true }).lean()
+    // Bật runValidators để đảm bảo các ràng buộc schema (vd: quantity >= 0) được kiểm tra khi update
+    return await Medicine.findByIdAndUpdate(id, update, { new: true, runValidators: true }).lean()
   }
 
   // Xóa 1 thuốc theo id
