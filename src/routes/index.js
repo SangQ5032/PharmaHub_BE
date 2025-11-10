@@ -8,6 +8,8 @@ import branchRoutes from '../modules/branch/branch.routes.js'
 import importRoutes from '../modules/imports/imports.routes.js'
 import inventoryRoutes from '../modules/inventory/inventory.routes.js'
 import medicinesRoutes from '../modules/medicines/medicines.routes.js'
+import salesRoutes from '../modules/sales/sales.routes.js'
+
 // TODO: thêm các module khác khi tạo tiếp
 
 const router = express.Router()
@@ -20,6 +22,7 @@ router.use('/branches', branchRoutes)
 router.use('/imports', importRoutes)
 router.use('/inventory', inventoryRoutes)
 router.use('/medicines', medicinesRoutes)
+router.use('/sales', salesRoutes)
 
 // TODO: mount các module khác
 
