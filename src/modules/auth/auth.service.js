@@ -67,7 +67,7 @@ export const verifyFirebaseTokenAndLogin = async (idToken) => {
     //   })
     //   user = user.toObject()
     // }
-    // Nếu không tìm thấy user thì tức là không được phép đăng nhập
+    // // Nếu không tìm thấy user thì tức là không được phép đăng nhập
     if (!user) {
       throw new AppError(403, 'Số điện thoại này chưa được đăng ký trong hệ thống')
     }
