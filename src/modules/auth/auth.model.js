@@ -1,4 +1,11 @@
-// Auth module doesn't define a separate Mongoose collection. It re-uses the User model in users module.
-// This file is intentionally left to export any auth-specific schemas if needed in future.
+import { Schema } from 'mongoose'
 
-export default {}
+// Define login attempt schema to track failed logins
+const LoginAttemptSchema = new Schema({
+  username: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
+  successful: { type: Boolean, default: false },
+  ip: String,
+})
+
+export default LoginAttemptSchema
