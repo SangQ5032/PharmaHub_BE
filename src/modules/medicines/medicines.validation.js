@@ -12,23 +12,11 @@ export const createMedicineSchema = Joi.object({
     .min(0)
     .required()
     .messages({ 'any.required': 'Giá bán là bắt buộc', 'number.base': 'Giá bán phải là số' }),
-  expiry_date: Joi.date()
-    .required()
-    .messages({
-      'any.required': 'Hạn sử dụng là bắt buộc',
-      'date.base': 'Hạn sử dụng không hợp lệ',
-    }),
+  expiry_date: Joi.date().required().messages({
+    'any.required': 'Hạn sử dụng là bắt buộc',
+    'date.base': 'Hạn sử dụng không hợp lệ',
+  }),
   supplier_id: Joi.string().required().messages({ 'any.required': 'Nhà cung cấp là bắt buộc' }),
   warning_threshold: Joi.number().min(0).optional(),
   manufacturer: Joi.string().optional().allow('', null),
-  quantity: Joi.number()
-    .integer()
-    .min(0)
-    .required()
-    .messages({
-      'any.required': 'Số lượng là bắt buộc',
-      'number.base': 'Số lượng phải là số',
-      'number.integer': 'Số lượng phải là số nguyên',
-      'number.min': 'Số lượng phải lớn hơn hoặc bằng 0',
-    }),
 })
