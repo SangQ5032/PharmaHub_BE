@@ -1,10 +1,8 @@
-import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import * as authRepo from './auth.repository.js'
 import config from '../../config/index.js'
 import { AppError } from '../../utils/AppError.js'
 import admin from '../../config/firebase/firebase.js'
-import { User } from '../users/users.model.js'
 
 /**
  * Normalize số điện thoại (loại bỏ ký tự không phải số, xử lý mã quốc gia)
@@ -31,11 +29,11 @@ const normalizePhone = (phone) => {
 }
 
 /**
- * Xác minh Firebase ID Token và đăng nhập
+ * Xác minh Firebase ID Token và kiểm tra dữ liệu trong MongoDB
  * @param {string} idToken - Firebase ID Token
  * @returns {Promise<Object>} - JWT token và thông tin user
  */
-export const verifyFirebaseTokenAndLogin = async (idToken) => {
+export const checkFirebaseToken = async (idToken) => {
   if (!idToken) {
     throw new AppError(400, 'ID Token là bắt buộc')
   }
@@ -45,31 +43,37 @@ export const verifyFirebaseTokenAndLogin = async (idToken) => {
     const decodedToken = await admin.auth().verifyIdToken(idToken)
 
     // Lấy số điện thoại từ decoded token
-    const phone = decodedToken.phone_number
+    const firebasePhone = decodedToken.phone_number
 
-    if (!phone) {
+    if (!firebasePhone) {
       throw new AppError(400, 'Token không chứa thông tin số điện thoại')
     }
 
-    // Normalize số điện thoại
-    const normalizedPhone = normalizePhone(phone)
+    // Normalize số điện thoại từ Firebase
+    const normalizedPhone = normalizePhone(firebasePhone)
 
-    // Tìm user theo số điện thoại
-    let user = await authRepo.findByPhone(normalizedPhone)
+    // Tìm user theo số điện thoại trong MongoDB
+    const user = await authRepo.findByPhone(normalizedPhone)
 
-    // Nếu chưa có user, tạo user mới
-    // if (!user) {
-    //   user = await User.create({
-    //     phone: normalizedPhone,
-    //     username: `user_${normalizedPhone}`,
-    //     password: await bcrypt.hash('firebase_login', 10), // Placeholder password
-    //     role: 'employee' // Mặc định là employee
-    //   })
-    //   user = user.toObject()
-    // }
-    // Nếu không tìm thấy user thì tức là không được phép đăng nhập
+    // Kiểm tra user tồn tại
     if (!user) {
       throw new AppError(403, 'Số điện thoại này chưa được đăng ký trong hệ thống')
+    }
+
+    // Kiểm tra xem user có contact.phone không (bắt buộc)
+    const dbPhone = user.contact && (user.contact.phone || null)
+    if (!dbPhone) {
+      throw new AppError(403, 'Thông tin số điện thoại không hợp lệ trong hệ thống')
+    }
+
+    // Kiểm tra số điện thoại trong MongoDB khớp với Firebase
+    if (normalizePhone(dbPhone) !== normalizedPhone) {
+      throw new AppError(403, 'Số điện thoại không khớp')
+    }
+
+    // Kiểm tra trạng thái user (nếu có)
+    if (user.status && user.status !== 'active') {
+      throw new AppError(403, 'Tài khoản không hoạt động')
     }
 
     // Tạo JWT token cho backend
@@ -77,7 +81,7 @@ export const verifyFirebaseTokenAndLogin = async (idToken) => {
       {
         sub: user._id,
         role: user.role,
-        branch_id: user.branchId || null,
+        branch_id: user.branch_id || null,
       },
       config.jwt.secret,
       { expiresIn: config.jwt.expiresIn }
@@ -89,14 +93,19 @@ export const verifyFirebaseTokenAndLogin = async (idToken) => {
       user: {
         id: user._id,
         username: user.username,
-        name: user.fullName || user.name,
-        phone: user.phone,
-        email: user.email,
+        name: user.name,
+        phone: dbPhone,
+        email: user.contact && user.contact.email,
         role: user.role,
-        branch_id: user.branchId || null,
+        branch_id: user.branch_id || null,
       },
     }
   } catch (error) {
+    // Nếu là AppError thì throw lại
+    if (error instanceof AppError) {
+      throw error
+    }
+
     // Xử lý lỗi từ Firebase
     if (error.code === 'auth/id-token-expired') {
       throw new AppError(401, 'Token đã hết hạn')
@@ -105,72 +114,5 @@ export const verifyFirebaseTokenAndLogin = async (idToken) => {
       throw new AppError(400, 'Token không hợp lệ')
     }
     throw new AppError(401, 'Xác thực token thất bại: ' + error.message)
-  }
-}
-
-/**
- * Đăng nhập với username/password
- * @param {string} username - Username
- * @param {string} password - Password
- * @param {string} ip - IP address
- * @returns {Promise<Object>} - JWT token và thông tin user
- */
-export const loginWithUsername = async (username, password, ip) => {
-  // Find user
-  const user = await authRepo.findByUsername(username)
-  if (!user) {
-    await authRepo.recordLoginAttempt(username, false, ip)
-    throw new AppError(401, 'Thông tin đăng nhập không hợp lệ')
-  }
-
-  // Verify password
-  const isMatch = await bcrypt.compare(password, user.password)
-  if (!isMatch) {
-    await authRepo.recordLoginAttempt(username, false, ip)
-    throw new AppError(401, 'Thông tin đăng nhập không hợp lệ')
-  }
-
-  // Record successful login
-  await authRepo.recordLoginAttempt(username, true, ip)
-
-  // Generate token
-  const accessToken = jwt.sign(
-    {
-      sub: user._id,
-      role: user.role,
-      branch_id: user.branchId || null,
-    },
-    config.jwt.secret,
-    { expiresIn: config.jwt.expiresIn }
-  )
-
-  // Return user data without sensitive information
-  return {
-    accessToken,
-    user: {
-      id: user._id,
-      username: user.username,
-      name: user.fullName || user.name,
-      role: user.role,
-      branch_id: user.branchId || null,
-      phone: user.phone,
-      email: user.email,
-    },
-  }
-}
-
-/**
- * Xác thực JWT token
- * @param {string} token - JWT token
- * @returns {Promise<Object>} - Thông tin user
- */
-export const validateToken = async (token) => {
-  try {
-    const decoded = jwt.verify(token, config.jwt.secret)
-    const user = await authRepo.findById(decoded.sub)
-    if (!user) throw new AppError(401, 'User not found')
-    return user
-  } catch (error) {
-    throw new AppError(401, 'Invalid token')
   }
 }

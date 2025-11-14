@@ -4,31 +4,11 @@ import LoginAttemptSchema from '../auth/auth.model.js'
 
 const LoginAttempt = mongoose.model('LoginAttempt', LoginAttemptSchema)
 
-export const findByUsername = (username) => {
-  return User.findOne({ username }).lean()
-}
-
-export const findById = (id) => {
-  return User.findById(id).lean()
-}
-
+/**
+ * Tìm user theo số điện thoại trong trường contact.phone
+ * @param {string} phone - Số điện thoại đã normalize (ví dụ: 0xxxxxxxxx)
+ * @returns {Promise<Object>} - User object hoặc null
+ */
 export const findByPhone = (phone) => {
-  return User.findOne({ phone }).lean()
-}
-
-export const recordLoginAttempt = (username, successful, ip) => {
-  return LoginAttempt.create({
-    username,
-    successful,
-    ip,
-    timestamp: new Date(),
-  })
-}
-
-export const getRecentLoginAttempts = (username, minutes = 15) => {
-  const timeAgo = new Date(Date.now() - minutes * 60 * 1000)
-  return LoginAttempt.find({
-    username,
-    timestamp: { $gte: timeAgo },
-  }).sort({ timestamp: -1 })
+  return User.findOne({ 'contact.phone': phone }).lean()
 }

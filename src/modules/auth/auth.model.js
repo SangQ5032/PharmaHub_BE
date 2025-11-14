@@ -1,11 +1,7 @@
-import { Schema } from 'mongoose'
-
-// Define login attempt schema to track failed logins
-const LoginAttemptSchema = new Schema({
-  username: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now },
-  successful: { type: Boolean, default: false },
-  ip: String,
-})
-
-export default LoginAttemptSchema
+/**
+ * Auth Models
+ *
+ * Module này hiện không sử dụng.
+ * Tất cả logic xác thực được xử lý trong auth.service.js
+ * Firebase Authentication được sử dụng thay vì lưu trữ session cục bộ.
+ */

@@ -93,6 +93,7 @@ SalesInvoiceSchema.pre('save', function (next) {
 SalesInvoiceSchema.index({ createdAt: -1 })
 SalesInvoiceSchema.index({ branch_id: 1, createdAt: -1 })
 
-const SalesInvoice = mongoose.models.SalesInvoice || mongoose.model('SalesInvoice', SalesInvoiceSchema)
+const SalesInvoice =
+  mongoose.models.SalesInvoice || mongoose.model('SalesInvoice', SalesInvoiceSchema)
 export { SalesInvoice }
 export default SalesInvoice
