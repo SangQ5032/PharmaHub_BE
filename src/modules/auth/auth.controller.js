@@ -2,11 +2,18 @@ import * as authService from './auth.service.js'
 import { catchAsync } from '../../utils/catchAsync.js'
 
 /**
- * API đăng nhập với Firebase ID Token
- * POST /api/auth/login
+ * API kiểm tra Firebase ID Token và xác minh với MongoDB
+ * POST /api/auth/check-token
  * Body: { idToken: string }
+ *
+ * Kiểm tra:
+ * 1. Firebase ID Token hợp lệ
+ * 2. Số điện thoại trong token
+ * 3. User tồn tại trong MongoDB
+ * 4. Số điện thoại khớp với DB
+ * 5. Trạng thái user hoạt động
  */
-export const loginWithFirebase = catchAsync(async (req, res) => {
+export const checkToken = catchAsync(async (req, res) => {
   const { idToken } = req.body
 
   if (!idToken) {
@@ -16,52 +23,11 @@ export const loginWithFirebase = catchAsync(async (req, res) => {
     })
   }
 
-  const result = await authService.verifyFirebaseTokenAndLogin(idToken)
+  const result = await authService.checkFirebaseToken(idToken)
 
   res.json({
     success: true,
-    message: 'Đăng nhập thành công',
+    message: 'Kiểm tra token thành công',
     data: result,
-  })
-})
-
-/**
- * API đăng nhập với username/password
- * POST /api/auth/login-username
- * Body: { username: string, password: string }
- */
-export const login = catchAsync(async (req, res) => {
-  const { username, password } = req.body
-  const ip = req.ip || req.connection.remoteAddress
-
-  const result = await authService.loginWithUsername(username, password, ip)
-
-  res.json({
-    success: true,
-    message: 'Đăng nhập thành công',
-    data: result,
-  })
-})
-
-/**
- * API xác thực JWT token
- * POST /api/auth/validate-token
- * Body: { token: string }
- */
-export const validateToken = catchAsync(async (req, res) => {
-  const { token } = req.body
-
-  if (!token) {
-    return res.status(400).json({
-      success: false,
-      message: 'Token là bắt buộc',
-    })
-  }
-
-  const user = await authService.validateToken(token)
-
-  res.json({
-    success: true,
-    data: user,
   })
 })
