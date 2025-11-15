@@ -1,8 +1,8 @@
 import { User } from '../users/users.model.js'
 import mongoose from 'mongoose'
-import LoginAttemptSchema from '../auth/auth.model.js'
+// import LoginAttemptSchema from '../auth/auth.model.js'
 
-const LoginAttempt = mongoose.model('LoginAttempt', LoginAttemptSchema)
+// const LoginAttempt = mongoose.model('LoginAttempt', LoginAttemptSchema)
 
 /**
  * Tìm user theo số điện thoại trong trường contact.phone

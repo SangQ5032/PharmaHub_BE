@@ -1,4 +1,4 @@
-import { SupplierRepository } from './suppliers.repository.js'
+import SupplierRepository from './suppliers.repository.js'
 import SupplierService from './suppliers.service.js'
 
 class SuppliersController {
