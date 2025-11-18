@@ -1,6 +1,6 @@
 // src/modules/statistics/statistics.service.js
 import statisticsRepository from './statistics.repository.js'
-import AppError from '../../utils/AppError.js'
+import { AppError } from '../../utils/AppError.js'
 
 class StatisticsService {
   /**

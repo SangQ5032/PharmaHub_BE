@@ -1,103 +1,86 @@
-// MODULE: SALES - REPOSITORY (Làm việc trực tiếp với MongoDB)
-// ---------------------------------------------------------------------
-// CHỨC NĂNG CHÍNH:
-//  - validateBranch: kiểm tra chi nhánh tồn tại
-//  - getMedicinesByIds: lấy danh sách thuốc theo _id phục vụ tính giá
-//  - createWithInventoryUpdate: tạo hóa đơn + TRỪ TỒN KHO trong 1 transaction
-//  - findById / findAll: truy vấn hóa đơn (có populate)
-// LƯU Ý: cần MongoDB Replica Set để dùng session/transaction
-// ---------------------------------------------------------------------
-
-import mongoose from 'mongoose'
-import { SalesInvoice } from './sales.model.js'
+import SalesInvoice from './sales.model.js'
 import { Inventory } from '../inventory/inventory.model.js'
 import { Medicine } from '../medicines/medicines.model.js'
-import Branch from '../branch/branch.model.js'
+import Customer from '../customers/customers.model.js'
+import { AppError } from '../../utils/AppError.js'
 
 class SalesRepository {
-  // Kiểm tra chi nhánh
-  async validateBranch(branchId) {
-    return Branch.findById(branchId).lean()
+  async findMedicinesByIds(ids = []) {
+    return Medicine.find({ _id: { $in: ids } }).lean()
   }
 
-  // Lấy thông tin các thuốc theo danh sách ID (lấy name, unit, price)
-  async getMedicinesByIds(medicineIds) {
-    return Medicine.find({ _id: { $in: medicineIds } })
-      .select('name unit price')
+  async getInventoryByMedicineIds(branchId, medicineIds = []) {
+    return Inventory.find({
+      branch_id: branchId,
+      medicine_id: { $in: medicineIds },
+    })
+      .select('medicine_id quantity')
       .lean()
   }
 
-  // Tạo hóa đơn và trừ tồn kho trong CÙNG 1 TRANSACTION
-  async createWithInventoryUpdate(saleData) {
-    const session = await mongoose.startSession()
-    session.startTransaction()
-    try {
-      // 1) Tạo hóa đơn
-      const [created] = await SalesInvoice.create([saleData], { session })
+  async decreaseInventory(branchId, items = [], session) {
+    const now = new Date()
 
-      // 2) Trừ tồn kho theo từng mặt hàng
-      for (const item of saleData.items) {
-        const inv = await Inventory.findOne({
-          branch_id: saleData.branch_id,
+    for (const item of items) {
+      const result = await Inventory.updateOne(
+        {
+          branch_id: branchId,
           medicine_id: item.medicine_id,
-        }).session(session)
+          quantity: { $gte: item.quantity },
+        },
+        {
+          $inc: { quantity: -item.quantity },
+          $set: { last_updated: now },
+        },
+        { session }
+      )
 
-        if (!inv) {
-          throw new Error(`Không tìm thấy tồn kho cho thuốc ${item.medicine_id}`)
-        }
-        if (inv.quantity < item.quantity) {
-          throw new Error(`Tồn kho không đủ cho thuốc ${item.medicine_id}`)
-        }
-
-        inv.quantity -= item.quantity
-        inv.last_updated = new Date()
-        await inv.save({ session })
+      if (!result.matchedCount) {
+        throw new AppError(
+          400,
+          'Tồn kho đã thay đổi. Không thể trừ số lượng thuốc như yêu cầu, vui lòng thử lại.'
+        )
       }
-
-      // 3) Commit transaction
-      await session.commitTransaction()
-      session.endSession()
-
-      // 4) Trả về bản ghi đầy đủ (có populate)
-      return await SalesInvoice.findById(created._id)
-        .populate('branch_id', 'name address phone')
-        .populate('employee_id', 'username fullName role')
-        .populate('items.medicine_id', 'name unit price')
-        .lean()
-    } catch (err) {
-      // Lỗi => rollback
-      await session.abortTransaction()
-      session.endSession()
-      throw err
     }
   }
 
-  // Lấy 1 hóa đơn theo id
-  async findById(id) {
+  async createInvoice(invoiceData, session) {
+    const [invoice] = await SalesInvoice.create([invoiceData], { session })
+    return invoice
+  }
+
+  async findInvoiceById(id) {
     return SalesInvoice.findById(id)
       .populate('branch_id', 'name address phone')
-      .populate('employee_id', 'username fullName role')
+      .populate('employee_id', 'name username')
+      .populate('customer_id', 'name phone address total_spent')
       .populate('items.medicine_id', 'name unit price')
       .lean()
   }
 
-  // Danh sách hóa đơn (lọc/phân trang/sắp xếp)
-  async findAll(filter = {}, options = {}) {
-    const { page = 1, limit = 10, sort = '-createdAt' } = options
-    const skip = (page - 1) * limit
+  async existsInvoiceCode(code) {
+    return SalesInvoice.exists({ invoice_code: code })
+  }
 
-    const [rows, total] = await Promise.all([
-      SalesInvoice.find(filter)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .populate('branch_id', 'name')
-        .populate('employee_id', 'username fullName')
-        .lean(),
-      SalesInvoice.countDocuments(filter),
-    ])
+  async findCustomerById(id) {
+    return Customer.findById(id)
+  }
 
-    return { rows, total, page, limit, pages: Math.ceil(total / limit) }
+  async findCustomerByPhone(phone) {
+    return Customer.findOne({ phone })
+  }
+
+  async createCustomer(data, session) {
+    const [customer] = await Customer.create([data], { session })
+    return customer
+  }
+
+  async increaseCustomerTotalSpent(customerId, amount, session) {
+    return Customer.findByIdAndUpdate(
+      customerId,
+      { $inc: { total_spent: amount } },
+      { new: true, session }
+    )
   }
 }
 

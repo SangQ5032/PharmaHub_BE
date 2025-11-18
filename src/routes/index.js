@@ -11,8 +11,8 @@ import medicinesRoutes from '../modules/medicines/medicines.routes.js'
 import suppliersRoutes from '../modules/suppliers/suppliers.router.js'
 import workSchedulesRoutes from '../modules/work_schedules/work_schedules.routes.js'
 import attendanceRoutes from '../modules/attendance/attendance.routes.js'
-import salesRoutes from '../modules/sales/sales.routes.js'
 import statisticsRoutes from '../modules/statistics/statistics.routes.js'
+import salesRoutes from '../modules/sales/sales.routes.js'
 
 // TODO: thêm các module khác khi tạo tiếp
 
@@ -29,8 +29,8 @@ router.use('/medicines', medicinesRoutes)
 router.use('/suppliers', suppliersRoutes)
 router.use('/work-schedules', workSchedulesRoutes)
 router.use('/attendance', attendanceRoutes)
-router.use('/sales', salesRoutes)
 router.use('/statistics', statisticsRoutes)
+router.use('/sales', salesRoutes)
 
 // TODO: mount các module khác
 
