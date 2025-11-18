@@ -1,6 +1,6 @@
 // src/modules/statistics/statistics.controller.js
 import statisticsService from './statistics.service.js'
-import catchAsync from '../../utils/catchAsync.js'
+import { catchAsync } from '../../utils/catchAsync.js'
 
 class StatisticsController {
   /**
