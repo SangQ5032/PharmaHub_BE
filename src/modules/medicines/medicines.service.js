@@ -60,3 +60,39 @@ export const deleteMedicine = async (id) => {
   if (!deleted) throw new AppError(404, 'Medicine not found')
   return deleted
 }
+
+// Lấy danh sách thuốc theo chi nhánh (với tồn kho)
+// Trả về tất cả thuốc kèm số lượng tồn kho ở chi nhánh đó
+// Nếu không có tồn kho trong chi nhánh thì trường in_stock = false, quantity = 0
+export const getMedicinesByBranch = async (branchId, query = {}) => {
+  const { page, limit, sort, search, name, q, category, supplier_id } = query
+
+  // Validate branchId
+  if (!branchId) {
+    throw new AppError(400, 'Branch ID is required')
+  }
+
+  const filter = {}
+  if (category) filter.category = category
+  if (supplier_id) filter.supplier_id = supplier_id
+
+  const options = { page: Number(page) || 1, limit: Number(limit) || 10 }
+
+  // Nhận sort dạng JSON string từ query: {"createdAt":-1}
+  if (sort) {
+    try {
+      options.sort = JSON.parse(sort)
+    } catch {
+      options.sort = { createdAt: -1 }
+    }
+  }
+
+  // Ưu tiên tìm kiếm theo tên (name hoặc q)
+  if (name || q) {
+    options.name = name || q
+  } else if (search) {
+    options.search = search
+  }
+
+  return await medicinesRepo.findByBranch(branchId, filter, options)
+}
