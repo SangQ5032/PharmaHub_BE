@@ -1,15 +1,27 @@
-// MODULE: CUSTOMERS - ROUTES (Route Definitions)
-// Mục đích: Khai báo các endpoint HTTP cho module khách hàng
 import express from 'express'
-import * as customerController from './customers.controller.js'
+import customersController from './customers.controller.js'
+import { protect, authorizeRoles } from '../../middlewares/authMiddleware.js'
 
 const router = express.Router()
 
-// CRUD Customers
-router.post('/', customerController.createCustomer)
-router.get('/', customerController.getCustomers)
-router.get('/:id', customerController.getCustomerById)
-router.put('/:id', customerController.updateCustomer)
-router.delete('/:id', customerController.deleteCustomer)
+// Public read (require auth)
+router.get('/', protect, customersController.getAll)
+router.get('/:id', protect, customersController.getById)
+
+// Create/update/delete (require admin or branch-manager)
+// Allow employees, branch-managers and system-admins to create/update customers
+router.post(
+  '/',
+  protect,
+  authorizeRoles('employee', 'branch-manager', 'system-admin'),
+  customersController.create
+)
+router.put(
+  '/:id',
+  protect,
+  authorizeRoles('employee', 'branch-manager', 'system-admin'),
+  customersController.update
+)
+router.delete('/:id', protect, authorizeRoles('system-admin'), customersController.delete)
 
 export default router

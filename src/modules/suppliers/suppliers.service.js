@@ -2,6 +2,7 @@ import SupplierRepository from './suppliers.repository.js'
 
 class SupplierService {
   async list(params) {
+    // params may include: page, limit, q, status, name
     return await SupplierRepository.getAll(params)
   }
   async getById(id) {

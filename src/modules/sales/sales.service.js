@@ -1,127 +1,293 @@
+import mongoose from 'mongoose'
 import salesRepository from './sales.repository.js'
+import { logger } from '../../utils/logger.js'
 import { AppError } from '../../utils/AppError.js'
 
-class SalesService {
-  /**
-   * Tạo hóa đơn bán hàng
-   * @param {Object} payload - dữ liệu từ client
-   * @param {String} employeeId - id nhân viên từ token
-   */
-  async createInvoice(payload, employeeId) {
-    const {
-      branch_id,
-      items,
-      customer_name,
-      customer_phone,
-      discount = 0,
-      tax_rate = 0,
-      payment_method = 'cash',
-      note,
-    } = payload || {}
+const PAYMENT_METHODS = ['cash', 'card', 'bank', 'e-wallet']
 
-    // 1) Validate input cơ bản
-    if (!branch_id) throw new AppError(400, 'Thiếu chi nhánh')
-    if (!items || !Array.isArray(items) || items.length === 0) {
+class SalesService {
+  async createInvoice(data = {}, employeeId) {
+    const branch_id = data.branch_id
+    const items = data.items
+    const discount = Number(data.discount ?? 0)
+    const tax_rate = Number(data.tax_rate ?? 0)
+    const payment_method = (data.payment_method || 'cash').toLowerCase()
+
+    if (!branch_id) {
+      throw new AppError(400, 'Không xác định được chi nhánh từ tài khoản')
+    }
+
+    if (!employeeId) {
+      throw new AppError(400, 'Không xác định được nhân viên tạo hóa đơn')
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
       throw new AppError(400, 'Danh sách thuốc không hợp lệ')
     }
 
-    // 2) Kiểm tra chi nhánh tồn tại
-    const branch = await salesRepository.validateBranch(branch_id)
-    if (!branch) throw new AppError(404, 'Chi nhánh không tồn tại')
+    const normalizedItems = items.map((item) => ({
+      medicine_id: item.medicine_id,
+      quantity: Number(item.quantity),
+      unit_price: item.unit_price !== undefined ? Number(item.unit_price) : undefined,
+    }))
 
-    // 3) Kiểm tra từng item
-    for (const it of items) {
-      if (!it.medicine_id) throw new AppError(400, 'Thiếu medicine_id')
-      if (it.quantity == null || it.quantity <= 0) throw new AppError(400, 'Số lượng không hợp lệ')
+    for (const item of normalizedItems) {
+      if (!mongoose.Types.ObjectId.isValid(item.medicine_id)) {
+        throw new AppError(400, 'medicine_id không hợp lệ')
+      }
+      if (!item.quantity || item.quantity <= 0) {
+        throw new AppError(400, 'Số lượng thuốc phải lớn hơn 0')
+      }
+      if (item.unit_price !== undefined && (Number.isNaN(item.unit_price) || item.unit_price < 0)) {
+        throw new AppError(400, 'Đơn giá không hợp lệ')
+      }
     }
 
-    // 4) Lấy thông tin thuốc để bổ sung giá (nếu client không gửi)
-    const medicineIds = items.map((i) => i.medicine_id)
-    const meds = await salesRepository.getMedicinesByIds(medicineIds)
-    if (meds.length !== medicineIds.length) {
-      const found = new Set(meds.map((m) => String(m._id)))
-      const missing = medicineIds.filter((id) => !found.has(String(id)))
-      throw new AppError(404, `Thuốc không tồn tại: ${missing.join(', ')}`)
+    if (Number.isNaN(discount) || discount < 0) {
+      throw new AppError(400, 'Chiết khấu không hợp lệ')
     }
 
-    // Map [medicineId => price] tại thời điểm bán
-    const priceMap = new Map(meds.map((m) => [String(m._id), m.price]))
+    if (Number.isNaN(tax_rate) || tax_rate < 0) {
+      throw new AppError(400, 'Thuế suất không hợp lệ')
+    }
 
-    // 5) Chuẩn hóa items: điền unit_price nếu thiếu + tính line_total
-    const normalizedItems = items.map((i) => {
-      const unit_price =
-        i.unit_price != null ? i.unit_price : priceMap.get(String(i.medicine_id)) || 0
-      if (unit_price < 0) throw new AppError(400, 'Đơn giá không hợp lệ')
-      const line_total = unit_price * i.quantity
-      return { medicine_id: i.medicine_id, quantity: i.quantity, unit_price, line_total }
+    if (!PAYMENT_METHODS.includes(payment_method)) {
+      throw new AppError(400, 'Phương thức thanh toán không hợp lệ')
+    }
+
+    const medicineIds = normalizedItems.map((item) => item.medicine_id)
+    const medicines = await salesRepository.findMedicinesByIds(medicineIds)
+
+    if (medicines.length !== medicineIds.length) {
+      const existingIds = medicines.map((m) => m._id.toString())
+      const missing = medicineIds.filter((id) => !existingIds.includes(id.toString()))
+      throw new AppError(404, `Không tìm thấy thuốc với ID: ${missing.join(', ')}`)
+    }
+
+    const medicineMap = new Map(medicines.map((m) => [m._id.toString(), m]))
+
+    const expiredMedicines = medicines.filter((m) => new Date(m.expiry_date) < new Date())
+    if (expiredMedicines.length) {
+      const names = expiredMedicines.map((m) => m.name).join(', ')
+      throw new AppError(400, `Không thể bán thuốc đã hết hạn: ${names}`)
+    }
+
+    const totalQuantityByMedicine = normalizedItems.reduce((acc, item) => {
+      const key = item.medicine_id.toString()
+      acc.set(key, (acc.get(key) || 0) + item.quantity)
+      return acc
+    }, new Map())
+
+    const inventories = await salesRepository.getInventoryByMedicineIds(
+      branch_id,
+      Array.from(totalQuantityByMedicine.keys())
+    )
+    const inventoryMap = new Map(inventories.map((inv) => [inv.medicine_id.toString(), inv]))
+
+    for (const [medicineId, neededQty] of totalQuantityByMedicine.entries()) {
+      const inventory = inventoryMap.get(medicineId)
+      const medicine = medicineMap.get(medicineId)
+      if (!inventory) {
+        // Log detailed debug info to help investigate missing inventory
+        logger.warn('Missing inventory for branch:', branch_id, 'medicineId:', medicineId)
+        logger.info('Inventory map keys:', Array.from(inventoryMap.keys()))
+        throw new AppError(
+          404,
+          `Thuốc ${medicine?.name || medicineId} không có trong tồn kho chi nhánh (branch_id: ${branch_id}, medicine_id: ${medicineId})`
+        )
+      }
+      if (inventory.quantity < neededQty) {
+        logger.warn(
+          'Insufficient inventory for',
+          medicineId,
+          'branch:',
+          branch_id,
+          'have:',
+          inventory.quantity,
+          'need:',
+          neededQty
+        )
+        throw new AppError(
+          400,
+          `Thuốc ${medicine.name} chỉ còn ${inventory.quantity} trong kho, không đủ ${neededQty} yêu cầu (branch_id: ${branch_id})`
+        )
+      }
+    }
+
+    const enrichedItems = normalizedItems.map((item) => {
+      const medicine = medicineMap.get(item.medicine_id.toString())
+      const unitPrice = item.unit_price !== undefined ? item.unit_price : medicine.price
+      const lineTotal = unitPrice * item.quantity
+      return {
+        medicine_id: item.medicine_id,
+        name: medicine.name,
+        quantity: item.quantity,
+        unit_price: unitPrice,
+        line_total: lineTotal,
+      }
     })
 
-    // 6) Tính tiền
-    const subtotal = normalizedItems.reduce((s, it) => s + it.line_total, 0)
-    if (discount < 0) throw new AppError(400, 'Giảm giá không hợp lệ')
-    if (tax_rate < 0) throw new AppError(400, 'Thuế suất không hợp lệ')
+    const subtotal = enrichedItems.reduce((sum, item) => sum + item.line_total, 0)
+    if (discount > subtotal) {
+      throw new AppError(400, 'Chiết khấu không thể lớn hơn tạm tính')
+    }
 
-    const taxable = Math.max(0, subtotal - discount)
-    const tax_amount = taxable * tax_rate
-    const total_amount = taxable + tax_amount
+    const taxableAmount = subtotal - discount
+    const taxAmount = (tax_rate / 100) * taxableAmount
+    const totalAmount = taxableAmount + taxAmount
 
-    // 7) Chuẩn bị dữ liệu để ghi DB
-    const saleData = {
-      branch_id,
-      employee_id: employeeId,
-      customer_name,
-      customer_phone,
-      items: normalizedItems,
+    const invoiceCode = await this.generateInvoiceCode()
+
+    const customerDetails = await this.resolveCustomer(
+      {
+        customer_id: data.customer_id,
+        customer_name: data.customer_name,
+        customer_phone: data.customer_phone,
+        customer_address: data.customer_address,
+      },
       subtotal,
-      discount,
-      tax_rate,
-      tax_amount,
-      total_amount,
-      payment_method,
-      note,
-      status: 'completed',
-    }
+      totalAmount
+    )
 
-    // 8) Ghi DB + trừ kho trong transaction
+    const session = await mongoose.startSession()
+    session.startTransaction()
+
     try {
-      const created = await salesRepository.createWithInventoryUpdate(saleData)
-      return created
-    } catch (err) {
-      // Chuẩn hóa message lỗi tồn kho cho client
-      if (/Tồn kho không đủ/.test(String(err))) throw new AppError(400, String(err))
-      if (/Không tìm thấy tồn kho/.test(String(err))) throw new AppError(404, String(err))
-      throw err
+      if (customerDetails.customer_id && customerDetails.shouldUpdateTotal) {
+        await salesRepository.increaseCustomerTotalSpent(
+          customerDetails.customer_id,
+          totalAmount,
+          session
+        )
+      }
+
+      await salesRepository.decreaseInventory(branch_id, enrichedItems, session)
+
+      const invoice = await salesRepository.createInvoice(
+        {
+          invoice_code: invoiceCode,
+          branch_id,
+          employee_id: employeeId,
+          customer_id: customerDetails.customer_id,
+          customer_name: customerDetails.customer_name,
+          customer_phone: customerDetails.customer_phone,
+          payment_method,
+          items: enrichedItems,
+          subtotal,
+          discount,
+          tax_rate,
+          tax_amount: taxAmount,
+          total_amount: totalAmount,
+          note: data.note,
+          status: 'completed',
+        },
+        session
+      )
+
+      await session.commitTransaction()
+      const populatedInvoice = await salesRepository.findInvoiceById(invoice._id)
+      return populatedInvoice
+    } catch (error) {
+      await session.abortTransaction()
+      throw error
+    } finally {
+      session.endSession()
     }
   }
 
-  // Lấy chi tiết 1 hóa đơn
-  async getInvoiceById(id) {
-    const doc = await salesRepository.findById(id)
-    if (!doc) throw new AppError(404, 'Không tìm thấy hóa đơn')
-    return doc
-  }
+  async resolveCustomer(customerPayload = {}, subtotal, totalAmount) {
+    const { customer_id, customer_phone, customer_name, customer_address } = customerPayload
 
-  // Danh sách hóa đơn (có lọc/phân trang/sắp xếp)
-  async listInvoices(query = {}) {
-    const { branch_id, from_date, to_date, customer_phone, page, limit, sort } = query
-    const filter = {}
-
-    if (branch_id) filter.branch_id = branch_id
-    if (customer_phone) filter.customer_phone = new RegExp(customer_phone, 'i')
-    if (from_date || to_date) {
-      filter.createdAt = {}
-      if (from_date) filter.createdAt.$gte = new Date(from_date)
-      if (to_date) filter.createdAt.$lte = new Date(to_date)
+    if (!customer_id && !customer_phone) {
+      return {
+        customer_id: null,
+        customer_name,
+        customer_phone,
+        shouldUpdateTotal: false,
+      }
     }
 
-    const options = {
-      page: parseInt(page || 1, 10),
-      limit: parseInt(limit || 10, 10),
-      sort: sort || '-createdAt',
+    if (customer_id) {
+      const customer = await salesRepository.findCustomerById(customer_id)
+      if (!customer) {
+        throw new AppError(404, 'Không tìm thấy khách hàng')
+      }
+      return {
+        customer_id: customer._id,
+        customer_name: customerNameOrFallback(customer_name, customer),
+        customer_phone: customer.phone,
+        shouldUpdateTotal: true,
+      }
     }
 
-    return salesRepository.findAll(filter, options)
+    const existingCustomer = await salesRepository.findCustomerByPhone(customer_phone)
+    if (existingCustomer) {
+      return {
+        customer_id: existingCustomer._id,
+        customer_name: customerNameOrFallback(customer_name, existingCustomer),
+        customer_phone: existingCustomer.phone,
+        shouldUpdateTotal: true,
+      }
+    }
+
+    if (!customer_name) {
+      throw new AppError(400, 'Tên khách hàng là bắt buộc khi tạo mới khách hàng')
+    }
+
+    if (!customer_phone) {
+      throw new AppError(400, 'Số điện thoại là bắt buộc khi tạo mới khách hàng')
+    }
+
+    const session = await mongoose.startSession()
+    session.startTransaction()
+    try {
+      const customer = await salesRepository.createCustomer(
+        {
+          name: customer_name,
+          phone: customer_phone,
+          address: customer_address,
+          total_spent: totalAmount || subtotal,
+        },
+        session
+      )
+      await session.commitTransaction()
+      return {
+        customer_id: customer._id,
+        customer_name: customer.name,
+        customer_phone: customer.phone,
+        shouldUpdateTotal: false,
+      }
+    } catch (error) {
+      await session.abortTransaction()
+      throw error
+    } finally {
+      session.endSession()
+    }
   }
+
+  async generateInvoiceCode() {
+    const datePart = new Date().toISOString().split('T')[0].replace(/-/g, '')
+    let attempt = 0
+
+    while (attempt < 5) {
+      const randomPart = Math.floor(100000 + Math.random() * 900000)
+      const code = `INV-${datePart}-${randomPart}`
+      const exists = await salesRepository.existsInvoiceCode(code)
+      if (!exists) {
+        return code
+      }
+      attempt++
+    }
+
+    throw new AppError(500, 'Không thể tạo mã hóa đơn duy nhất, vui lòng thử lại')
+  }
+}
+
+const customerNameOrFallback = (providedName, customer) => {
+  if (providedName && providedName.trim()) {
+    return providedName
+  }
+  return customer?.name
 }
 
 export default new SalesService()

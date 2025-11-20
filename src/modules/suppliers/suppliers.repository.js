@@ -1,11 +1,14 @@
-import { Supplier } from './suppliers.model'
+import { Supplier } from './suppliers.model.js'
 
 class SupplierRepository {
-  async getAll({ page = 1, limit = 20, q, status } = {}) {
+  async getAll({ page = 1, limit = 100, q, status, name } = {}) {
     const filter = {}
     if (status) filter.status = status
-    if (q) {
-      // search by text index (name) or fallback to regex
+    // Name partial search (case-insensitive)
+    if (name) {
+      filter.name = { $regex: name, $options: 'i' }
+    } else if (q) {
+      // Text search by index when no explicit name filter provided
       filter.$text = { $search: q }
     }
     const skip = (Math.max(Number(page) || 1, 1) - 1) * Math.max(Number(limit) || 1, 1)
