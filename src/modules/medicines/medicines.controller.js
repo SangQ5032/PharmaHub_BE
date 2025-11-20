@@ -21,7 +21,12 @@ export const createMedicine = asyncHandler(async (req, res) => {
 //   - sort: sắp xếp (JSON string, VD: {"createdAt":-1})
 export const getMedicines = asyncHandler(async (req, res) => {
   const result = await medicinesService.getMedicines(req.query)
-  res.json(result)
+  // res.json(result)
+  res.json({
+    success: true,
+    message: 'Lấy danh sách thuốc thành công',
+    data: result.data,
+  })
 })
 
 // GET /api/medicines/:id - chi tiết 1 thuốc

@@ -1,6 +1,7 @@
 // MODULE: MEDICINES - REPOSITORY (Data Access Layer)
 // Mục đích: Làm việc trực tiếp với MongoDB thông qua Mongoose
 // - Chỉ chứa các hàm CRUD/Query, không xử lý nghiệp vụ
+import mongoose from 'mongoose'
 import { Medicine } from './medicines.model.js'
 import { Inventory } from '../inventory/inventory.model.js'
 
@@ -68,6 +69,9 @@ class MedicinesRepository {
   async findByBranch(branchId, filter = {}, options = {}) {
     const { page = 1, limit = 10, sort = { createdAt: -1 }, search, name } = options
 
+    // Convert branchId từ string sang ObjectId
+    const branchObjectId = new mongoose.Types.ObjectId(branchId)
+
     const skip = (page - 1) * limit
 
     // Pipeline aggregation để join medicines với inventory theo branch
@@ -86,7 +90,7 @@ class MedicinesRepository {
                 $expr: {
                   $and: [
                     { $eq: ['$medicine_id', '$$medicine_id'] },
-                    { $eq: ['$branch_id', branchId] },
+                    { $eq: ['$branch_id', branchObjectId] },
                   ],
                 },
               },
@@ -102,7 +106,10 @@ class MedicinesRepository {
           // Lấy phần tử đầu tiên của mảng inventory (nếu tồn tại)
           inventory_record: { $arrayElemAt: ['$inventory', 0] },
           // Thêm trường xác định có tồn kho trong chi nhánh không
-          in_stock: { $gt: [{ $arrayElemAt: ['$inventory.quantity', 0] }, 0] },
+          // FIX: Phải dùng $ifNull để xử lý trường hợp inventory_record là null
+          in_stock: {
+            $gte: [{ $ifNull: [{ $arrayElemAt: ['$inventory.quantity', 0] }, 0] }, 1],
+          },
           // Số lượng tồn kho (nếu không có thì mặc định 0)
           quantity: {
             $ifNull: [{ $arrayElemAt: ['$inventory.quantity', 0] }, 0],
