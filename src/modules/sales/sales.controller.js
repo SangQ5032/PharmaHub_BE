@@ -9,7 +9,6 @@ class SalesController {
     if (!user) {
       throw new AppError(401, 'Không xác thực được người dùng')
     }
-
     const branchId = user.branch_id || user.branchId
     if (!branchId) {
       throw new AppError(400, 'Tài khoản chưa được gán chi nhánh, không thể tạo hóa đơn')

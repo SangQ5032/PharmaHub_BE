@@ -8,6 +8,7 @@ const router = express.Router()
 
 // CRUD Medicines
 router.post('/', validateBody(createMedicineSchema), medicinesController.createMedicine)
+router.get('/branch/:branchId', medicinesController.getMedicinesByBranch)
 router.get('/', medicinesController.getMedicines)
 router.get('/:id', medicinesController.getMedicineById)
 router.put('/:id', medicinesController.updateMedicine)
