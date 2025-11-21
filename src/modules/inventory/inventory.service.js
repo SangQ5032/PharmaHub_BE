@@ -42,27 +42,29 @@ class InventoryService {
     const inventory = await inventoryRepository.getByBranch(branchId, filter)
 
     // Transform data để thêm status
-    const result = inventory.map((item) => {
-      const status =
-        item.quantity === 0
-          ? 'out_of_stock'
-          : item.quantity <= item.medicine_id.warning_threshold
-            ? 'low_stock'
-            : 'sufficient'
+    const result = inventory
+      .filter((item) => item.medicine_id !== null) // Filter out items with missing medicine
+      .map((item) => {
+        const status =
+          item.quantity === 0
+            ? 'out_of_stock'
+            : item.quantity <= item.medicine_id.warning_threshold
+              ? 'low_stock'
+              : 'sufficient'
 
-      return {
-        _id: item._id,
-        branch_id: item.branch_id,
-        medicine_id: item.medicine_id._id,
-        medicine_name: item.medicine_id.name,
-        medicine_unit: item.medicine_id.unit,
-        medicine_category: item.medicine_id.category,
-        quantity: item.quantity,
-        warning_threshold: item.medicine_id.warning_threshold,
-        status,
-        last_updated: item.last_updated,
-      }
-    })
+        return {
+          _id: item._id,
+          branch_id: item.branch_id,
+          medicine_id: item.medicine_id._id,
+          medicine_name: item.medicine_id.name,
+          medicine_unit: item.medicine_id.unit,
+          medicine_category: item.medicine_id.category,
+          quantity: item.quantity,
+          warning_threshold: item.medicine_id.warning_threshold,
+          status,
+          last_updated: item.last_updated,
+        }
+      })
 
     return result
   }
@@ -105,29 +107,31 @@ class InventoryService {
     const inventory = await inventoryRepository.getAll(filter)
 
     // Transform data để thêm status
-    const result = inventory.map((item) => {
-      const status =
-        item.quantity === 0
-          ? 'out_of_stock'
-          : item.quantity <= item.medicine_id.warning_threshold
-            ? 'low_stock'
-            : 'sufficient'
+    const result = inventory
+      .filter((item) => item.medicine_id !== null) // Filter out items with missing medicine
+      .map((item) => {
+        const status =
+          item.quantity === 0
+            ? 'out_of_stock'
+            : item.quantity <= item.medicine_id.warning_threshold
+              ? 'low_stock'
+              : 'sufficient'
 
-      return {
-        _id: item._id,
-        branch_id: item.branch_id,
-        branch_name: item.branch_id.name,
-        branch_address: item.branch_id.address,
-        medicine_id: item.medicine_id._id,
-        medicine_name: item.medicine_id.name,
-        medicine_unit: item.medicine_id.unit,
-        medicine_category: item.medicine_id.category,
-        quantity: item.quantity,
-        warning_threshold: item.medicine_id.warning_threshold,
-        status,
-        last_updated: item.last_updated,
-      }
-    })
+        return {
+          _id: item._id,
+          branch_id: item.branch_id,
+          branch_name: item.branch_id.name,
+          branch_address: item.branch_id.address,
+          medicine_id: item.medicine_id._id,
+          medicine_name: item.medicine_id.name,
+          medicine_unit: item.medicine_id.unit,
+          medicine_category: item.medicine_id.category,
+          quantity: item.quantity,
+          warning_threshold: item.medicine_id.warning_threshold,
+          status,
+          last_updated: item.last_updated,
+        }
+      })
 
     return result
   }

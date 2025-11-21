@@ -22,4 +22,13 @@ router.get(
   usersController.getUsersByBranch
 )
 
+// GET /api/users/branch/:branchId
+// Lấy danh sách user theo chi nhánh (truyền branchId via params)
+router.get(
+  '/branch/:branchId',
+  protect,
+  authorizeRoles('branch-manager', 'system-admin'),
+  usersController.getUsersByBranchParam
+)
+
 export default router

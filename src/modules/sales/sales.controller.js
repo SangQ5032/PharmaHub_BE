@@ -9,7 +9,16 @@ class SalesController {
     if (!user) {
       throw new AppError(401, 'Không xác thực được người dùng')
     }
-    const branchId = user.branch_id || user.branchId
+    const tokenRole = (user.role || (req.tokenPayload && req.tokenPayload.role) || '')
+      .toString()
+      .toLowerCase()
+    let branchId = user.branch_id || user.branchId
+
+    // Allow system-admin to specify branch_id via request body
+    if (!branchId && tokenRole === 'system-admin') {
+      branchId = req.body.branch_id
+    }
+
     if (!branchId) {
       throw new AppError(400, 'Tài khoản chưa được gán chi nhánh, không thể tạo hóa đơn')
     }
@@ -42,7 +51,23 @@ class SalesController {
       throw new AppError(401, 'Không xác thực được người dùng')
     }
 
-    const branchId = user.branch_id || user.branchId
+    // Prefer branch from user token, but allow system-admin to specify
+    // a branch via query param (e.g., ?branch_id=...) for cross-branch queries.
+    const userRole = user.role || (req.tokenPayload && req.tokenPayload.role) || ''
+    const tokenRole = String(userRole).toLowerCase().replace(/_/g, '-')
+    let branchId = user.branch_id || user.branchId
+
+    console.log('[DEBUG getInvoicesByBranch]', {
+      userRole,
+      tokenRole,
+      userBranchId: branchId,
+      queryBranchId: req.query.branch_id,
+    })
+
+    if (!branchId && tokenRole === 'system-admin') {
+      branchId = req.query.branch_id || req.query.branchId
+    }
+
     if (!branchId) {
       throw new AppError(400, 'Tài khoản chưa được gán chi nhánh')
     }
@@ -75,7 +100,16 @@ class SalesController {
       throw new AppError(401, 'Không xác thực được người dùng')
     }
 
-    const branchId = user.branch_id || user.branchId
+    const tokenRole = (user.role || (req.tokenPayload && req.tokenPayload.role) || '')
+      .toString()
+      .toLowerCase()
+    let branchId = user.branch_id || user.branchId
+
+    // Allow system-admin to specify branch_id via query param
+    if (!branchId && tokenRole === 'system-admin') {
+      branchId = req.query.branch_id || req.query.branchId
+    }
+
     if (!branchId) {
       throw new AppError(400, 'Tài khoản chưa được gán chi nhánh')
     }

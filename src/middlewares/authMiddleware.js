@@ -18,6 +18,8 @@ export const protect = async (req, res, next) => {
     if (!user) return next(new AppError(401, 'User not found'))
 
     req.user = user // gắn user vào req
+    // save token payload for debugging / fallback role checks
+    req.tokenPayload = decoded
     next()
   } catch (err) {
     next(new AppError(401, 'Invalid token'))
@@ -28,7 +30,13 @@ export const protect = async (req, res, next) => {
 export const authorizeRoles =
   (...roles) =>
   (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    // normalize role string for safe comparison and support fallback to token payload
+    const normalize = (r) => (r && String(r).trim().toLowerCase().replace(/_/g, '-')) || null
+    const allowed = roles.map(normalize)
+    const userRole =
+      normalize(req.user && req.user.role) || normalize(req.tokenPayload && req.tokenPayload.role)
+
+    if (!userRole || !allowed.includes(userRole)) {
       return next(new AppError(403, 'Forbidden: insufficient permissions'))
     }
     next()
