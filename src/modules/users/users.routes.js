@@ -13,4 +13,13 @@ router.get(
   usersController.getAllUsers
 )
 
+// GET /api/users/branch/list
+// Lấy danh sách user theo chi nhánh từ accessToken
+router.get(
+  '/branch/list',
+  protect,
+  authorizeRoles('branch-manager', 'system-admin'),
+  usersController.getUsersByBranch
+)
+
 export default router
