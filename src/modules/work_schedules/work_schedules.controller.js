@@ -133,7 +133,15 @@ class WorkScheduleController {
   async getAll(req, res, next) {
     try {
       // Lấy branch_id từ user hiện tại
-      const branchId = req.user.branch_id
+      const user = req.user
+      const userRole = user.role || (req.tokenPayload && req.tokenPayload.role) || ''
+      const tokenRole = String(userRole).toLowerCase().replace(/_/g, '-')
+      let branchId = user.branch_id
+
+      // Allow system-admin to specify branch_id via query param
+      if (!branchId && tokenRole === 'system-admin') {
+        branchId = req.query.branch_id || req.query.branchId
+      }
 
       if (!branchId) {
         return res.status(400).json({

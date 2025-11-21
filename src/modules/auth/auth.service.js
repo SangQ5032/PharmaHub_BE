@@ -76,18 +76,21 @@ export const checkFirebaseToken = async (idToken) => {
       throw new AppError(403, 'Tài khoản không hoạt động')
     }
 
-    // Tạo JWT token cho backend
+    // Ensure role uses hyphen format (e.g. system-admin) for consistency
+    const normalizeRole = (r) => (r && String(r).trim().replace(/_/g, '-')) || r
+    const roleForToken = normalizeRole(user.role)
+
     const accessToken = jwt.sign(
       {
         sub: user._id,
-        role: user.role,
+        role: roleForToken,
         branch_id: user.branch_id || null,
       },
       config.jwt.secret,
       { expiresIn: config.jwt.expiresIn }
     )
 
-    // Trả về token và thông tin user
+    // Trả về token và thông tin user (role normalized to use hyphen)
     return {
       accessToken,
       user: {
@@ -96,7 +99,7 @@ export const checkFirebaseToken = async (idToken) => {
         name: user.name,
         phone: dbPhone,
         email: user.contact && user.contact.email,
-        role: user.role,
+        role: roleForToken,
         branch_id: user.branch_id || null,
       },
     }
