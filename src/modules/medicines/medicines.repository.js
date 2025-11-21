@@ -3,7 +3,7 @@
 // - Chỉ chứa các hàm CRUD/Query, không xử lý nghiệp vụ
 import mongoose from 'mongoose'
 import { Medicine } from './medicines.model.js'
-import { Inventory } from '../inventory/inventory.model.js'
+// import { Inventory } from '../inventory/inventory.model.js'
 
 class MedicinesRepository {
   // Tạo mới 1 bản ghi thuốc

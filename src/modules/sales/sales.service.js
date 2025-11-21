@@ -281,6 +281,140 @@ class SalesService {
 
     throw new AppError(500, 'Không thể tạo mã hóa đơn duy nhất, vui lòng thử lại')
   }
+
+  // Lấy danh sách hoá đơn theo chi nhánh
+  // branchId từ token, có thể filter theo employee_id
+  async getInvoicesByBranch(branchId, query = {}) {
+    if (!branchId) {
+      throw new AppError(400, 'Chi nhánh là bắt buộc')
+    }
+
+    const { page = 1, limit = 10, employee_id, customer_id, from_date, to_date, search } = query
+
+    const filter = {
+      branch_id: branchId,
+    }
+
+    // Nếu có employee_id trong query, filter theo employee
+    if (employee_id) {
+      filter.employee_id = employee_id
+    }
+
+    // Filter theo khách hàng
+    if (customer_id) {
+      filter.customer_id = customer_id
+    }
+
+    // Filter theo ngày (từ - đến)
+    if (from_date || to_date) {
+      filter.created_at = {}
+      if (from_date) {
+        filter.created_at.$gte = new Date(from_date)
+      }
+      if (to_date) {
+        const toDate = new Date(to_date)
+        toDate.setHours(23, 59, 59, 999)
+        filter.created_at.$lte = toDate
+      }
+    }
+
+    // Tìm kiếm theo mã hoá đơn hoặc tên khách hàng
+    if (search) {
+      filter.$or = [
+        { invoice_code: { $regex: search, $options: 'i' } },
+        { customer_name: { $regex: search, $options: 'i' } },
+      ]
+    }
+
+    const skip = (page - 1) * limit
+    const sort = { created_at: -1 }
+
+    const [data, total] = await Promise.all([
+      salesRepository.findInvoices(filter, { skip, limit, sort }),
+      salesRepository.countInvoices(filter),
+    ])
+
+    return {
+      data,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    }
+  }
+
+  // Lấy danh sách hoá đơn tạo bởi nhân viên hiện tại
+  async getInvoicesByEmployee(branchId, employeeId, query = {}) {
+    if (!branchId) {
+      throw new AppError(400, 'Chi nhánh là bắt buộc')
+    }
+
+    if (!employeeId) {
+      throw new AppError(400, 'Nhân viên là bắt buộc')
+    }
+
+    const { page = 1, limit = 10, from_date, to_date, search } = query
+
+    const filter = {
+      branch_id: branchId,
+      employee_id: employeeId,
+    }
+
+    // Filter theo ngày (từ - đến)
+    if (from_date || to_date) {
+      filter.created_at = {}
+      if (from_date) {
+        filter.created_at.$gte = new Date(from_date)
+      }
+      if (to_date) {
+        const toDate = new Date(to_date)
+        toDate.setHours(23, 59, 59, 999)
+        filter.created_at.$lte = toDate
+      }
+    }
+
+    // Tìm kiếm theo mã hoá đơn hoặc tên khách hàng
+    if (search) {
+      filter.$or = [
+        { invoice_code: { $regex: search, $options: 'i' } },
+        { customer_name: { $regex: search, $options: 'i' } },
+      ]
+    }
+
+    const skip = (page - 1) * limit
+    const sort = { created_at: -1 }
+
+    const [data, total] = await Promise.all([
+      salesRepository.findInvoices(filter, { skip, limit, sort }),
+      salesRepository.countInvoices(filter),
+    ])
+
+    return {
+      data,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    }
+  }
+
+  // Lấy chi tiết hoá đơn
+  async getInvoiceDetail(invoiceId) {
+    if (!invoiceId) {
+      throw new AppError(400, 'ID hoá đơn là bắt buộc')
+    }
+
+    const invoice = await salesRepository.findInvoiceById(invoiceId)
+    if (!invoice) {
+      throw new AppError(404, 'Hoá đơn không tồn tại')
+    }
+
+    return invoice
+  }
 }
 
 const customerNameOrFallback = (providedName, customer) => {

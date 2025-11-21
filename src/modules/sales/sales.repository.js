@@ -82,6 +82,26 @@ class SalesRepository {
       { new: true, session }
     )
   }
+
+  // Lấy danh sách hoá đơn với filter và pagination
+  async findInvoices(filter = {}, options = {}) {
+    const { skip = 0, limit = 10, sort = { created_at: -1 } } = options
+
+    return SalesInvoice.find(filter)
+      .populate('branch_id', 'name address phone')
+      .populate('employee_id', 'name username')
+      .populate('customer_id', 'name phone address total_spent')
+      .populate('items.medicine_id', 'name unit price category')
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean()
+  }
+
+  // Đếm tổng số hoá đơn theo filter
+  async countInvoices(filter = {}) {
+    return SalesInvoice.countDocuments(filter)
+  }
 }
 
 export default new SalesRepository()
