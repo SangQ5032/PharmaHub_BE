@@ -5,6 +5,7 @@ import express from 'express'
 import authRoutes from '../modules/auth/auth.routes.js'
 import usersRoutes from '../modules/users/users.routes.js'
 import branchRoutes from '../modules/branch/branch.routes.js'
+import categoriesRoutes from '../modules/categories/categories.routes.js'
 import importRoutes from '../modules/imports/imports.routes.js'
 import inventoryRoutes from '../modules/inventory/inventory.routes.js'
 import medicinesRoutes from '../modules/medicines/medicines.routes.js'
@@ -24,6 +25,7 @@ const router = express.Router()
 router.use('/auth', authRoutes)
 router.use('/users', usersRoutes)
 router.use('/branches', branchRoutes)
+router.use('/categories', categoriesRoutes)
 router.use('/imports', importRoutes)
 router.use('/inventory', inventoryRoutes)
 router.use('/medicines', medicinesRoutes)
