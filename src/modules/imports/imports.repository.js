@@ -2,6 +2,8 @@ import { Import } from './imports.model.js'
 import { Inventory } from '../inventory/inventory.model.js'
 import { Medicine } from '../medicines/medicines.model.js'
 import { Supplier } from '../suppliers/suppliers.model.js'
+import { Batch } from '../batches/batches.model.js'
+import Branch from '../branch/branch.model.js'
 import mongoose from 'mongoose'
 
 class ImportRepository {
@@ -24,8 +26,8 @@ class ImportRepository {
     return await Import.findById(id)
       .populate('branch_id', 'name address phone')
       .populate('supplier_id', 'name contact')
-      .populate('employee_id', 'username fullName')
-      .populate('items.medicine_id', 'name unit price')
+      .populate('employee_id', 'username name')
+      .populate('items.medicine_id', 'name unit')
       .lean()
   }
 
@@ -43,7 +45,7 @@ class ImportRepository {
     const imports = await Import.find(filter)
       .populate('branch_id', 'name address')
       .populate('supplier_id', 'name contact.phone')
-      .populate('employee_id', 'username fullName')
+      .populate('employee_id', 'username name')
       .populate('items.medicine_id', 'name unit')
       .sort(sort)
       .skip(skip)
@@ -60,6 +62,51 @@ class ImportRepository {
         total,
         totalPages: Math.ceil(total / limit),
       },
+    }
+  }
+
+  /**
+   * Tạo batch records từ phiếu nhập
+   * @param {String} branchId - ID chi nhánh
+   * @param {String} importRecordId - ID phiếu nhập
+   * @param {Array} items - Danh sách thuốc nhập
+   * @param {String} supplierId - ID nhà cung cấp
+   * @returns {Promise<Array>} - Danh sách batch tạo mới
+   */
+  async createBatchesFromImport(branchId, importRecordId, items, supplierId) {
+    const session = await mongoose.startSession()
+    session.startTransaction()
+
+    try {
+      const batches = []
+      for (const item of items) {
+        const batch = await Batch.create(
+          [
+            {
+              branch_id: branchId,
+              medicine_id: item.medicine_id,
+              batch_number: item.batch_number,
+              expiry_date: item.expiry_date,
+              import_price: item.unit_price,
+              quantity: item.quantity,
+              initial_quantity: item.quantity,
+              supplier_id: supplierId,
+              import_record_id: importRecordId,
+              status: 'active',
+            },
+          ],
+          { session }
+        )
+        batches.push(batch[0])
+      }
+
+      await session.commitTransaction()
+      return batches
+    } catch (error) {
+      await session.abortTransaction()
+      throw error
+    } finally {
+      session.endSession()
     }
   }
 
@@ -112,22 +159,83 @@ class ImportRepository {
   }
 
   /**
+   * Rollback inventory khi hủy phiếu nhập
+   * @param {String} branchId - ID chi nhánh
+   * @param {Array} items - Danh sách thuốc nhập
+   * @returns {Promise<void>}
+   */
+  async rollbackInventory(branchId, items) {
+    const session = await mongoose.startSession()
+    session.startTransaction()
+
+    try {
+      for (const item of items) {
+        const inventory = await Inventory.findOne({
+          branch_id: branchId,
+          medicine_id: item.medicine_id,
+        }).session(session)
+
+        if (inventory) {
+          inventory.quantity -= item.quantity
+          if (inventory.quantity < 0) {
+            inventory.quantity = 0
+          }
+          inventory.last_updated = new Date()
+          await inventory.save({ session })
+        }
+      }
+
+      await session.commitTransaction()
+    } catch (error) {
+      await session.abortTransaction()
+      throw error
+    } finally {
+      session.endSession()
+    }
+  }
+
+  /**
    * Kiểm tra tồn tại của medicine, supplier, branch
    * @param {Array} medicineIds - Danh sách ID thuốc
    * @param {String} supplierId - ID nhà cung cấp
+   * @param {String} branchId - ID chi nhánh
    * @returns {Promise<Object>} - Kết quả kiểm tra
    */
-  async validateReferences(medicineIds, supplierId) {
+  async validateReferences(medicineIds, supplierId, branchId) {
     const medicines = await Medicine.find({
       _id: { $in: medicineIds },
     }).lean()
 
     const supplier = await Supplier.findById(supplierId).lean()
+    const branch = await Branch.findById(branchId).lean()
 
     return {
       medicines,
       supplier,
+      branch,
     }
+  }
+
+  /**
+   * Cập nhật trạng thái phiếu nhập
+   * @param {String} id - ID phiếu nhập
+   * @param {String} status - Trạng thái mới
+   * @param {Object} additionalData - Dữ liệu thêm (nếu có)
+   * @returns {Promise<Object>} - Phiếu nhập đã cập nhật
+   */
+  async updateStatus(id, status, additionalData = {}) {
+    const updateData = { status, ...additionalData }
+    const updated = await Import.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    })
+      .populate('branch_id', 'name address phone')
+      .populate('supplier_id', 'name contact')
+      .populate('employee_id', 'username name')
+      .populate('items.medicine_id', 'name unit')
+      .lean()
+
+    return updated
   }
 
   /**
@@ -154,13 +262,25 @@ class ImportRepository {
           totalImports: { $sum: 1 },
           totalCost: { $sum: '$total_cost' },
           avgCost: { $avg: '$total_cost' },
+          totalItems: { $sum: { $size: '$items' } },
         },
       },
     ])
 
-    return stats[0] || { totalImports: 0, totalCost: 0, avgCost: 0 }
+    return stats[0] || { totalImports: 0, totalCost: 0, avgCost: 0, totalItems: 0 }
+  }
+
+  /**
+   * Lấy danh sách batch theo import record
+   * @param {String} importRecordId - ID phiếu nhập
+   * @returns {Promise<Array>} - Danh sách batch
+   */
+  async getBatchesByImportRecord(importRecordId) {
+    return await Batch.find({ import_record_id: importRecordId })
+      .populate('medicine_id', 'name')
+      .populate('branch_id', 'name')
+      .lean()
   }
 }
 
 export default new ImportRepository()
-
