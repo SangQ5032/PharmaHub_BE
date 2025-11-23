@@ -164,3 +164,31 @@ export const getLowStockMedicines = async (query = {}) => {
 
   return await medicinesRepo.findLowStockMedicines({}, options)
 }
+
+// Lấy danh sách thuốc theo chi nhánh (kèm thông tin tồn kho và lô hàng)
+export const getMedicinesByBranch = async (branchId, query = {}) => {
+  if (!branchId) {
+    throw new AppError(400, 'Chi nhánh là bắt buộc')
+  }
+
+  const { page, limit, sort, search, name, q, status } = query
+  const options = { page: Number(page) || 1, limit: Number(limit) || 10 }
+
+  if (sort) {
+    try {
+      options.sort = JSON.parse(sort)
+    } catch {
+      options.sort = { createdAt: -1 }
+    }
+  }
+
+  if (name || q) {
+    options.name = name || q
+  } else if (search) {
+    options.search = search
+  }
+
+  if (status) options.status = status
+
+  return await medicinesRepo.getMedicinesByBranchWithBatches(branchId, options)
+}

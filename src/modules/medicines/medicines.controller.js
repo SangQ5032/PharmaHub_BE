@@ -95,3 +95,15 @@ export const getLowStockMedicines = asyncHandler(async (req, res) => {
     pagination: result.pagination,
   })
 })
+
+// GET /api/medicines/by-branch/:branchId - danh sách thuốc theo chi nhánh (kèm lô hàng và tồn kho)
+export const getMedicinesByBranch = asyncHandler(async (req, res) => {
+  const { branchId } = req.params
+  const result = await medicinesService.getMedicinesByBranch(branchId, req.query)
+  res.json({
+    success: true,
+    message: 'Lấy danh sách thuốc theo chi nhánh thành công',
+    data: result.data,
+    pagination: result.pagination,
+  })
+})

@@ -1,3 +1,5 @@
+// MODULE: SUPPLIERS - MODEL
+// Định nghĩa schema cho nhà cung cấp trong MongoDB
 import mongoose from 'mongoose'
 
 const SupplierSchema = new mongoose.Schema(
@@ -6,7 +8,6 @@ const SupplierSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Tên nhà cung cấp là bắt buộc'],
       trim: true,
-      unique: true,
       index: true,
     },
     contact: {
@@ -20,6 +21,7 @@ const SupplierSchema = new mongoose.Schema(
         type: String,
         trim: true,
         lowercase: true,
+        sparse: true,
         match: [/^\S+@\S+\.\S+$/, 'Email không hợp lệ'],
       },
       address: {
@@ -31,21 +33,24 @@ const SupplierSchema = new mongoose.Schema(
     note: {
       type: String,
       trim: true,
+      default: '',
     },
     status: {
       type: String,
       enum: ['active', 'inactive'],
       default: 'active',
+      index: true,
     },
   },
   {
     timestamps: true,
     collection: 'suppliers',
+    versionKey: false,
   }
 )
 
-// Index để tìm kiếm nhanh
-SupplierSchema.index({ name: 'text' })
+// Compound index để tìm kiếm và lọc nhanh
+SupplierSchema.index({ name: 'text', 'contact.email': 'text' })
+SupplierSchema.index({ status: 1, createdAt: -1 })
 
 export const Supplier = mongoose.model('Supplier', SupplierSchema)
-
