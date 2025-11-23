@@ -2,21 +2,57 @@ import Joi from 'joi'
 
 export const createMedicineSchema = Joi.object({
   name: Joi.string().trim().required().messages({ 'any.required': 'Tên thuốc là bắt buộc' }),
-  description: Joi.string().allow('', null),
-  category: Joi.string()
-    .trim()
-    .required()
-    .messages({ 'any.required': 'Phân loại thuốc là bắt buộc' }),
+  generic_name: Joi.string().trim().optional().allow('', null),
+  brand_name: Joi.string().trim().optional().allow('', null),
+  dosage_form: Joi.string().trim().optional().allow('', null),
+  strength: Joi.string().trim().optional().allow('', null),
   unit: Joi.string().trim().required().messages({ 'any.required': 'Đơn vị tính là bắt buộc' }),
-  price: Joi.number()
+  packaging: Joi.string().trim().optional().allow('', null),
+  category_id: Joi.string().trim().optional().allow('', null),
+  prescription_required: Joi.boolean().optional().default(false),
+  is_controlled: Joi.boolean().optional().default(false),
+  retail_price: Joi.number()
     .min(0)
     .required()
-    .messages({ 'any.required': 'Giá bán là bắt buộc', 'number.base': 'Giá bán phải là số' }),
-  expiry_date: Joi.date().required().messages({
-    'any.required': 'Hạn sử dụng là bắt buộc',
-    'date.base': 'Hạn sử dụng không hợp lệ',
-  }),
-  supplier_id: Joi.string().required().messages({ 'any.required': 'Nhà cung cấp là bắt buộc' }),
-  warning_threshold: Joi.number().min(0).optional(),
-  manufacturer: Joi.string().optional().allow('', null),
+    .messages({ 'any.required': 'Giá bán lẻ là bắt buộc', 'number.base': 'Giá bán phải là số' }),
+  minimum_price: Joi.number().min(0).optional().allow(null),
+  max_price: Joi.number().min(0).optional().allow(null),
+  manufacturer: Joi.string().trim().optional().allow('', null),
+  country_of_origin: Joi.string().trim().optional().allow('', null),
+  indications: Joi.string().trim().optional().allow('', null),
+  contraindications: Joi.string().trim().optional().allow('', null),
+  side_effects: Joi.string().trim().optional().allow('', null),
+  usage_instructions: Joi.string().trim().optional().allow('', null),
+  storage_conditions: Joi.string().trim().optional().allow('', null),
+  registration_number: Joi.string().trim().optional().allow('', null),
+  barcode: Joi.string().trim().optional().allow('', null),
+  alert_threshold: Joi.number().min(0).optional().default(50),
+  status: Joi.string().valid('active', 'inactive', 'discontinued').optional().default('active'),
+})
+
+export const updateMedicineSchema = Joi.object({
+  name: Joi.string().trim().optional(),
+  generic_name: Joi.string().trim().optional().allow('', null),
+  brand_name: Joi.string().trim().optional().allow('', null),
+  dosage_form: Joi.string().trim().optional().allow('', null),
+  strength: Joi.string().trim().optional().allow('', null),
+  unit: Joi.string().trim().optional(),
+  packaging: Joi.string().trim().optional().allow('', null),
+  category_id: Joi.string().trim().optional().allow('', null),
+  prescription_required: Joi.boolean().optional(),
+  is_controlled: Joi.boolean().optional(),
+  retail_price: Joi.number().min(0).optional(),
+  minimum_price: Joi.number().min(0).optional().allow(null),
+  max_price: Joi.number().min(0).optional().allow(null),
+  manufacturer: Joi.string().trim().optional().allow('', null),
+  country_of_origin: Joi.string().trim().optional().allow('', null),
+  indications: Joi.string().trim().optional().allow('', null),
+  contraindications: Joi.string().trim().optional().allow('', null),
+  side_effects: Joi.string().trim().optional().allow('', null),
+  usage_instructions: Joi.string().trim().optional().allow('', null),
+  storage_conditions: Joi.string().trim().optional().allow('', null),
+  registration_number: Joi.string().trim().optional().allow('', null),
+  barcode: Joi.string().trim().optional().allow('', null),
+  alert_threshold: Joi.number().min(0).optional(),
+  status: Joi.string().valid('active', 'inactive', 'discontinued').optional(),
 })
