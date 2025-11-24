@@ -5,6 +5,11 @@ const BranchSchema = new mongoose.Schema({
   address: { type: String, required: true },
   phone: { type: String, required: true },
   revenue_target: { type: Number, default: 0 },
+  location: {
+    latitude: { type: Number, required: false },
+    longitude: { type: Number, required: false },
+    radius: { type: Number, required: false },
+  },
 })
 const Branch = mongoose.model('Branch', BranchSchema)
 

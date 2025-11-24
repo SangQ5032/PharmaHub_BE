@@ -19,14 +19,20 @@ class BranchController {
   }
   async create(req, res) {
     try {
-      const { name, address, phone, revenue_target } = req.body
+      const { name, address, phone, revenue_target, location } = req.body
       if (!name || !address || !phone) {
         return res
           .status(400)
           .json({ success: false, message: 'name, address and phone are required' })
       }
-      const newBranch = await branchService.createBranch({ name, address, phone, revenue_target })
-      res.status(201).json({ success: true, data: newBranch })
+      const newBranch = await branchService.createBranch({
+        name,
+        address,
+        phone,
+        revenue_target,
+        location,
+      })
+      res.status(201).json({ success: true, message: 'Tạo chi nhánh thành công', data: newBranch })
     } catch (error) {
       console.error('Error creating branch:', error)
       res.status(500).json({ success: false, message: 'Internal server error' })
