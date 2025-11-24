@@ -13,52 +13,127 @@ const MedicineSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
-    // Mô tả ngắn gọn công dụng/ghi chú
-    description: {
+    // Tên chung/hoạt chất chính
+    generic_name: {
       type: String,
       trim: true,
     },
-    // Nhóm/loại thuốc (VD: Kháng sinh/Giảm đau/...)
-    category: {
+    // Tên thương mại/tên nhãn hiệu
+    brand_name: {
       type: String,
-      required: [true, 'Phân loại thuốc là bắt buộc'],
       trim: true,
-      index: true,
     },
-    // Đơn vị tính (viên, hộp, chai, ...)
+    // Dạng bào chế (viên, hộp, chai, ...)
+    dosage_form: {
+      type: String,
+      trim: true,
+    },
+    // Hàm lượng hoạt chất
+    strength: {
+      type: String,
+      trim: true,
+    },
+    // Đơn vị tính (viên, hộp, chai, ml, ...)
     unit: {
       type: String,
       required: [true, 'Đơn vị tính là bắt buộc'],
       trim: true,
     },
-    // Giá bán lẻ
-    price: {
-      type: Number,
-      required: [true, 'Giá bán là bắt buộc'],
-      min: [0, 'Giá bán phải lớn hơn 0'],
+    // Quy cách đóng gói
+    packaging: {
+      type: String,
+      trim: true,
     },
-    // Hạn sử dụng
-    expiry_date: {
-      type: Date,
-      required: [true, 'Hạn sử dụng là bắt buộc'],
-    },
-    // Tham chiếu tới nhà cung cấp
-    supplier_id: {
+    // Tham chiếu tới danh mục/loại thuốc
+    category_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Supplier',
-      required: [true, 'Nhà cung cấp là bắt buộc'],
+      ref: 'Category',
       index: true,
     },
-    // Ngưỡng cảnh báo tồn kho (VD: < 50 thì cảnh báo)
-    warning_threshold: {
+    // Có yêu cầu đơn kê đơn không?
+    prescription_required: {
+      type: Boolean,
+      default: false,
+    },
+    // Thuốc được kiểm soát/hạn chế không?
+    is_controlled: {
+      type: Boolean,
+      default: false,
+    },
+    // Giá bán lẻ
+    retail_price: {
+      type: Number,
+      required: [true, 'Giá bán lẻ là bắt buộc'],
+      min: [0, 'Giá bán phải lớn hơn 0'],
+    },
+    // Giá tối thiểu (tùy chọn)
+    minimum_price: {
+      type: Number,
+      default: null,
+    },
+    // Giá tối đa (tùy chọn)
+    max_price: {
+      type: Number,
+      default: null,
+    },
+    // Hãng sản xuất
+    manufacturer: {
+      type: String,
+      trim: true,
+    },
+    // Nước sản xuất
+    country_of_origin: {
+      type: String,
+      trim: true,
+    },
+    // Chỉ định sử dụng
+    indications: {
+      type: String,
+      trim: true,
+    },
+    // Chống chỉ định
+    contraindications: {
+      type: String,
+      trim: true,
+    },
+    // Tác dụng phụ
+    side_effects: {
+      type: String,
+      trim: true,
+    },
+    // Hướng dẫn sử dụng
+    usage_instructions: {
+      type: String,
+      trim: true,
+    },
+    // Điều kiện bảo quản
+    storage_conditions: {
+      type: String,
+      trim: true,
+    },
+    // Số đăng ký
+    registration_number: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    // Mã vạch
+    barcode: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    // Ngưỡng cảnh báo tồn kho
+    alert_threshold: {
       type: Number,
       default: 50,
       min: [0, 'Ngưỡng cảnh báo phải lớn hơn hoặc bằng 0'],
     },
-    // Hãng sản xuất (nếu có)
-    manufacturer: {
+    // Trạng thái (active, inactive, ...)
+    status: {
       type: String,
-      trim: true,
+      enum: ['active', 'inactive', 'discontinued'],
+      default: 'active',
     },
   },
   {
@@ -67,19 +142,7 @@ const MedicineSchema = new mongoose.Schema(
   }
 )
 
-// Index text cho phép tìm kiếm nhanh theo tên/mô tả
-MedicineSchema.index({ name: 'text', description: 'text' })
-
-// Virtual field: true nếu thuốc sắp hết hạn (<= 3 tháng tới)
-MedicineSchema.virtual('isExpiringSoon').get(function () {
-  const today = new Date()
-  const threeMonthsLater = new Date(today.setMonth(today.getMonth() + 3))
-  return this.expiry_date <= threeMonthsLater
-})
-
-// Virtual field: true nếu đã hết hạn
-MedicineSchema.virtual('isExpired').get(function () {
-  return this.expiry_date < new Date()
-})
+// Index text cho phép tìm kiếm nhanh theo tên/generic name/brand name
+MedicineSchema.index({ name: 'text', generic_name: 'text', brand_name: 'text' })
 
 export const Medicine = mongoose.model('Medicine', MedicineSchema)

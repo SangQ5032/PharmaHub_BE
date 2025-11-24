@@ -17,6 +17,15 @@ const ImportItemSchema = new mongoose.Schema(
       required: [true, 'Đơn giá là bắt buộc'],
       min: [0, 'Đơn giá phải lớn hơn hoặc bằng 0'],
     },
+    batch_number: {
+      type: String,
+      required: [true, 'Mã lô hàng là bắt buộc'],
+      trim: true,
+    },
+    expiry_date: {
+      type: Date,
+      required: [true, 'Ngày hết hạn là bắt buộc'],
+    },
   },
   { _id: false }
 )
@@ -87,4 +96,3 @@ ImportSchema.pre('save', function (next) {
 })
 
 export const Import = mongoose.model('Import', ImportSchema)
-

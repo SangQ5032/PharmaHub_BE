@@ -5,9 +5,11 @@ import express from 'express'
 import authRoutes from '../modules/auth/auth.routes.js'
 import usersRoutes from '../modules/users/users.routes.js'
 import branchRoutes from '../modules/branch/branch.routes.js'
+import categoriesRoutes from '../modules/categories/categories.routes.js'
 import importRoutes from '../modules/imports/imports.routes.js'
 import inventoryRoutes from '../modules/inventory/inventory.routes.js'
 import medicinesRoutes from '../modules/medicines/medicines.routes.js'
+import batchesRoutes from '../modules/batches/batches.routes.js'
 import suppliersRoutes from '../modules/suppliers/suppliers.router.js'
 import workSchedulesRoutes from '../modules/work_schedules/work_schedules.routes.js'
 import attendanceRoutes from '../modules/attendance/attendance.routes.js'
@@ -24,9 +26,11 @@ const router = express.Router()
 router.use('/auth', authRoutes)
 router.use('/users', usersRoutes)
 router.use('/branches', branchRoutes)
+router.use('/categories', categoriesRoutes)
 router.use('/imports', importRoutes)
 router.use('/inventory', inventoryRoutes)
 router.use('/medicines', medicinesRoutes)
+router.use('/batches', batchesRoutes)
 router.use('/suppliers', suppliersRoutes)
 router.use('/work-schedules', workSchedulesRoutes)
 router.use('/attendance', attendanceRoutes)
