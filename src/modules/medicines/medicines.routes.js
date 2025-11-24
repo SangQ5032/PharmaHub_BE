@@ -11,6 +11,7 @@ router.get('/by-branch/:branchId', medicinesController.getMedicinesByBranch)
 router.get('/low-stock', medicinesController.getLowStockMedicines)
 router.get('/category/:categoryId', medicinesController.getMedicinesByCategory)
 router.get('/status/:status', medicinesController.getMedicinesByStatus)
+router.get('/:medicineId/inventory-all-branches', medicinesController.getInventoryAllBranches)
 
 // Generic routes
 router.post('/', validateBody(createMedicineSchema), medicinesController.createMedicine)

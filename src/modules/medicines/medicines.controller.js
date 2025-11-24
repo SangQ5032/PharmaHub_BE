@@ -107,3 +107,14 @@ export const getMedicinesByBranch = asyncHandler(async (req, res) => {
     pagination: result.pagination,
   })
 })
+
+// GET /api/medicines/:medicineId/inventory-all-branches - kiểm tra tồn kho 1 thuốc tại tất cả cửa hàng
+export const getInventoryAllBranches = asyncHandler(async (req, res) => {
+  const { medicineId } = req.params
+  const result = await medicinesService.getInventoryAllBranches(medicineId, req.query)
+  res.json({
+    success: true,
+    message: 'Lấy tồn kho thuốc tại tất cả chi nhánh thành công',
+    data: result.data,
+  })
+})

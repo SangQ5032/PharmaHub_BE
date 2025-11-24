@@ -357,6 +357,110 @@ class MedicinesRepository {
       },
     }
   }
+
+  // Kiểm tra tồn kho 1 thuốc tại tất cả cửa hàng
+  async getInventoryAllBranches(medicineId, sortBy = 'branch_name') {
+    const medicineObjectId = new mongoose.Types.ObjectId(medicineId)
+
+    // Định nghĩa các tùy chọn sắp xếp
+    const sortOptions = {
+      branch_name: { 'branch.name': 1 },
+      total_quantity: { total_quantity: -1 },
+      low_quantity: { total_quantity: 1 },
+    }
+
+    const sortStage = sortOptions[sortBy] || { 'branch.name': 1 }
+
+    // Bước 1: Lấy tồn kho theo chi nhánh
+    const inventoryByBranch = await Medicine.aggregate([
+      {
+        $match: { _id: medicineObjectId },
+      },
+      {
+        $lookup: {
+          from: 'batches',
+          let: { medicine_id: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$medicine_id', '$$medicine_id'] },
+                    { $eq: ['$status', 'active'] },
+                  ],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: '$branch_id',
+                total_quantity: { $sum: '$quantity' },
+                batches: {
+                  $push: {
+                    _id: '$_id',
+                    batch_number: '$batch_number',
+                    quantity: '$quantity',
+                    expiry_date: '$expiry_date',
+                    import_price: '$import_price',
+                    supplier_id: '$supplier_id',
+                  },
+                },
+              },
+            },
+          ],
+          as: 'inventory_by_branch',
+        },
+      },
+      {
+        $unwind: {
+          path: '$inventory_by_branch',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: ['$inventory_by_branch', {}],
+          },
+        },
+      },
+    ])
+
+    // Tạo map từ branch_id -> inventory data
+    const inventoryMap = {}
+    inventoryByBranch.forEach((item) => {
+      inventoryMap[item._id.toString()] = item
+    })
+
+    // Bước 2: Lấy tất cả chi nhánh
+    const Branch = mongoose.model('Branch')
+    const allBranches = await Branch.find().lean()
+
+    // Bước 3: Merge dữ liệu chi nhánh với tồn kho
+    const result = allBranches.map((branch) => {
+      const inventory = inventoryMap[branch._id.toString()]
+      return {
+        branch_id: branch._id,
+        branch_name: branch.name || 'Không xác định',
+        branch_address: branch.address || '',
+        branch_phone: branch.phone || '',
+        total_quantity: inventory?.total_quantity || 0,
+        batches: inventory?.batches || [],
+        in_stock: (inventory?.total_quantity || 0) > 0 ? 'Còn hàng' : 'Hết hàng',
+      }
+    })
+
+    // Sắp xếp theo tùy chọn
+    if (sortBy === 'total_quantity') {
+      result.sort((a, b) => b.total_quantity - a.total_quantity)
+    } else if (sortBy === 'low_quantity') {
+      result.sort((a, b) => a.total_quantity - b.total_quantity)
+    } else {
+      result.sort((a, b) => (a.branch_name || '').localeCompare(b.branch_name || ''))
+    }
+
+    return result
+  }
 }
 
 export default new MedicinesRepository()

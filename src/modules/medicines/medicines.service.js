@@ -192,3 +192,34 @@ export const getMedicinesByBranch = async (branchId, query = {}) => {
 
   return await medicinesRepo.getMedicinesByBranchWithBatches(branchId, options)
 }
+
+// Kiểm tra tồn kho 1 thuốc tại tất cả cửa hàng
+export const getInventoryAllBranches = async (medicineId, query = {}) => {
+  if (!medicineId) {
+    throw new AppError(400, 'ID thuốc là bắt buộc')
+  }
+
+  // Kiểm tra thuốc có tồn tại không
+  const medicine = await medicinesRepo.findById(medicineId)
+  if (!medicine) {
+    throw new AppError(404, 'Không tìm thấy thuốc')
+  }
+
+  const { sortBy = 'branch_name' } = query
+
+  const result = await medicinesRepo.getInventoryAllBranches(medicineId, sortBy)
+
+  return {
+    data: {
+      medicine_id: medicine._id,
+      medicine_name: medicine.name,
+      generic_name: medicine.generic_name,
+      brand_name: medicine.brand_name,
+      unit: medicine.unit,
+      retail_price: medicine.retail_price,
+      alert_threshold: medicine.alert_threshold,
+      branches: result,
+      total_quantity: result.reduce((sum, b) => sum + b.total_quantity, 0),
+    },
+  }
+}
