@@ -40,10 +40,10 @@ class AttendanceController {
   async checkin(req, res, next) {
     try {
       const userId = req.user._id
-      const { branch_id, checkin_time } = req.body
+      const { branch_id, checkin_time, latitude, longitude } = req.body
 
-      // Nếu không có branch_id trong body, lấy từ user
-      const branchId = branch_id || req.user.branchId
+      // Nếu không có branch_id trong body, lấy từ user (token hoặc profile)
+      const branchId = branch_id || req.user.branch_id || req.user.branchId
 
       if (!branchId) {
         return res.status(400).json({
@@ -59,7 +59,21 @@ class AttendanceController {
         })
       }
 
-      const attendance = await attendanceService.checkin(userId, branchId, checkin_time)
+      // Kiểm tra latitude và longitude
+      if (latitude === undefined || longitude === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: 'Vui lòng cấp quyền truy cập vị trí',
+        })
+      }
+
+      const attendance = await attendanceService.checkin(
+        userId,
+        branchId,
+        latitude,
+        longitude,
+        checkin_time
+      )
       res.status(201).json({
         success: true,
         message: 'Checkin thành công',
@@ -67,7 +81,15 @@ class AttendanceController {
       })
     } catch (error) {
       console.error('Error checking in:', error)
-      if (error.message.includes('đã checkin') || error.message.includes('chưa checkout')) {
+      // Xử lý các lỗi cụ thể
+      if (
+        error.message.includes('đã checkin') ||
+        error.message.includes('chưa checkout') ||
+        error.message.includes('lịch làm việc') ||
+        error.message.includes('vị trí') ||
+        error.message.includes('cửa hàng') ||
+        error.message.includes('cấp quyền')
+      ) {
         return res.status(400).json({
           success: false,
           message: error.message,

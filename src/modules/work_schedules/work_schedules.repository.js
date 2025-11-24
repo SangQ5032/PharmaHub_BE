@@ -88,6 +88,16 @@ class WorkScheduleRepository {
       date: { $gte: from, $lte: to },
     })
   }
+
+  async getWorkScheduleByUserIdAndDate(userId, date) {
+    return await WorkSchedule.findOne({
+      user_id: userId,
+      date: date,
+    })
+      .populate('user_id', 'username name role')
+      .populate('branch_id', 'name address location')
+      .populate('created_by', 'username name')
+  }
 }
 
 export default new WorkScheduleRepository()

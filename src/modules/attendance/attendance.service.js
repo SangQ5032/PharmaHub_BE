@@ -1,5 +1,26 @@
 import attendanceRepository from './attendance.repository.js'
+import workScheduleRepository from '../work_schedules/work_schedules.repository.js'
+import Branch from '../branch/branch.model.js'
 import mongoose from 'mongoose'
+
+/**
+ * Hàm tính khoảng cách giữa 2 điểm trên Trái Đất (km)
+ * Sử dụng công thức Haversine
+ */
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371 // Bán kính Trái Đất (km)
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  const distance = R * c
+  return distance * 1000 // Chuyển thành mét
+}
 
 class AttendanceService {
   async getAllAttendances() {
@@ -27,7 +48,13 @@ class AttendanceService {
     return await attendanceRepository.getAttendancesByBranchId(branchId)
   }
 
-  async checkin(userId, branchId, checkinTime) {
+  /**
+   * Checkin với xác thực:
+   * 1. Kiểm tra user có công việc hôm nay không
+   * 2. Kiểm tra vị trí GPS nằm trong bán kính branch không
+   * 3. Kiểm tra user chưa checkout từ lần checkin trước
+   */
+  async checkin(userId, branchId, latitude, longitude, checkinTime) {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       throw new Error('Invalid user ID')
     }
@@ -41,6 +68,44 @@ class AttendanceService {
       throw new Error(
         'Bạn đã checkin nhưng chưa checkout. Vui lòng checkout trước khi checkin mới.'
       )
+    }
+
+    // Lấy ngày hôm nay ở định dạng YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0]
+
+    // Kiểm tra user có công việc hôm nay không
+    const workSchedule = await workScheduleRepository.getWorkScheduleByUserIdAndDate(userId, today)
+    if (!workSchedule) {
+      throw new Error('Bạn không có lịch làm việc hôm nay')
+    }
+
+    // Lấy thông tin chi nhánh
+    const branch = await Branch.findById(branchId)
+    if (!branch) {
+      throw new Error('Chi nhánh không tồn tại')
+    }
+
+    // Kiểm tra xem chi nhánh có cấu hình vị trí không
+    if (!branch.location || !branch.location.latitude || !branch.location.longitude) {
+      throw new Error('Chi nhánh chưa cấu hình vị trí')
+    }
+
+    // Kiểm tra xem latitude, longitude có được gửi không
+    if (latitude === undefined || longitude === undefined) {
+      throw new Error('Vui lòng cấp quyền truy cập vị trí')
+    }
+
+    // Tính khoảng cách từ vị trí hiện tại đến chi nhánh
+    const distance = calculateDistance(
+      latitude,
+      longitude,
+      branch.location.latitude,
+      branch.location.longitude
+    )
+
+    // Kiểm tra xem user có nằm trong bán kính cho phép không
+    if (distance > branch.location.radius) {
+      throw new Error('Bạn chưa tới cửa hàng')
     }
 
     const attendanceData = {
