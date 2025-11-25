@@ -3,7 +3,7 @@ import { AppError } from '../../utils/AppError.js'
 
 class InventoryService {
   /**
-   * Lấy tồn kho theo chi nhánh
+   * Lấy tồn kho theo chi nhánh (kèm chi tiết lô thuốc)
    * @param {String} branchId - ID chi nhánh
    * @param {Object} query - Query parameters
    * @returns {Promise<Array>} - Danh sách tồn kho
@@ -25,7 +25,7 @@ class InventoryService {
     // Nếu yêu cầu low_stock
     if (low_stock === 'true') {
       const inventory = await inventoryRepository.getLowStock(branchId)
-      return inventory
+      return this._transformInventoryData(inventory)
     }
 
     // Build filter
@@ -40,37 +40,11 @@ class InventoryService {
     }
 
     const inventory = await inventoryRepository.getByBranch(branchId, filter)
-
-    // Transform data để thêm status
-    const result = inventory
-      .filter((item) => item.medicine_id !== null) // Filter out items with missing medicine
-      .map((item) => {
-        const status =
-          item.quantity === 0
-            ? 'out_of_stock'
-            : item.quantity <= item.medicine_id.warning_threshold
-              ? 'low_stock'
-              : 'sufficient'
-
-        return {
-          _id: item._id,
-          branch_id: item.branch_id,
-          medicine_id: item.medicine_id._id,
-          medicine_name: item.medicine_id.name,
-          medicine_unit: item.medicine_id.unit,
-          medicine_category: item.medicine_id.category,
-          quantity: item.quantity,
-          warning_threshold: item.medicine_id.warning_threshold,
-          status,
-          last_updated: item.last_updated,
-        }
-      })
-
-    return result
+    return this._transformInventoryData(inventory)
   }
 
   /**
-   * Lấy tồn kho toàn hệ thống (admin only)
+   * Lấy tồn kho toàn hệ thống (admin only) - kèm chi tiết lô thuốc
    * @param {Object} query - Query parameters
    * @returns {Promise<Array>} - Danh sách tồn kho
    */
@@ -80,7 +54,7 @@ class InventoryService {
     // Nếu yêu cầu low_stock
     if (low_stock === 'true') {
       const inventory = await inventoryRepository.getLowStock(branch_id || null)
-      return inventory
+      return this._transformInventoryData(inventory)
     }
 
     // Build filter
@@ -105,35 +79,138 @@ class InventoryService {
     }
 
     const inventory = await inventoryRepository.getAll(filter)
+    return this._transformInventoryData(inventory)
+  }
 
-    // Transform data để thêm status
-    const result = inventory
-      .filter((item) => item.medicine_id !== null) // Filter out items with missing medicine
-      .map((item) => {
-        const status =
-          item.quantity === 0
-            ? 'out_of_stock'
-            : item.quantity <= item.medicine_id.warning_threshold
-              ? 'low_stock'
-              : 'sufficient'
+  /**
+   * Transform dữ liệu tồn kho từ aggregate
+   * @param {Array} inventory - Dữ liệu tồn kho từ repository
+   * @returns {Array} - Dữ liệu đã transform
+   */
+  _transformInventoryData(inventory) {
+    return inventory.map((item) => {
+      const status =
+        item.quantity === 0
+          ? 'out_of_stock'
+          : item.quantity <= item.medicine_warning_threshold
+            ? 'low_stock'
+            : 'sufficient'
 
-        return {
-          _id: item._id,
-          branch_id: item.branch_id,
-          branch_name: item.branch_id.name,
-          branch_address: item.branch_id.address,
-          medicine_id: item.medicine_id._id,
-          medicine_name: item.medicine_id.name,
-          medicine_unit: item.medicine_id.unit,
-          medicine_category: item.medicine_id.category,
-          quantity: item.quantity,
-          warning_threshold: item.medicine_id.warning_threshold,
-          status,
-          last_updated: item.last_updated,
-        }
-      })
+      // Tính tổng giá trị tồn kho
+      const totalValue = item.batches.reduce((sum, batch) => {
+        return sum + (batch.quantity * batch.import_price || 0)
+      }, 0)
 
-    return result
+      return {
+        _id: item._id,
+        branch: {
+          _id: item.branch_id,
+          name: item.branch_name,
+          address: item.branch_address,
+          phone: item.branch_phone,
+        },
+        medicine: {
+          _id: item.medicine_id,
+          name: item.medicine_name,
+          generic_name: item.medicine_generic_name,
+          brand_name: item.medicine_brand_name,
+          unit: item.medicine_unit,
+          category: item.medicine_category,
+          description: item.medicine_description,
+          dosage_form: item.medicine_dosage_form,
+          strength: item.medicine_strength,
+          retail_price: item.medicine_retail_price,
+          manufacturer: item.medicine_manufacturer,
+          country_of_origin: item.medicine_country_of_origin,
+          indications: item.medicine_indications,
+          contraindications: item.medicine_contraindications,
+          side_effects: item.medicine_side_effects,
+          usage_instructions: item.medicine_usage_instructions,
+          storage_conditions: item.medicine_storage_conditions,
+          registration_number: item.medicine_registration_number,
+          barcode: item.medicine_barcode,
+          status: item.medicine_status,
+          warning_threshold: item.medicine_warning_threshold,
+        },
+        total_quantity: item.quantity,
+        warning_threshold: item.medicine_warning_threshold,
+        status,
+        batches: item.batches.map((batch) => ({
+          _id: batch._id,
+          batch_number: batch.batch_number,
+          expiry_date: batch.expiry_date,
+          import_price: batch.import_price,
+          quantity: batch.quantity,
+          initial_quantity: batch.initial_quantity,
+          supplier: {
+            _id: batch.supplier_id,
+            name: batch.supplier?.name || 'N/A',
+          },
+          batch_value: batch.quantity * batch.import_price,
+          status: batch.status,
+          imported_at: batch.createdAt,
+        })),
+        total_value: totalValue,
+        last_updated: item.last_updated,
+      }
+    })
+  }
+
+  /**
+   * Lấy tồn kho của 1 loại thuốc tại chi nhánh cụ thể
+   * @param {String} branchId - ID chi nhánh
+   * @param {String} medicineId - ID thuốc
+   * @returns {Promise<Object>} - Chi tiết tồn kho
+   */
+  async getInventoryByBranchAndMedicine(branchId, medicineId) {
+    if (!branchId || !medicineId) {
+      throw new AppError(400, 'ID chi nhánh và ID thuốc là bắt buộc')
+    }
+
+    // Validate branch tồn tại
+    const branch = await inventoryRepository.validateBranch(branchId)
+    if (!branch) {
+      throw new AppError(404, 'Chi nhánh không tồn tại')
+    }
+
+    // Validate medicine tồn tại
+    const medicine = await inventoryRepository.validateMedicine(medicineId)
+    if (!medicine) {
+      throw new AppError(404, 'Thuốc không tồn tại')
+    }
+
+    const filter = {
+      medicine_id: medicineId,
+    }
+
+    const inventory = await inventoryRepository.getByBranch(branchId, filter)
+    const transformed = this._transformInventoryData(inventory)
+
+    if (transformed.length === 0) {
+      throw new AppError(404, 'Không tìm thấy tồn kho cho thuốc này tại chi nhánh')
+    }
+
+    return transformed[0]
+  }
+
+  /**
+   * Lấy chi tiết tồn kho bằng inventory ID
+   * @param {String} inventoryId - ID inventory record
+   * @returns {Promise<Object>} - Chi tiết tồn kho
+   */
+  async getInventoryById(inventoryId) {
+    if (!inventoryId) {
+      throw new AppError(400, 'ID tồn kho là bắt buộc')
+    }
+
+    const inventory = await inventoryRepository.getInventoryById(inventoryId)
+
+    if (!inventory || inventory.length === 0) {
+      throw new AppError(404, 'Không tìm thấy tồn kho')
+    }
+
+    const transformed = this._transformInventoryData(inventory)
+    return transformed[0]
   }
 }
 

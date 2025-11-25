@@ -34,6 +34,38 @@ class InventoryController {
       data: result,
     })
   })
+
+  /**
+   * Lấy tồn kho của 1 loại thuốc tại chi nhánh cụ thể
+   * GET /api/inventory/branch/:branchId/medicine/:medicineId
+   */
+  getInventoryByBranchAndMedicine = asyncHandler(async (req, res) => {
+    const { branchId, medicineId } = req.params
+
+    const result = await inventoryService.getInventoryByBranchAndMedicine(branchId, medicineId)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy tồn kho thuốc tại chi nhánh thành công',
+      data: result,
+    })
+  })
+
+  /**
+   * Lấy chi tiết tồn kho bằng inventory ID
+   * GET /api/inventory/:inventoryId
+   */
+  getInventoryById = asyncHandler(async (req, res) => {
+    const { inventoryId } = req.params
+
+    const result = await inventoryService.getInventoryById(inventoryId)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy chi tiết tồn kho thành công',
+      data: result,
+    })
+  })
 }
 
 export default new InventoryController()
