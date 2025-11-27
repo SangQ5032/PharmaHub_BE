@@ -60,10 +60,23 @@ class AttendanceController {
       }
 
       // Kiểm tra latitude và longitude
-      if (latitude === undefined || longitude === undefined) {
+      if (
+        latitude === undefined ||
+        latitude === null ||
+        longitude === undefined ||
+        longitude === null
+      ) {
         return res.status(400).json({
           success: false,
           message: 'Vui lòng cấp quyền truy cập vị trí',
+        })
+      }
+
+      // Validate latitude và longitude có nằm trong khoảng hợp lệ không
+      if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tọa độ GPS không hợp lệ',
         })
       }
 
@@ -88,10 +101,13 @@ class AttendanceController {
         error.message.includes('lịch làm việc') ||
         error.message.includes('vị trí') ||
         error.message.includes('cửa hàng') ||
-        error.message.includes('cấp quyền')
+        error.message.includes('cấp quyền') ||
+        error.message.includes('bán kính') ||
+        error.message.includes('Khoảng cách') ||
+        error.message.includes('Tọa độ GPS')
       ) {
         return res.status(400).json({
-          success: false,
+          success: true,
           message: error.message,
         })
       }

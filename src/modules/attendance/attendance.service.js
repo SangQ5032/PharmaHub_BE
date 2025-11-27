@@ -90,9 +90,24 @@ class AttendanceService {
       throw new Error('Chi nhánh chưa cấu hình vị trí')
     }
 
+    // Kiểm tra xem radius có được cấu hình không
+    if (!branch.location.radius || branch.location.radius <= 0) {
+      throw new Error('Chi nhánh chưa cấu hình bán kính cho phép')
+    }
+
     // Kiểm tra xem latitude, longitude có được gửi không
-    if (latitude === undefined || longitude === undefined) {
+    if (
+      latitude === undefined ||
+      latitude === null ||
+      longitude === undefined ||
+      longitude === null
+    ) {
       throw new Error('Vui lòng cấp quyền truy cập vị trí')
+    }
+
+    // Validate latitude và longitude có nằm trong khoảng hợp lệ không
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      throw new Error('Tọa độ GPS không hợp lệ')
     }
 
     // Tính khoảng cách từ vị trí hiện tại đến chi nhánh
@@ -105,7 +120,9 @@ class AttendanceService {
 
     // Kiểm tra xem user có nằm trong bán kính cho phép không
     if (distance > branch.location.radius) {
-      throw new Error('Bạn chưa tới cửa hàng')
+      throw new Error(
+        `Bạn chưa tới cửa hàng. Khoảng cách hiện tại: ${Math.round(distance)}m, bán kính cho phép: ${branch.location.radius}m`
+      )
     }
 
     const attendanceData = {
