@@ -36,7 +36,7 @@ class SalesController {
       employeeId
     )
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       message: 'Tạo hóa đơn thành công',
       data: invoice,

@@ -52,6 +52,22 @@ class InventoryController {
   })
 
   /**
+   * Lấy danh sách batch của thuốc tại chi nhánh (dành cho chọn batch khi tạo hóa đơn)
+   * GET /api/inventory/branch/:branchId/medicine/:medicineId/batches
+   */
+  getBatchesForMedicine = asyncHandler(async (req, res) => {
+    const { branchId, medicineId } = req.params
+
+    const batches = await inventoryService.getBatchesForMedicine(branchId, medicineId)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy danh sách lô hàng thành công',
+      data: batches,
+    })
+  })
+
+  /**
    * Lấy chi tiết tồn kho bằng inventory ID
    * GET /api/inventory/:inventoryId
    */

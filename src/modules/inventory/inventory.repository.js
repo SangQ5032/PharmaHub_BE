@@ -381,6 +381,30 @@ class InventoryRepository {
   }
 
   /**
+   * Lấy danh sách batch của thuốc tại chi nhánh
+   * @param {String} branchId - ID chi nhánh
+   * @param {String} medicineId - ID thuốc
+   * @returns {Promise<Array>} - Danh sách batch
+   */
+  async getBatchesByBranchAndMedicine(branchId, medicineId) {
+    const branchObjectId = new mongoose.Types.ObjectId(branchId)
+    const medicineObjectId = new mongoose.Types.ObjectId(medicineId)
+
+    const batches = await Batch.find({
+      branch_id: branchObjectId,
+      medicine_id: medicineObjectId,
+      status: 'active',
+      quantity: { $gt: 0 },
+      expiry_date: { $gt: new Date() },
+    })
+      .select('batch_number expiry_date import_price quantity supplier_id status')
+      .sort({ expiry_date: 1 })
+      .lean()
+
+    return batches
+  }
+
+  /**
    * Lấy tồn kho bằng inventory ID (kèm chi tiết lô thuốc)
    * @param {String} inventoryId - ID inventory
    * @returns {Promise<Array>} - Dữ liệu tồn kho

@@ -27,6 +27,7 @@ class SalesService {
 
     const normalizedItems = items.map((item) => ({
       medicine_id: item.medicine_id,
+      batch_id: item.batch_id,
       quantity: Number(item.quantity),
       unit_price: item.unit_price !== undefined ? Number(item.unit_price) : undefined,
     }))
@@ -34,6 +35,9 @@ class SalesService {
     for (const item of normalizedItems) {
       if (!mongoose.Types.ObjectId.isValid(item.medicine_id)) {
         throw new AppError(400, 'medicine_id không hợp lệ')
+      }
+      if (!mongoose.Types.ObjectId.isValid(item.batch_id)) {
+        throw new AppError(400, 'batch_id không hợp lệ')
       }
       if (!item.quantity || item.quantity <= 0) {
         throw new AppError(400, 'Số lượng thuốc phải lớn hơn 0')
@@ -72,55 +76,59 @@ class SalesService {
       throw new AppError(400, `Không thể bán thuốc đã hết hạn: ${names}`)
     }
 
-    const totalQuantityByMedicine = normalizedItems.reduce((acc, item) => {
-      const key = item.medicine_id.toString()
-      acc.set(key, (acc.get(key) || 0) + item.quantity)
-      return acc
-    }, new Map())
+    // Lấy thông tin batch
+    const batchIds = normalizedItems.map((item) => item.batch_id)
+    const batches = await salesRepository.findBatchesByIds(batchIds)
 
-    const inventories = await salesRepository.getInventoryByMedicineIds(
-      branch_id,
-      Array.from(totalQuantityByMedicine.keys())
-    )
-    const inventoryMap = new Map(inventories.map((inv) => [inv.medicine_id.toString(), inv]))
+    if (batches.length !== batchIds.length) {
+      const existingIds = batches.map((b) => b._id.toString())
+      const missing = batchIds.filter((id) => !existingIds.includes(id.toString()))
+      throw new AppError(404, `Không tìm thấy lô hàng với ID: ${missing.join(', ')}`)
+    }
 
-    for (const [medicineId, neededQty] of totalQuantityByMedicine.entries()) {
-      const inventory = inventoryMap.get(medicineId)
-      const medicine = medicineMap.get(medicineId)
-      if (!inventory) {
-        // Log detailed debug info to help investigate missing inventory
-        logger.warn('Missing inventory for branch:', branch_id, 'medicineId:', medicineId)
-        logger.info('Inventory map keys:', Array.from(inventoryMap.keys()))
-        throw new AppError(
-          404,
-          `Thuốc ${medicine?.name || medicineId} không có trong tồn kho chi nhánh (branch_id: ${branch_id}, medicine_id: ${medicineId})`
-        )
+    const batchMap = new Map(batches.map((b) => [b._id.toString(), b]))
+
+    // Validate batch: tồn tại ở chi nhánh đúng, chưa hết hạn, có đủ số lượng
+    for (const item of normalizedItems) {
+      const batch = batchMap.get(item.batch_id.toString())
+      const medicine = medicineMap.get(item.medicine_id.toString())
+
+      if (!batch) {
+        throw new AppError(404, `Không tìm thấy lô hàng với ID: ${item.batch_id}`)
       }
-      if (inventory.quantity < neededQty) {
-        logger.warn(
-          'Insufficient inventory for',
-          medicineId,
-          'branch:',
-          branch_id,
-          'have:',
-          inventory.quantity,
-          'need:',
-          neededQty
-        )
+
+      // Kiểm tra batch thuộc chi nhánh đúng
+      if (batch.branch_id.toString() !== branch_id.toString()) {
+        throw new AppError(400, `Lô hàng ${batch.batch_number} không thuộc chi nhánh hiện tại`)
+      }
+
+      // Kiểm tra batch chưa hết hạn
+      if (new Date(batch.expiry_date) < new Date()) {
         throw new AppError(
           400,
-          `Thuốc ${medicine.name} chỉ còn ${inventory.quantity} trong kho, không đủ ${neededQty} yêu cầu (branch_id: ${branch_id})`
+          `Lô hàng ${batch.batch_number} của ${medicine.name} đã hết hạn (hết hạn: ${batch.expiry_date.toLocaleDateString('vi-VN')})`
+        )
+      }
+
+      // Kiểm tra batch có đủ số lượng
+      if (batch.quantity < item.quantity) {
+        throw new AppError(
+          400,
+          `Lô hàng ${batch.batch_number} của ${medicine.name} chỉ còn ${batch.quantity}, không đủ ${item.quantity} yêu cầu`
         )
       }
     }
 
     const enrichedItems = normalizedItems.map((item) => {
       const medicine = medicineMap.get(item.medicine_id.toString())
+      const batch = batchMap.get(item.batch_id.toString())
       const unitPrice = item.unit_price !== undefined ? item.unit_price : medicine.price
       const lineTotal = unitPrice * item.quantity
       return {
         medicine_id: item.medicine_id,
+        batch_id: item.batch_id,
         name: medicine.name,
+        batch_number: batch.batch_number,
         quantity: item.quantity,
         unit_price: unitPrice,
         line_total: lineTotal,
@@ -161,7 +169,7 @@ class SalesService {
         )
       }
 
-      await salesRepository.decreaseInventory(branch_id, enrichedItems, session)
+      await salesRepository.decreaseInventory(enrichedItems, session)
 
       const invoice = await salesRepository.createInvoice(
         {

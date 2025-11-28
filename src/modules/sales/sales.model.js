@@ -8,7 +8,18 @@ const SalesItemSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    batch_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Batch',
+      required: true,
+      index: true,
+    },
     name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    batch_number: {
       type: String,
       required: true,
       trim: true,
