@@ -194,6 +194,42 @@ class InventoryService {
   }
 
   /**
+   * Lấy danh sách batch của thuốc tại chi nhánh (dành cho chọn batch khi tạo hóa đơn)
+   * @param {String} branchId - ID chi nhánh
+   * @param {String} medicineId - ID thuốc
+   * @returns {Promise<Array>} - Danh sách batch
+   */
+  async getBatchesForMedicine(branchId, medicineId) {
+    if (!branchId || !medicineId) {
+      throw new AppError(400, 'ID chi nhánh và ID thuốc là bắt buộc')
+    }
+
+    // Validate branch tồn tại
+    const branch = await inventoryRepository.validateBranch(branchId)
+    if (!branch) {
+      throw new AppError(404, 'Chi nhánh không tồn tại')
+    }
+
+    // Validate medicine tồn tại
+    const medicine = await inventoryRepository.validateMedicine(medicineId)
+    if (!medicine) {
+      throw new AppError(404, 'Thuốc không tồn tại')
+    }
+
+    const batches = await inventoryRepository.getBatchesByBranchAndMedicine(branchId, medicineId)
+
+    return batches.map((batch) => ({
+      _id: batch._id,
+      batch_number: batch.batch_number,
+      expiry_date: batch.expiry_date,
+      quantity: batch.quantity,
+      import_price: batch.import_price,
+      supplier_id: batch.supplier_id,
+      status: batch.status,
+    }))
+  }
+
+  /**
    * Lấy chi tiết tồn kho bằng inventory ID
    * @param {String} inventoryId - ID inventory record
    * @returns {Promise<Object>} - Chi tiết tồn kho

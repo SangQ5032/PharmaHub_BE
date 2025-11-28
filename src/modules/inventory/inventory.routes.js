@@ -12,6 +12,17 @@ router.use(protect)
 router.use(reportsRoutes)
 
 /**
+ * @route   GET /api/inventory/branch/:branchId/medicine/:medicineId/batches
+ * @desc    Lấy danh sách batch của thuốc tại chi nhánh (dành cho chọn batch khi tạo hóa đơn)
+ * @access  Private (employee, branch-manager, system-admin)
+ */
+router.get(
+  '/branch/:branchId/medicine/:medicineId/batches',
+  authorizeRoles('employee', 'branch-manager', 'system-admin'),
+  inventoryController.getBatchesForMedicine
+)
+
+/**
  * @route   GET /api/inventory/branch/:branchId/medicine/:medicineId
  * @desc    Lấy tồn kho của 1 loại thuốc tại chi nhánh cụ thể
  * @access  Private (employee, branch-manager, system-admin)

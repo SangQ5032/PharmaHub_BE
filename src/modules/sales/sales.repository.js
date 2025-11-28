@@ -1,5 +1,6 @@
 import SalesInvoice from './sales.model.js'
 import { Inventory } from '../inventory/inventory.model.js'
+import { Batch } from '../batches/batches.model.js'
 import { Medicine } from '../medicines/medicines.model.js'
 import Customer from '../customers/customers.model.js'
 import { AppError } from '../../utils/AppError.js'
@@ -7,6 +8,10 @@ import { AppError } from '../../utils/AppError.js'
 class SalesRepository {
   async findMedicinesByIds(ids = []) {
     return Medicine.find({ _id: { $in: ids } }).lean()
+  }
+
+  async findBatchesByIds(ids = []) {
+    return Batch.find({ _id: { $in: ids } }).lean()
   }
 
   async getInventoryByMedicineIds(branchId, medicineIds = []) {
@@ -18,19 +23,15 @@ class SalesRepository {
       .lean()
   }
 
-  async decreaseInventory(branchId, items = [], session) {
-    const now = new Date()
-
+  async decreaseInventory(items = [], session) {
     for (const item of items) {
-      const result = await Inventory.updateOne(
+      const result = await Batch.updateOne(
         {
-          branch_id: branchId,
-          medicine_id: item.medicine_id,
+          _id: item.batch_id,
           quantity: { $gte: item.quantity },
         },
         {
           $inc: { quantity: -item.quantity },
-          $set: { last_updated: now },
         },
         { session }
       )
@@ -38,7 +39,7 @@ class SalesRepository {
       if (!result.matchedCount) {
         throw new AppError(
           400,
-          'Tồn kho đã thay đổi. Không thể trừ số lượng thuốc như yêu cầu, vui lòng thử lại.'
+          'Tồn kho lô hàng đã thay đổi. Không thể trừ số lượng thuốc như yêu cầu, vui lòng thử lại.'
         )
       }
     }
@@ -55,6 +56,7 @@ class SalesRepository {
       .populate('employee_id', 'name username')
       .populate('customer_id', 'name phone address total_spent')
       .populate('items.medicine_id', 'name unit price')
+      .populate('items.batch_id', 'batch_number expiry_date')
       .lean()
   }
 
@@ -92,6 +94,7 @@ class SalesRepository {
       .populate('employee_id', 'name username')
       .populate('customer_id', 'name phone address total_spent')
       .populate('items.medicine_id', 'name unit price category')
+      .populate('items.batch_id', 'batch_number expiry_date')
       .sort(sort)
       .skip(skip)
       .limit(limit)
