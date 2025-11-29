@@ -55,9 +55,9 @@ class StatisticsService {
    */
   async getStatisticsByPeriod(filters) {
     try {
-      const validGroupBy = ['day', 'month', 'year']
+      const validGroupBy = ['day', 'week', 'month', 'year']
       if (filters.groupBy && !validGroupBy.includes(filters.groupBy)) {
-        throw new AppError('groupBy phải là: day, month hoặc year', 400)
+        throw new AppError('groupBy phải là: day, week, month hoặc year', 400)
       }
 
       const stats = await statisticsRepository.getStatsByPeriod(filters)

@@ -33,11 +33,10 @@ class StatisticsRepository {
 
     const result = await SalesInvoice.aggregate([
       { $match: matchConditions },
-      { $unwind: '$items' },
       {
         $group: {
           _id: null,
-          totalQuantity: { $sum: '$items.quantity' },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
           totalRevenue: { $sum: '$total_amount' },
           totalInvoices: { $sum: 1 },
           totalDiscount: { $sum: '$discount' },
@@ -235,6 +234,12 @@ class StatisticsRepository {
           year: { $year: '$createdAt' },
           month: { $month: '$createdAt' },
           day: { $dayOfMonth: '$createdAt' },
+        }
+        break
+      case 'week':
+        dateGroup = {
+          year: { $year: '$createdAt' },
+          week: { $week: '$createdAt' },
         }
         break
       case 'month':
