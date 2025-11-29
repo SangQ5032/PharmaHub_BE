@@ -73,10 +73,17 @@ class AttendanceService {
     // Lấy ngày hôm nay ở định dạng YYYY-MM-DD
     const today = new Date().toISOString().split('T')[0]
 
-    // Kiểm tra user có công việc hôm nay không
-    const workSchedule = await workScheduleRepository.getWorkScheduleByUserIdAndDate(userId, today)
+    // Xác định shift từ thời gian check-in hiện tại
+    const checkinDateTime = checkinTime ? new Date(checkinTime) : new Date()
+    const checkinHour = checkinDateTime.getHours()
+    const shift = checkinHour < 12 ? 'morning' : 'afternoon'
+
+    // Kiểm tra user có công việc vào shift cụ thể hôm nay không
+    const workSchedule = await workScheduleRepository.checkDuplicateSchedule(userId, today, shift)
     if (!workSchedule) {
-      throw new Error('Bạn không có lịch làm việc hôm nay')
+      throw new Error(
+        `Bạn không có lịch làm việc ${shift === 'morning' ? 'ca sáng' : 'ca chiều'} hôm nay`
+      )
     }
 
     // Lấy thông tin chi nhánh

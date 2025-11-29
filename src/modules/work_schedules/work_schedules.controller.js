@@ -355,6 +355,150 @@ class WorkScheduleController {
       })
     }
   }
+
+  // Get attendance history for employee (their own attendance records)
+  async getMyAttendanceHistory(req, res, next) {
+    try {
+      const userId = req.user._id
+      const page = req.query.page || 1
+      const limit = req.query.limit || 10
+
+      const result = await workScheduleService.getAttendanceHistoryByEmployeeId(userId, page, limit)
+
+      res.status(200).json({
+        success: true,
+        message: 'Retrieved attendance history for current employee with schedule comparison',
+        data: result.data,
+        pagination: {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
+        },
+      })
+    } catch (error) {
+      console.error('Error getting attendance history:', error)
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Internal server error',
+      })
+    }
+  }
+
+  // Get attendance history for branch employees (branch-manager)
+  async getBranchEmployeesAttendanceHistory(req, res, next) {
+    try {
+      const user = req.user
+      const branchId = user.branch_id
+
+      if (!branchId) {
+        return res.status(400).json({
+          success: false,
+          message: 'User does not have a branch assigned',
+        })
+      }
+
+      const page = req.query.page || 1
+      const limit = req.query.limit || 10
+
+      // Build filters from query parameters
+      const filters = {}
+      if (req.query.from_date) filters.from_date = req.query.from_date
+      if (req.query.to_date) filters.to_date = req.query.to_date
+      if (req.query.user_id) filters.user_id = req.query.user_id
+      if (req.query.status) filters.status = req.query.status
+
+      const result = await workScheduleService.getAttendanceHistoryByBranchId(
+        branchId,
+        page,
+        limit,
+        filters
+      )
+
+      res.status(200).json({
+        success: true,
+        message: 'Retrieved attendance history for branch employees with schedule comparison',
+        data: result.data,
+        pagination: {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
+        },
+      })
+    } catch (error) {
+      console.error('Error getting branch employees attendance history:', error)
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Internal server error',
+      })
+    }
+  }
+
+  // Get attendance history for all branches (system-admin)
+  async getAllAttendanceHistory(req, res, next) {
+    try {
+      const page = req.query.page || 1
+      const limit = req.query.limit || 10
+
+      // Build filters from query parameters
+      const filters = {}
+      if (req.query.from_date) filters.from_date = req.query.from_date
+      if (req.query.to_date) filters.to_date = req.query.to_date
+      if (req.query.user_id) filters.user_id = req.query.user_id
+      if (req.query.branch_id) filters.branch_id = req.query.branch_id
+      if (req.query.status) filters.status = req.query.status
+
+      const result = await workScheduleService.getAttendanceHistoryAll(page, limit, filters)
+
+      res.status(200).json({
+        success: true,
+        message: 'Retrieved all attendance history with schedule comparison',
+        data: result.data,
+        pagination: {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
+        },
+      })
+    } catch (error) {
+      console.error('Error getting all attendance history:', error)
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Internal server error',
+      })
+    }
+  }
+
+  // Get detailed attendance record with invoices created during this shift
+  async getAttendanceDetailWithInvoices(req, res, next) {
+    try {
+      const { attendanceId } = req.params
+
+      if (!attendanceId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Attendance ID is required',
+        })
+      }
+
+      const result = await workScheduleService.getAttendanceDetailWithInvoices(attendanceId)
+
+      res.status(200).json({
+        success: true,
+        message: 'Retrieved attendance detail with invoices',
+        data: result,
+      })
+    } catch (error) {
+      console.error('Error getting attendance detail:', error)
+      const statusCode = error.message.includes('not found') ? 404 : 400
+      res.status(statusCode).json({
+        success: false,
+        message: error.message || 'Internal server error',
+      })
+    }
+  }
 }
 
 export default new WorkScheduleController()

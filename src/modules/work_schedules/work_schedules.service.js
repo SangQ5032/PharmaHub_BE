@@ -389,6 +389,130 @@ class WorkScheduleService {
     }
     return await workScheduleRepository.getWorkSchedulesByBranchId(branchId)
   }
+
+  // Get attendance history for employee with work schedule comparison
+  async getAttendanceHistoryByEmployeeId(userId, page = 1, limit = 10) {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error('Invalid user ID')
+    }
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1)
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10))
+
+    return await workScheduleRepository.getAttendanceHistoryByEmployeeId(userId, pageNum, limitNum)
+  }
+
+  // Get attendance history for branch employees with work schedule comparison
+  async getAttendanceHistoryByBranchId(branchId, page = 1, limit = 10, filters = {}) {
+    if (!mongoose.Types.ObjectId.isValid(branchId)) {
+      throw new Error('Invalid branch ID')
+    }
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1)
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10))
+
+    // Validate filter dates if provided
+    if (filters.from_date) {
+      try {
+        this.validateDateFormat(filters.from_date)
+      } catch (error) {
+        throw new Error(`Invalid from_date: ${error.message}`)
+      }
+    }
+
+    if (filters.to_date) {
+      try {
+        this.validateDateFormat(filters.to_date)
+      } catch (error) {
+        throw new Error(`Invalid to_date: ${error.message}`)
+      }
+    }
+
+    if (filters.from_date && filters.to_date && filters.from_date > filters.to_date) {
+      throw new Error('from_date must be before to_date')
+    }
+
+    // Validate filter user_id if provided
+    if (filters.user_id && !mongoose.Types.ObjectId.isValid(filters.user_id)) {
+      throw new Error('Invalid user_id in filter')
+    }
+
+    // Validate status if provided
+    if (
+      filters.status &&
+      !['checked_in', 'checked_out', 'late', 'early', 'absent'].includes(filters.status)
+    ) {
+      throw new Error('Status must be one of: checked_in, checked_out, late, early, absent')
+    }
+
+    return await workScheduleRepository.getAttendanceHistoryByBranchId(
+      branchId,
+      pageNum,
+      limitNum,
+      filters
+    )
+  }
+
+  // Get attendance history for all branches (system-admin) with work schedule comparison
+  async getAttendanceHistoryAll(page = 1, limit = 10, filters = {}) {
+    const pageNum = Math.max(1, parseInt(page, 10) || 1)
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10))
+
+    // Validate filter dates if provided
+    if (filters.from_date) {
+      try {
+        this.validateDateFormat(filters.from_date)
+      } catch (error) {
+        throw new Error(`Invalid from_date: ${error.message}`)
+      }
+    }
+
+    if (filters.to_date) {
+      try {
+        this.validateDateFormat(filters.to_date)
+      } catch (error) {
+        throw new Error(`Invalid to_date: ${error.message}`)
+      }
+    }
+
+    if (filters.from_date && filters.to_date && filters.from_date > filters.to_date) {
+      throw new Error('from_date must be before to_date')
+    }
+
+    // Validate filter user_id if provided
+    if (filters.user_id && !mongoose.Types.ObjectId.isValid(filters.user_id)) {
+      throw new Error('Invalid user_id in filter')
+    }
+
+    // Validate filter branch_id if provided
+    if (filters.branch_id && !mongoose.Types.ObjectId.isValid(filters.branch_id)) {
+      throw new Error('Invalid branch_id in filter')
+    }
+
+    // Validate status if provided
+    if (
+      filters.status &&
+      !['checked_in', 'checked_out', 'late', 'early', 'absent'].includes(filters.status)
+    ) {
+      throw new Error('Status must be one of: checked_in, checked_out, late, early, absent')
+    }
+
+    return await workScheduleRepository.getAttendanceHistoryAll(pageNum, limitNum, filters)
+  }
+
+  // Get detailed attendance record with invoices created during this shift
+  async getAttendanceDetailWithInvoices(attendanceId) {
+    if (!attendanceId || attendanceId.length !== 24) {
+      throw new Error('Invalid attendance ID')
+    }
+
+    const result = await workScheduleRepository.getAttendanceDetailWithInvoices(attendanceId)
+    if (!result) {
+      throw new Error('Attendance record not found')
+    }
+
+    return result
+  }
 }
 
 export default new WorkScheduleService()
