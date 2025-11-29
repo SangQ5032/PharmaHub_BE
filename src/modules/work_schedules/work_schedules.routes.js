@@ -1,7 +1,7 @@
 import express from 'express'
 const router = express.Router()
 import workScheduleController from './work_schedules.controller.js'
-import { protect } from '../../middlewares/authMiddleware.js'
+import { protect, authorizeRoles } from '../../middlewares/authMiddleware.js'
 
 /**
  * @route   POST /api/work-schedules/week
@@ -16,6 +16,53 @@ router.post('/week', protect, workScheduleController.createWeekSchedule)
  * @access  Private (yêu cầu accessToken)
  */
 router.post('/day', protect, workScheduleController.createDaySchedule)
+
+/**
+ * @route   GET /api/work-schedules/history/me
+ * @desc    Lấy lịch sử làm việc (attendance) của nhân viên hiện tại với so sánh lịch
+ * @access  Private (yêu cầu accessToken) - role: employee
+ */
+router.get(
+  '/history/me',
+  protect,
+  authorizeRoles('employee'),
+  workScheduleController.getMyAttendanceHistory
+)
+
+/**
+ * @route   GET /api/work-schedules/history/branch-employees
+ * @desc    Lấy lịch sử làm việc (attendance) của các nhân viên trong chi nhánh với so sánh lịch
+ * @access  Private (yêu cầu accessToken) - role: branch-manager
+ */
+router.get(
+  '/history/branch-employees',
+  protect,
+  authorizeRoles('branch-manager'),
+  workScheduleController.getBranchEmployeesAttendanceHistory
+)
+
+/**
+ * @route   GET /api/work-schedules/history/all
+ * @desc    Lấy lịch sử làm việc (attendance) của tất cả các chi nhánh với so sánh lịch
+ * @access  Private (yêu cầu accessToken) - role: system-admin
+ */
+router.get(
+  '/history/all',
+  protect,
+  authorizeRoles('system-admin'),
+  workScheduleController.getAllAttendanceHistory
+)
+
+/**
+ * @route   GET /api/work-schedules/history/:attendanceId
+ * @desc    Lấy chi tiết lịch sử làm việc (attendance) kèm danh sách hoá đơn được tạo trong ca
+ * @access  Private (yêu cầu accessToken)
+ */
+router.get(
+  '/history/:attendanceId',
+  protect,
+  workScheduleController.getAttendanceDetailWithInvoices
+)
 
 /**
  * @route   GET /api/work-schedules/week
