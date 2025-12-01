@@ -18,6 +18,17 @@ export const protect = async (req, res, next) => {
     if (!user) return next(new AppError(401, 'User not found'))
 
     req.user = user // gắn user vào req
+
+    // If user doesn't have role, use role from token
+    if (!req.user.role && decoded.role) {
+      req.user.role = decoded.role
+    }
+
+    // If user doesn't have branch_id, use branch_id from token
+    if (!req.user.branch_id && decoded.branch_id) {
+      req.user.branch_id = decoded.branch_id
+    }
+
     // save token payload for debugging / fallback role checks
     req.tokenPayload = decoded
     next()
@@ -41,3 +52,5 @@ export const authorizeRoles =
     }
     next()
   }
+
+export default protect
