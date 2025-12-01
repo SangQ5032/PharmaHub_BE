@@ -363,7 +363,20 @@ class WorkScheduleController {
       const page = req.query.page || 1
       const limit = req.query.limit || 10
 
-      const result = await workScheduleService.getAttendanceHistoryByEmployeeId(userId, page, limit)
+      // Build filters from query parameters
+      const filters = {}
+      if (req.query.from_date) filters.from_date = req.query.from_date
+      if (req.query.to_date) filters.to_date = req.query.to_date
+      if (req.query.search) filters.search = req.query.search
+      if (req.query.shift) filters.shift = req.query.shift
+      if (req.query.status) filters.status = req.query.status
+
+      const result = await workScheduleService.getAttendanceHistoryByEmployeeId(
+        userId,
+        page,
+        limit,
+        filters
+      )
 
       res.status(200).json({
         success: true,

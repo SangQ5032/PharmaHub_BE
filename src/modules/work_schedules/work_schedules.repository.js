@@ -102,12 +102,35 @@ class WorkScheduleRepository {
   }
 
   // Get attendance history for employee with work schedule comparison
-  async getAttendanceHistoryByEmployeeId(userId, page = 1, limit = 10) {
+  async getAttendanceHistoryByEmployeeId(userId, page = 1, limit = 10, filters = {}) {
     const skip = (page - 1) * limit
+    const query = { user_id: userId }
+
+    // Add optional filters
+    if (filters.search) {
+      // Search by specific date
+      const searchDateTime = `${filters.search}T00:00:00`
+      const searchDateTimeEnd = `${filters.search}T23:59:59`
+      query.checkin_time = { $gte: searchDateTime, $lte: searchDateTimeEnd }
+    } else if (filters.from_date && filters.to_date) {
+      const fromDateTime = `${filters.from_date}T00:00:00`
+      const toDateTime = `${filters.to_date}T23:59:59`
+      query.checkin_time = { $gte: fromDateTime, $lte: toDateTime }
+    } else if (filters.from_date) {
+      const fromDateTime = `${filters.from_date}T00:00:00`
+      query.checkin_time = { $gte: fromDateTime }
+    } else if (filters.to_date) {
+      const toDateTime = `${filters.to_date}T23:59:59`
+      query.checkin_time = { $lte: toDateTime }
+    }
+
+    if (filters.status) {
+      query.status = filters.status
+    }
 
     // Lấy attendance records của employee
-    const total = await Attendance.countDocuments({ user_id: userId })
-    const attendanceData = await Attendance.find({ user_id: userId })
+    const total = await Attendance.countDocuments(query)
+    const attendanceData = await Attendance.find(query)
       .populate('user_id', 'username name role contact')
       .populate('branch_id', 'name address phone')
       .sort({ createdAt: -1 })
@@ -144,12 +167,18 @@ class WorkScheduleRepository {
       }
     })
 
+    // Filter by shift if provided
+    let finalData = enrichedData
+    if (filters.shift) {
+      finalData = enrichedData.filter((item) => item.shift === filters.shift)
+    }
+
     return {
-      data: enrichedData,
-      total,
+      data: finalData,
+      total: filters.shift ? finalData.length : total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil((filters.shift ? finalData.length : total) / limit),
     }
   }
 
@@ -325,9 +354,9 @@ class WorkScheduleRepository {
     })
 
     // Get invoices created by this employee between checkin and checkout time
+    // Only filter by employee_id and time range (not branch_id to handle cross-branch scenarios)
     const invoiceFilter = {
       employee_id: attendance.user_id._id,
-      branch_id: attendance.branch_id._id,
       createdAt: {
         $gte: attendance.checkin_time,
         $lte: attendance.checkout_time || new Date(),
