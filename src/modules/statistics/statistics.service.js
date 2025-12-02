@@ -130,6 +130,31 @@ class StatisticsService {
       throw new AppError('Lỗi khi lấy dashboard: ' + error.message, 500)
     }
   }
+
+  /**
+   * Lấy thống kê cá nhân của nhân viên hiện tại
+   * @param {string} employeeId - ID của nhân viên
+   * @param {Object} filters - { startDate, endDate, groupBy }
+   */
+  async getEmployeePersonalStatistics(employeeId, filters) {
+    try {
+      const validGroupBy = ['day', 'week', 'month', 'year']
+      if (filters.groupBy && !validGroupBy.includes(filters.groupBy)) {
+        throw new AppError('groupBy phải là: day, week, month hoặc year', 400)
+      }
+
+      const stats = await statisticsRepository.getEmployeePersonalStatistics(employeeId, filters)
+
+      return {
+        success: true,
+        groupBy: filters.groupBy || null,
+        data: stats,
+      }
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      throw new AppError('Lỗi khi lấy thống kê cá nhân: ' + error.message, 500)
+    }
+  }
 }
 
 export default new StatisticsService()

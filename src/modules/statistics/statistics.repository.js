@@ -400,6 +400,104 @@ class StatisticsRepository {
 
     return result
   }
+
+  /**
+   * Thống kê cá nhân của nhân viên hiện tại (có lọc theo ngày/tháng/năm)
+   * @param {string} employeeId - ID của nhân viên
+   * @param {Object} filters - { startDate, endDate, groupBy (day|week|month|year) }
+   * @returns {Promise<Object>} - Thống kê cá nhân gồm tổng số đơn hàng, tổng doanh thu, etc.
+   */
+  async getEmployeePersonalStatistics(employeeId, filters = {}) {
+    const matchConditions = {
+      status: 'completed',
+      employee_id: employeeId,
+    }
+
+    // Lọc theo thời gian
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        matchConditions.createdAt.$lte = new Date(filters.endDate)
+      }
+    }
+
+    // Nếu không có groupBy, trả về thống kê tổng hợp
+    if (!filters.groupBy) {
+      const result = await SalesInvoice.aggregate([
+        { $match: matchConditions },
+        {
+          $group: {
+            _id: null,
+            totalOrders: { $sum: 1 },
+            totalQuantity: { $sum: { $sum: '$items.quantity' } },
+            totalRevenue: { $sum: '$total_amount' },
+            totalDiscount: { $sum: '$discount' },
+            totalTax: { $sum: '$tax_amount' },
+            averageOrderValue: { $avg: '$total_amount' },
+          },
+        },
+      ])
+
+      return (
+        result[0] || {
+          totalOrders: 0,
+          totalQuantity: 0,
+          totalRevenue: 0,
+          totalDiscount: 0,
+          totalTax: 0,
+          averageOrderValue: 0,
+        }
+      )
+    }
+
+    // Thống kê theo thời gian (ngày/tuần/tháng/năm)
+    let groupId
+    switch (filters.groupBy) {
+      case 'day':
+        groupId = {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+        }
+        break
+      case 'week':
+        groupId = {
+          year: { $year: '$createdAt' },
+          week: { $week: '$createdAt' },
+        }
+        break
+      case 'month':
+        groupId = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+        }
+        break
+      case 'year':
+        groupId = { $year: '$createdAt' }
+        break
+      default:
+        groupId = { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: groupId,
+          totalOrders: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          totalRevenue: { $sum: '$total_amount' },
+          totalDiscount: { $sum: '$discount' },
+          totalTax: { $sum: '$tax_amount' },
+          averageOrderValue: { $avg: '$total_amount' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ])
+
+    return result
+  }
 }
 
 export default new StatisticsRepository()
