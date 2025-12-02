@@ -92,4 +92,16 @@ router.get(
   statisticsController.getDashboardStats
 )
 
+/**
+ * @route   GET /api/statistics/my-stats
+ * @desc    Lấy thống kê cá nhân của nhân viên hiện tại
+ * @access  Private (employee, branch-manager, system-admin, admin)
+ * @query   startDate, endDate, groupBy (day|week|month|year)
+ */
+router.get(
+  '/my-stats',
+  authorizeRoles('employee', 'branch-manager', 'system_admin', 'admin'),
+  statisticsController.getEmployeePersonalStatistics
+)
+
 export default router

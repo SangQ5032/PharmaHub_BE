@@ -161,6 +161,30 @@ class StatisticsController {
       data: result.data,
     })
   })
+
+  /**
+   * GET /api/statistics/my-stats
+   * Lấy thống kê cá nhân của nhân viên hiện tại
+   * Hỗ trợ lọc theo ngày/tháng/năm
+   */
+  getEmployeePersonalStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate, groupBy } = req.query
+    const employeeId = req.user._id
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+    if (groupBy) filters.groupBy = groupBy
+
+    const result = await statisticsService.getEmployeePersonalStatistics(employeeId, filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê cá nhân thành công',
+      groupBy: result.groupBy,
+      data: result.data,
+    })
+  })
 }
 
 export default new StatisticsController()
