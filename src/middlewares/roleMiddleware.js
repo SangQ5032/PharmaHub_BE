@@ -31,21 +31,21 @@ export const requireRole = (...allowedRoles) => {
  * Middleware to check if user is branch manager or system manager
  */
 export const isBranchOrSystemManager = (req, res, next) => {
-  return requireRole('branch_manager', 'system_manager')(req, res, next)
+  return requireRole('branch_manager', 'system_admin')(req, res, next)
 }
 
 /**
  * Middleware to check if user is system manager
  */
 export const isSystemManager = (req, res, next) => {
-  return requireRole('system_manager')(req, res, next)
+  return requireRole('system_admin')(req, res, next)
 }
 
 /**
  * Middleware to check if user is employee
  */
 export const isEmployee = (req, res, next) => {
-  return requireRole('employee', 'branch_manager', 'system_manager')(req, res, next)
+  return requireRole('employee', 'branch_manager', 'system_admin')(req, res, next)
 }
 
 /**
@@ -63,8 +63,8 @@ export const checkPayrollAccess = (req, res, next) => {
   const userRole = (req.user.role || '').toLowerCase().replace(/-/g, '_')
   const { branch_id, user_id } = req.query || req.body || {}
 
-  if (userRole === 'system_manager') {
-    // System manager can access all
+  if (userRole === 'system_admin') {
+    // System admin can access all
     return next()
   }
 
