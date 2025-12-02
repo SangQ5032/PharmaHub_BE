@@ -29,7 +29,7 @@ router.use(protect)
  * @query   user_id, branch_id, month (YYYY-MM)
  * @access  Private - Branch Manager, System Manager
  */
-router.get('/preview', requireRole('branch_manager', 'system_manager'), previewPayroll)
+router.get('/preview', requireRole('branch_manager', 'system_admin'), previewPayroll)
 
 /**
  * @route   POST /api/payrolls
@@ -37,7 +37,7 @@ router.get('/preview', requireRole('branch_manager', 'system_manager'), previewP
  * @body    user_id, branch_id, month, base_salary, bonus_amount (optional), note (optional)
  * @access  Private - Branch Manager, System Manager
  */
-router.post('/', requireRole('branch_manager', 'system_manager'), createPayroll)
+router.post('/', requireRole('branch_manager', 'system_admin'), createPayroll)
 
 /**
  * @route   GET /api/payrolls
@@ -60,7 +60,7 @@ router.get('/:id', isEmployee, getPayrollById)
  * @body    bonus_amount (optional), note (optional)
  * @access  Private - Branch Manager, System Manager
  */
-router.put('/:id', requireRole('branch_manager', 'system_manager'), updatePayroll)
+router.put('/:id', requireRole('branch_manager', 'system_admin'), updatePayroll)
 
 /**
  * @route   PUT /api/payrolls/:id/approve
