@@ -104,4 +104,96 @@ router.get(
   statisticsController.getEmployeePersonalStatistics
 )
 
+// ========== BRANCH MANAGER STATISTICS ==========
+
+/**
+ * @route   GET /api/statistics/branch/:branchId/revenue
+ * @desc    Lấy thống kê doanh thu toàn cửa hàng theo chi nhánh
+ * @access  Private (branch-manager, system-admin, admin)
+ * @params  branchId
+ * @query   startDate, endDate
+ */
+router.get(
+  '/branch/:branchId/revenue',
+  authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  statisticsController.getBranchRevenueStatistics
+)
+
+/**
+ * @route   GET /api/statistics/branch/:branchId/employees
+ * @desc    Lấy thống kê doanh thu từng nhân viên theo chi nhánh
+ * @access  Private (branch-manager, system-admin, admin)
+ * @params  branchId
+ * @query   startDate, endDate
+ */
+router.get(
+  '/branch/:branchId/employees',
+  authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  statisticsController.getBranchEmployeeRevenue
+)
+
+/**
+ * @route   GET /api/statistics/branch/:branchId/medicines
+ * @desc    Lấy thống kê số lượng thuốc đã bán ra
+ * @access  Private (branch-manager, system-admin, admin)
+ * @params  branchId
+ * @query   startDate, endDate
+ */
+router.get(
+  '/branch/:branchId/medicines',
+  authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  statisticsController.getBranchSalesMedicineStatistics
+)
+
+/**
+ * @route   GET /api/statistics/branch/:branchId/imports
+ * @desc    Lấy thống kê các lô hàng đã nhập
+ * @access  Private (branch-manager, system-admin, admin)
+ * @params  branchId
+ * @query   startDate, endDate, supplierId
+ */
+router.get(
+  '/branch/:branchId/imports',
+  authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  statisticsController.getBranchImportStatistics
+)
+
+/**
+ * @route   GET /api/statistics/branch/:branchId/batch-status
+ * @desc    Lấy thống kê tình trạng lô hàng (hết/còn hàng, còn/hết hạn)
+ * @access  Private (branch-manager, system-admin, admin)
+ * @params  branchId
+ */
+router.get(
+  '/branch/:branchId/batch-status',
+  authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  statisticsController.getBranchBatchStatusStatistics
+)
+
+/**
+ * @route   GET /api/statistics/branch/:branchId/customers
+ * @desc    Lấy thống kê doanh thu và số đơn hàng theo khách hàng
+ * @access  Private (branch-manager, system-admin, admin)
+ * @params  branchId
+ * @query   startDate, endDate
+ */
+router.get(
+  '/branch/:branchId/customers',
+  authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  statisticsController.getBranchCustomerStatistics
+)
+
+/**
+ * @route   GET /api/statistics/branch/:branchId/revenue-by-period
+ * @desc    Lấy thống kê doanh thu theo thời gian
+ * @access  Private (branch-manager, system-admin, admin)
+ * @params  branchId
+ * @query   startDate, endDate, groupBy (day|week|month|year)
+ */
+router.get(
+  '/branch/:branchId/revenue-by-period',
+  authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  statisticsController.getBranchRevenueByPeriod
+)
+
 export default router

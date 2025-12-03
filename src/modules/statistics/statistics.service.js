@@ -155,6 +155,122 @@ class StatisticsService {
       throw new AppError('Lỗi khi lấy thống kê cá nhân: ' + error.message, 500)
     }
   }
+
+  /**
+   * Lấy thống kê doanh thu toàn cửa hàng theo chi nhánh (BRANCH-MANAGER)
+   */
+  async getBranchRevenueStatistics(branchId, filters) {
+    try {
+      const stats = await statisticsRepository.getBranchRevenueStatistics(branchId, filters)
+      return {
+        success: true,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê doanh thu chi nhánh: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê doanh thu từng nhân viên theo chi nhánh
+   */
+  async getBranchEmployeeRevenue(branchId, filters) {
+    try {
+      const stats = await statisticsRepository.getBranchEmployeeRevenue(branchId, filters)
+      return {
+        success: true,
+        total: stats.length,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê doanh thu nhân viên: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê số lượng thuốc đã bán ra
+   */
+  async getBranchSalesMedicineStatistics(branchId, filters) {
+    try {
+      const stats = await statisticsRepository.getBranchSalesMedicineStatistics(branchId, filters)
+      return {
+        success: true,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê bán hàng: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê các lô hàng đã nhập
+   */
+  async getBranchImportStatistics(branchId, filters) {
+    try {
+      const stats = await statisticsRepository.getBranchImportStatistics(branchId, filters)
+      return {
+        success: true,
+        total: stats.length,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê nhập hàng: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê tình trạng lô hàng
+   */
+  async getBranchBatchStatusStatistics(branchId) {
+    try {
+      const stats = await statisticsRepository.getBranchBatchStatusStatistics(branchId)
+      return {
+        success: true,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê tình trạng lô hàng: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê doanh thu theo khách hàng
+   */
+  async getBranchCustomerStatistics(branchId, filters) {
+    try {
+      const stats = await statisticsRepository.getBranchCustomerStatistics(branchId, filters)
+      return {
+        success: true,
+        total: stats.length,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê khách hàng: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê doanh thu theo thời gian
+   */
+  async getBranchRevenueByPeriod(branchId, filters) {
+    try {
+      const validGroupBy = ['day', 'week', 'month', 'year']
+      if (filters.groupBy && !validGroupBy.includes(filters.groupBy)) {
+        throw new AppError('groupBy phải là: day, week, month hoặc year', 400)
+      }
+
+      const stats = await statisticsRepository.getBranchRevenueByPeriod(branchId, filters)
+      return {
+        success: true,
+        total: stats.length,
+        groupBy: filters.groupBy || 'day',
+        data: stats,
+      }
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      throw new AppError('Lỗi khi lấy thống kê theo thời gian: ' + error.message, 500)
+    }
+  }
 }
 
 export default new StatisticsService()

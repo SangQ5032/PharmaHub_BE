@@ -185,6 +185,155 @@ class StatisticsController {
       data: result.data,
     })
   })
+
+  /**
+   * GET /api/statistics/branch/revenue
+   * Lấy thống kê doanh thu toàn cửa hàng theo chi nhánh
+   */
+  getBranchRevenueStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+    const branchId = req.params.branchId
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getBranchRevenueStatistics(branchId, filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê doanh thu chi nhánh thành công',
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/branch/employees
+   * Lấy thống kê doanh thu từng nhân viên theo chi nhánh
+   */
+  getBranchEmployeeRevenue = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+    const branchId = req.params.branchId
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getBranchEmployeeRevenue(branchId, filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê doanh thu nhân viên thành công',
+      total: result.total,
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/branch/medicines
+   * Lấy thống kê số lượng thuốc đã bán ra
+   */
+  getBranchSalesMedicineStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+    const branchId = req.params.branchId
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getBranchSalesMedicineStatistics(branchId, filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê bán hàng thành công',
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/branch/imports
+   * Lấy thống kê các lô hàng đã nhập
+   */
+  getBranchImportStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate, supplierId } = req.query
+    const branchId = req.params.branchId
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+    if (supplierId) filters.supplierId = supplierId
+
+    const result = await statisticsService.getBranchImportStatistics(branchId, filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê nhập hàng thành công',
+      total: result.total,
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/branch/batch-status
+   * Lấy thống kê tình trạng lô hàng
+   */
+  getBranchBatchStatusStatistics = catchAsync(async (req, res) => {
+    const branchId = req.params.branchId
+
+    const result = await statisticsService.getBranchBatchStatusStatistics(branchId)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê tình trạng lô hàng thành công',
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/branch/customers
+   * Lấy thống kê doanh thu theo khách hàng
+   */
+  getBranchCustomerStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+    const branchId = req.params.branchId
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getBranchCustomerStatistics(branchId, filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê khách hàng thành công',
+      total: result.total,
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/branch/revenue-by-period
+   * Lấy thống kê doanh thu theo thời gian
+   */
+  getBranchRevenueByPeriod = catchAsync(async (req, res) => {
+    const { startDate, endDate, groupBy } = req.query
+    const branchId = req.params.branchId
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+    if (groupBy) filters.groupBy = groupBy
+
+    const result = await statisticsService.getBranchRevenueByPeriod(branchId, filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê doanh thu theo thời gian thành công',
+      groupBy: result.groupBy,
+      total: result.total,
+      data: result.data,
+    })
+  })
 }
 
 export default new StatisticsController()
