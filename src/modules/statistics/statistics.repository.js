@@ -1,5 +1,8 @@
 // src/modules/statistics/statistics.repository.js
 import SalesInvoice from '../sales/sales.model.js'
+import { Import } from '../imports/imports.model.js'
+import { Batch } from '../batches/batches.model.js'
+import Customer from '../customers/customers.model.js'
 
 class StatisticsRepository {
   /**
@@ -491,6 +494,495 @@ class StatisticsRepository {
           totalDiscount: { $sum: '$discount' },
           totalTax: { $sum: '$tax_amount' },
           averageOrderValue: { $avg: '$total_amount' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê doanh thu toàn cửa hàng theo chi nhánh (BRANCH-MANAGER)
+   * @param {string} branchId - ID chi nhánh
+   * @param {Object} filters - { startDate, endDate, groupBy }
+   * @returns {Promise<Object>} - Tổng doanh thu, số đơn hàng, số lượng thuốc bán ra
+   */
+  async getBranchRevenueStatistics(branchId, filters = {}) {
+    const mongoose = await import('mongoose')
+    const ObjectId = mongoose.default.Types.ObjectId
+    const branchObjectId = new ObjectId(branchId)
+
+    const matchConditions = { status: 'completed', branch_id: branchObjectId }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        matchConditions.createdAt.$lte = new Date(filters.endDate)
+      }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$total_amount' },
+          totalInvoices: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          totalDiscount: { $sum: '$discount' },
+          totalTax: { $sum: '$tax_amount' },
+          averageInvoiceValue: { $avg: '$total_amount' },
+        },
+      },
+    ])
+
+    return (
+      result[0] || {
+        totalRevenue: 0,
+        totalInvoices: 0,
+        totalQuantity: 0,
+        totalDiscount: 0,
+        totalTax: 0,
+        averageInvoiceValue: 0,
+      }
+    )
+  }
+
+  /**
+   * Thống kê doanh thu từng nhân viên theo chi nhánh
+   * @param {string} branchId - ID chi nhánh
+   * @param {Object} filters - { startDate, endDate }
+   * @returns {Promise<Array>} - Danh sách nhân viên với doanh thu của họ
+   */
+  async getBranchEmployeeRevenue(branchId, filters = {}) {
+    const mongoose = await import('mongoose')
+    const ObjectId = mongoose.default.Types.ObjectId
+    const branchObjectId = new ObjectId(branchId)
+
+    const matchConditions = { status: 'completed', branch_id: branchObjectId }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        matchConditions.createdAt.$lte = new Date(filters.endDate)
+      }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: '$employee_id',
+          totalRevenue: { $sum: '$total_amount' },
+          totalOrders: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          averageOrderValue: { $avg: '$total_amount' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'employee',
+        },
+      },
+      { $unwind: { path: '$employee', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          employeeId: '$_id',
+          employeeName: { $ifNull: ['$employee.name', 'Nhân viên không tồn tại'] },
+          totalRevenue: 1,
+          totalOrders: 1,
+          totalQuantity: 1,
+          averageOrderValue: { $round: ['$averageOrderValue', 0] },
+          _id: 0,
+        },
+      },
+      { $sort: { totalRevenue: -1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê số lượng thuốc đã bán ra và phân loại theo sản phẩm
+   * @param {string} branchId - ID chi nhánh
+   * @param {Object} filters - { startDate, endDate }
+   * @returns {Promise<Object>} - Tổng số lượng bán + phân loại theo sản phẩm
+   */
+  async getBranchSalesMedicineStatistics(branchId, filters = {}) {
+    const mongoose = await import('mongoose')
+    const ObjectId = mongoose.default.Types.ObjectId
+    const branchObjectId = new ObjectId(branchId)
+
+    const matchConditions = { status: 'completed', branch_id: branchObjectId }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        matchConditions.createdAt.$lte = new Date(filters.endDate)
+      }
+    }
+
+    // Tổng thống kê
+    const overallStats = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: null,
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          totalMedicineTypes: { $addToSet: '$items.medicine_id' },
+          totalRevenue: { $sum: '$total_amount' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalQuantity: 1,
+          totalMedicineTypes: { $size: '$totalMedicineTypes' },
+          totalRevenue: 1,
+        },
+      },
+    ])
+
+    // Chi tiết theo từng loại thuốc
+    const medicineDetails = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.medicine_id',
+          medicineName: { $first: '$items.name' },
+          batchNumber: { $first: '$items.batch_number' },
+          totalQuantity: { $sum: '$items.quantity' },
+          totalRevenue: { $sum: '$items.line_total' },
+          timesOrdered: { $sum: 1 },
+          averagePrice: { $avg: '$items.unit_price' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'medicines',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'medicineDetails',
+        },
+      },
+      { $unwind: { path: '$medicineDetails', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          medicineId: '$_id',
+          medicineName: 1,
+          category: { $ifNull: ['$medicineDetails.category_id', 'N/A'] },
+          totalQuantity: 1,
+          totalRevenue: 1,
+          timesOrdered: 1,
+          averagePrice: { $round: ['$averagePrice', 0] },
+          _id: 0,
+        },
+      },
+      { $sort: { totalQuantity: -1 } },
+    ])
+
+    return {
+      overall: overallStats[0] || { totalQuantity: 0, totalMedicineTypes: 0, totalRevenue: 0 },
+      medicineDetails,
+    }
+  }
+
+  /**
+   * Thống kê các lô hàng đã nhập
+   * @param {string} branchId - ID chi nhánh
+   * @param {Object} filters - { startDate, endDate, supplierId }
+   * @returns {Promise<Array>} - Danh sách các lô hàng nhập
+   */
+  async getBranchImportStatistics(branchId, filters = {}) {
+    const mongoose = await import('mongoose')
+    const ObjectId = mongoose.default.Types.ObjectId
+    const branchObjectId = new ObjectId(branchId)
+
+    const matchConditions = { branch_id: branchObjectId }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        matchConditions.createdAt.$lte = new Date(filters.endDate)
+      }
+    }
+
+    if (filters.supplierId) {
+      matchConditions.supplier_id = new ObjectId(filters.supplierId)
+    }
+
+    const result = await Import.aggregate([
+      { $match: matchConditions },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: {
+            batchNumber: '$items.batch_number',
+            medicineId: '$items.medicine_id',
+          },
+          importId: { $first: '$_id' },
+          quantity: { $sum: '$items.quantity' },
+          unitPrice: { $first: '$items.unit_price' },
+          expiryDate: { $first: '$items.expiry_date' },
+          supplierId: { $first: '$supplier_id' },
+          createdAt: { $first: '$createdAt' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'medicines',
+          localField: '_id.medicineId',
+          foreignField: '_id',
+          as: 'medicine',
+        },
+      },
+      { $unwind: { path: '$medicine', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'suppliers',
+          localField: 'supplierId',
+          foreignField: '_id',
+          as: 'supplier',
+        },
+      },
+      { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          medicineName: { $ifNull: ['$medicine.name', 'Thuốc không tồn tại'] },
+          batchNumber: '$_id.batchNumber',
+          quantity: 1,
+          unitPrice: 1,
+          totalCost: { $multiply: ['$quantity', '$unitPrice'] },
+          expiryDate: 1,
+          supplierName: { $ifNull: ['$supplier.name', 'Nhà cung cấp không tồn tại'] },
+          createdAt: 1,
+        },
+      },
+      { $sort: { createdAt: -1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê tình trạng lô hàng (hết/còn hàng, còn hạn/hết hạn)
+   * @param {string} branchId - ID chi nhánh
+   * @returns {Promise<Array>} - Danh sách lô hàng với tình trạng
+   */
+  async getBranchBatchStatusStatistics(branchId) {
+    const mongoose = await import('mongoose')
+    const ObjectId = mongoose.default.Types.ObjectId
+
+    const branchObjectId = new ObjectId(branchId)
+    const today = new Date()
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
+
+    const result = await Batch.aggregate([
+      { $match: { branch_id: branchObjectId } },
+      {
+        $lookup: {
+          from: 'medicines',
+          localField: 'medicine_id',
+          foreignField: '_id',
+          as: 'medicine',
+        },
+      },
+      { $unwind: { path: '$medicine', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          batchNumber: 1,
+          medicineName: { $ifNull: ['$medicine.name', 'Thuốc không tồn tại'] },
+          quantity: 1,
+          initialQuantity: 1,
+          status: 1,
+          expiryDate: 1,
+          importPrice: 1,
+          isExpired: { $gte: [new Date(), '$expiryDate'] },
+          isOutOfStock: { $eq: ['$quantity', 0] },
+          quantitySold: { $subtract: ['$initialQuantity', '$quantity'] },
+        },
+      },
+      {
+        $addFields: {
+          stockStatus: {
+            $cond: [{ $eq: ['$quantity', 0] }, 'Hết hàng', 'Còn hàng'],
+          },
+          expiryStatus: {
+            $cond: [{ $gte: [new Date(), '$expiryDate'] }, 'Hết hạn', 'Còn hạn'],
+          },
+        },
+      },
+      { $sort: { expiryDate: 1 } },
+    ])
+
+    // Tính toán thống kê tổng hợp
+    const summary = {
+      total: result.length,
+      outOfStock: result.filter((b) => b.quantity === 0).length,
+      inStock: result.filter((b) => b.quantity > 0).length,
+      expired: result.filter((b) => b.isExpired).length,
+      expiringSoon: result.filter(
+        (b) => !b.isExpired && new Date(b.expiryDate).getTime() - today.getTime() <= thirtyDaysMs
+      ).length,
+      valid: result.filter(
+        (b) => !b.isExpired && new Date(b.expiryDate).getTime() - today.getTime() > thirtyDaysMs
+      ).length,
+    }
+
+    return {
+      summary,
+      details: result,
+    }
+  }
+
+  /**
+   * Thống kê doanh thu và số đơn hàng theo khách hàng
+   * @param {string} branchId - ID chi nhánh
+   * @param {Object} filters - { startDate, endDate }
+   * @returns {Promise<Array>} - Danh sách khách hàng với thống kê doanh thu
+   */
+  async getBranchCustomerStatistics(branchId, filters = {}) {
+    const mongoose = await import('mongoose')
+    const ObjectId = mongoose.default.Types.ObjectId
+    const branchObjectId = new ObjectId(branchId)
+
+    const matchConditions = { status: 'completed', branch_id: branchObjectId }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        matchConditions.createdAt.$lte = new Date(filters.endDate)
+      }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: '$customer_id',
+          customerName: { $first: '$customer_name' },
+          customerPhone: { $first: '$customer_phone' },
+          totalRevenue: { $sum: '$total_amount' },
+          totalOrders: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          averageOrderValue: { $avg: '$total_amount' },
+          lastOrderDate: { $max: '$createdAt' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'customers',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'customerDetails',
+        },
+      },
+      { $unwind: { path: '$customerDetails', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          customerId: '$_id',
+          customerName: { $ifNull: ['$customerDetails.name', '$customerName'] },
+          customerPhone: { $ifNull: ['$customerDetails.phone', '$customerPhone'] },
+          totalRevenue: { $round: ['$totalRevenue', 0] },
+          totalOrders: 1,
+          totalQuantity: 1,
+          averageOrderValue: { $round: ['$averageOrderValue', 0] },
+          lastOrderDate: 1,
+          _id: 0,
+        },
+      },
+      { $sort: { totalRevenue: -1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê doanh thu theo chi nhánh theo khoảng thời gian
+   * @param {string} branchId - ID chi nhánh
+   * @param {Object} filters - { startDate, endDate, groupBy }
+   * @returns {Promise<Array>} - Thống kê theo thời gian
+   */
+  async getBranchRevenueByPeriod(branchId, filters = {}) {
+    const mongoose = await import('mongoose')
+    const ObjectId = mongoose.default.Types.ObjectId
+    const branchObjectId = new ObjectId(branchId)
+
+    const matchConditions = { status: 'completed', branch_id: branchObjectId }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        matchConditions.createdAt.$lte = new Date(filters.endDate)
+      }
+    }
+
+    const groupBy = filters.groupBy || 'day'
+    let dateGroup = {}
+
+    switch (groupBy) {
+      case 'day':
+        dateGroup = {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+        }
+        break
+      case 'week':
+        dateGroup = {
+          year: { $year: '$createdAt' },
+          week: { $week: '$createdAt' },
+        }
+        break
+      case 'month':
+        dateGroup = {
+          $dateToString: { format: '%Y-%m', date: '$createdAt' },
+        }
+        break
+      case 'year':
+        dateGroup = {
+          $year: '$createdAt',
+        }
+        break
+      default:
+        dateGroup = {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+        }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: dateGroup,
+          totalRevenue: { $sum: '$total_amount' },
+          totalOrders: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          totalDiscount: { $sum: '$discount' },
+          totalTax: { $sum: '$tax_amount' },
         },
       },
       { $sort: { _id: 1 } },
