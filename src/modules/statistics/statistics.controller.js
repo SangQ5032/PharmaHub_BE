@@ -334,6 +334,205 @@ class StatisticsController {
       data: result.data,
     })
   })
+
+  // ========== SYSTEM ADMIN STATISTICS ==========
+
+  /**
+   * GET /api/statistics/system-admin/overall
+   * Lấy thống kê tổng quan toàn hệ thống (SYSTEM-ADMIN)
+   */
+  getSystemAdminOverallStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getSystemAdminOverallStatistics(filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê tổng quan toàn hệ thống thành công',
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/system-admin/branches-revenue
+   * Lấy thống kê doanh thu từng chi nhánh (SYSTEM-ADMIN)
+   */
+  getSystemAdminBranchRevenueStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getSystemAdminBranchRevenueStatistics(filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê doanh thu chi nhánh thành công',
+      total: result.total,
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/system-admin/employees-revenue
+   * Lấy thống kê doanh thu từng nhân viên toàn hệ thống (SYSTEM-ADMIN)
+   */
+  getSystemAdminEmployeeRevenueStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getSystemAdminEmployeeRevenueStatistics(filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê doanh thu nhân viên thành công',
+      total: result.total,
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/system-admin/top-selling
+   * Lấy top thuốc bán chạy toàn hệ thống (SYSTEM-ADMIN)
+   */
+  getSystemAdminTopSellingMedicines = catchAsync(async (req, res) => {
+    const { startDate, endDate, limit } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+    if (limit) filters.limit = limit
+
+    const result = await statisticsService.getSystemAdminTopSellingMedicines(filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy top thuốc bán chạy toàn hệ thống thành công',
+      total: result.total,
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/system-admin/revenue-by-period
+   * Lấy thống kê doanh thu theo thời gian toàn hệ thống (SYSTEM-ADMIN)
+   */
+  getSystemAdminRevenueByPeriod = catchAsync(async (req, res) => {
+    const { startDate, endDate, groupBy } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+    if (groupBy) filters.groupBy = groupBy
+
+    const result = await statisticsService.getSystemAdminRevenueByPeriod(filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê doanh thu theo thời gian thành công',
+      groupBy: result.groupBy,
+      total: result.total,
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/system-admin/customers
+   * Lấy thống kê doanh thu theo khách hàng toàn hệ thống (SYSTEM-ADMIN)
+   */
+  getSystemAdminCustomerStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getSystemAdminCustomerStatistics(filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê khách hàng toàn hệ thống thành công',
+      total: result.total,
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/system-admin/imports
+   * Lấy thống kê tổng nhập hàng toàn hệ thống (SYSTEM-ADMIN)
+   */
+  getSystemAdminImportStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getSystemAdminImportStatistics(filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê nhập hàng toàn hệ thống thành công',
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/system-admin/batch-status
+   * Lấy thống kê tình trạng batch toàn hệ thống (SYSTEM-ADMIN)
+   */
+  getSystemAdminBatchStatusStatistics = catchAsync(async (req, res) => {
+    const result = await statisticsService.getSystemAdminBatchStatusStatistics()
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê tình trạng batch thành công',
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/system-admin/dashboard
+   * Lấy dashboard tổng hợp cho system admin
+   */
+  getSystemAdminDashboard = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const [overall, topMedicines, branchStats, employeeStats, imports, batchStatus] =
+      await Promise.all([
+        statisticsService.getSystemAdminOverallStatistics(filters),
+        statisticsService.getSystemAdminTopSellingMedicines({ ...filters, limit: 5 }),
+        statisticsService.getSystemAdminBranchRevenueStatistics(filters),
+        statisticsService.getSystemAdminEmployeeRevenueStatistics(filters),
+        statisticsService.getSystemAdminImportStatistics(filters),
+        statisticsService.getSystemAdminBatchStatusStatistics(),
+      ])
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy dashboard thành công',
+      data: {
+        overall: overall.data,
+        topMedicines: topMedicines.data,
+        branchStats: branchStats.data,
+        employeeStats: employeeStats.data,
+        imports: imports.data,
+        batchStatus: batchStatus.data,
+      },
+    })
+  })
 }
 
 export default new StatisticsController()

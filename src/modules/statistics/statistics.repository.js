@@ -142,7 +142,10 @@ class StatisticsRepository {
         matchConditions.createdAt.$gte = new Date(filters.startDate)
       }
       if (filters.endDate) {
-        matchConditions.createdAt.$lte = new Date(filters.endDate)
+        // Thêm 1 ngày để bao gồm cả ngày cuối
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
       }
     }
 
@@ -167,7 +170,7 @@ class StatisticsRepository {
           totalQuantity: { $sum: '$items.quantity' },
           totalRevenue: { $sum: '$items.line_total' },
           averagePrice: { $avg: '$items.unit_price' },
-          timesOrdered: { $sum: 1 },
+          timesOrdered: { $addToSet: '$_id' },
         },
       },
       {
@@ -188,7 +191,7 @@ class StatisticsRepository {
           totalQuantity: 1,
           totalRevenue: 1,
           averagePrice: { $round: ['$averagePrice', 0] },
-          timesOrdered: 1,
+          timesOrdered: { $size: '$timesOrdered' },
         },
       },
       { $sort: { totalQuantity: -1 } },
@@ -989,6 +992,534 @@ class StatisticsRepository {
     ])
 
     return result
+  }
+
+  // ========== SYSTEM ADMIN STATISTICS ==========
+
+  /**
+   * Thống kê doanh thu từng chi nhánh (SYSTEM-ADMIN)
+   * @param {Object} filters - { startDate, endDate }
+   * @returns {Promise<Array>} - Danh sách chi nhánh với doanh thu
+   */
+  async getSystemAdminBranchRevenueStatistics(filters = {}) {
+    const matchConditions = { status: 'completed' }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        // Thêm 1 ngày để bao gồm cả ngày cuối
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
+      }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: '$branch_id',
+          totalRevenue: { $sum: '$total_amount' },
+          totalInvoices: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          totalDiscount: { $sum: '$discount' },
+          totalTax: { $sum: '$tax_amount' },
+          averageInvoiceValue: { $avg: '$total_amount' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'branches',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'branch',
+        },
+      },
+      { $unwind: { path: '$branch', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          branchId: '$_id',
+          branchName: { $ifNull: ['$branch.name', 'Chi nhánh không tồn tại'] },
+          branchAddress: { $ifNull: ['$branch.address', 'N/A'] },
+          branchPhone: { $ifNull: ['$branch.phone', 'N/A'] },
+          totalRevenue: { $round: ['$totalRevenue', 0] },
+          totalInvoices: 1,
+          totalQuantity: 1,
+          totalDiscount: { $round: ['$totalDiscount', 0] },
+          totalTax: { $round: ['$totalTax', 0] },
+          averageInvoiceValue: { $round: ['$averageInvoiceValue', 0] },
+          _id: 0,
+        },
+      },
+      { $sort: { totalRevenue: -1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê tổng quan toàn hệ thống (SYSTEM-ADMIN)
+   * @param {Object} filters - { startDate, endDate }
+   * @returns {Promise<Object>} - Tổng doanh thu, số đơn hàng, số lượng thuốc bán ra
+   */
+  async getSystemAdminOverallStatistics(filters = {}) {
+    const matchConditions = { status: 'completed' }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        // Thêm 1 ngày để bao gồm cả ngày cuối
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
+      }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$total_amount' },
+          totalInvoices: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          totalDiscount: { $sum: '$discount' },
+          totalTax: { $sum: '$tax_amount' },
+          averageInvoiceValue: { $avg: '$total_amount' },
+          totalBranches: { $addToSet: '$branch_id' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRevenue: { $round: ['$totalRevenue', 0] },
+          totalInvoices: 1,
+          totalQuantity: 1,
+          totalDiscount: { $round: ['$totalDiscount', 0] },
+          totalTax: { $round: ['$totalTax', 0] },
+          averageInvoiceValue: { $round: ['$averageInvoiceValue', 0] },
+          totalBranches: { $size: '$totalBranches' },
+        },
+      },
+    ])
+
+    return (
+      result[0] || {
+        totalRevenue: 0,
+        totalInvoices: 0,
+        totalQuantity: 0,
+        totalDiscount: 0,
+        totalTax: 0,
+        averageInvoiceValue: 0,
+        totalBranches: 0,
+      }
+    )
+  }
+
+  /**
+   * Thống kê doanh thu từng nhân viên toàn hệ thống (SYSTEM-ADMIN)
+   * @param {Object} filters - { startDate, endDate }
+   * @returns {Promise<Array>} - Danh sách nhân viên với doanh thu
+   */
+  async getSystemAdminEmployeeRevenueStatistics(filters = {}) {
+    const matchConditions = { status: 'completed' }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        // Thêm 1 ngày để bao gồm cả ngày cuối
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
+      }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: '$employee_id',
+          totalRevenue: { $sum: '$total_amount' },
+          totalOrders: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          branchId: { $first: '$branch_id' },
+          averageOrderValue: { $avg: '$total_amount' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'employee',
+        },
+      },
+      { $unwind: { path: '$employee', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'branches',
+          localField: 'branchId',
+          foreignField: '_id',
+          as: 'branch',
+        },
+      },
+      { $unwind: { path: '$branch', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          employeeId: '$_id',
+          employeeName: { $ifNull: ['$employee.fullName', 'Nhân viên không tồn tại'] },
+          employeeUsername: { $ifNull: ['$employee.username', 'N/A'] },
+          branchName: { $ifNull: ['$branch.name', 'Chi nhánh không tồn tại'] },
+          totalRevenue: { $round: ['$totalRevenue', 0] },
+          totalOrders: 1,
+          totalQuantity: 1,
+          averageOrderValue: { $round: ['$averageOrderValue', 0] },
+          _id: 0,
+        },
+      },
+      { $sort: { totalRevenue: -1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê chi tiết thuốc bán chạy toàn hệ thống (SYSTEM-ADMIN)
+   * @param {Object} filters - { startDate, endDate, limit }
+   * @returns {Promise<Array>} - Top thuốc bán chạy
+   */
+  async getSystemAdminTopSellingMedicines(filters = {}) {
+    const matchConditions = { status: 'completed' }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        // Thêm 1 ngày để bao gồm cả ngày cuối
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
+      }
+    }
+
+    const limit = parseInt(filters.limit) || 10
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.medicine_id',
+          totalQuantity: { $sum: '$items.quantity' },
+          totalRevenue: { $sum: '$items.line_total' },
+          averagePrice: { $avg: '$items.unit_price' },
+          timesOrdered: { $addToSet: '$_id' },
+          branchCount: { $addToSet: '$branch_id' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'medicines',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'medicine',
+        },
+      },
+      { $unwind: { path: '$medicine', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          medicineId: '$_id',
+          medicineName: { $ifNull: ['$medicine.name', 'Thuốc không tồn tại'] },
+          medicineUnit: { $ifNull: ['$medicine.unit', 'N/A'] },
+          medicineCategory: { $ifNull: ['$medicine.category', 'N/A'] },
+          totalQuantity: 1,
+          totalRevenue: { $round: ['$totalRevenue', 0] },
+          averagePrice: { $round: ['$averagePrice', 0] },
+          timesOrdered: { $size: '$timesOrdered' },
+          branchesCount: { $size: '$branchCount' },
+          _id: 0,
+        },
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: limit },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê doanh thu theo thời gian toàn hệ thống (SYSTEM-ADMIN)
+   * @param {Object} filters - { startDate, endDate, groupBy }
+   * @returns {Promise<Array>} - Thống kê theo thời gian
+   */
+  async getSystemAdminRevenueByPeriod(filters = {}) {
+    const matchConditions = { status: 'completed' }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        // Thêm 1 ngày để bao gồm cả ngày cuối
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
+      }
+    }
+
+    const groupBy = filters.groupBy || 'day'
+    let dateGroup = {}
+
+    switch (groupBy) {
+      case 'day':
+        dateGroup = {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+        }
+        break
+      case 'week':
+        dateGroup = {
+          year: { $year: '$createdAt' },
+          week: { $week: '$createdAt' },
+        }
+        break
+      case 'month':
+        dateGroup = {
+          $dateToString: { format: '%Y-%m', date: '$createdAt' },
+        }
+        break
+      case 'year':
+        dateGroup = {
+          $year: '$createdAt',
+        }
+        break
+      default:
+        dateGroup = {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+        }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: dateGroup,
+          totalRevenue: { $sum: '$total_amount' },
+          totalOrders: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          totalDiscount: { $sum: '$discount' },
+          totalTax: { $sum: '$tax_amount' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê doanh thu theo khách hàng toàn hệ thống (SYSTEM-ADMIN)
+   * @param {Object} filters - { startDate, endDate }
+   * @returns {Promise<Array>} - Danh sách khách hàng với thống kê doanh thu
+   */
+  async getSystemAdminCustomerStatistics(filters = {}) {
+    const matchConditions = { status: 'completed' }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        // Thêm 1 ngày để bao gồm cả ngày cuối
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
+      }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: '$customer_id',
+          customerName: { $first: '$customer_name' },
+          customerPhone: { $first: '$customer_phone' },
+          totalRevenue: { $sum: '$total_amount' },
+          totalOrders: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          averageOrderValue: { $avg: '$total_amount' },
+          lastOrderDate: { $max: '$createdAt' },
+          branchCount: { $addToSet: '$branch_id' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'customers',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'customerDetails',
+        },
+      },
+      { $unwind: { path: '$customerDetails', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          customerId: '$_id',
+          customerName: { $ifNull: ['$customerDetails.name', '$customerName'] },
+          customerPhone: { $ifNull: ['$customerDetails.phone', '$customerPhone'] },
+          totalRevenue: { $round: ['$totalRevenue', 0] },
+          totalOrders: 1,
+          totalQuantity: 1,
+          averageOrderValue: { $round: ['$averageOrderValue', 0] },
+          lastOrderDate: 1,
+          branchesCount: { $size: '$branchCount' },
+          _id: 0,
+        },
+      },
+      { $sort: { totalRevenue: -1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê tổng nhập hàng toàn hệ thống (SYSTEM-ADMIN)
+   * @param {Object} filters - { startDate, endDate }
+   * @returns {Promise<Object>} - Tổng nhập hàng
+   */
+  async getSystemAdminImportStatistics(filters = {}) {
+    const matchConditions = {}
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        // Thêm 1 ngày để bao gồm cả ngày cuối
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
+      }
+    }
+
+    const result = await Import.aggregate([
+      { $match: matchConditions },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: null,
+          totalImports: { $sum: 1 },
+          totalQuantity: { $sum: '$items.quantity' },
+          totalCost: { $sum: { $multiply: ['$items.quantity', '$items.unit_price'] } },
+          totalBatches: { $addToSet: '$items.batch_number' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalImports: 1,
+          totalQuantity: 1,
+          totalCost: { $round: ['$totalCost', 0] },
+          totalBatches: { $size: '$totalBatches' },
+        },
+      },
+    ])
+
+    return (
+      result[0] || {
+        totalImports: 0,
+        totalQuantity: 0,
+        totalCost: 0,
+        totalBatches: 0,
+      }
+    )
+  }
+
+  /**
+   * Thống kê tình trạng batch toàn hệ thống (SYSTEM-ADMIN)
+   * @returns {Promise<Object>} - Tình trạng batch tổng hợp
+   */
+  async getSystemAdminBatchStatusStatistics() {
+    const today = new Date()
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
+
+    const result = await Batch.aggregate([
+      {
+        $lookup: {
+          from: 'medicines',
+          localField: 'medicine_id',
+          foreignField: '_id',
+          as: 'medicine',
+        },
+      },
+      { $unwind: { path: '$medicine', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'branches',
+          localField: 'branch_id',
+          foreignField: '_id',
+          as: 'branch',
+        },
+      },
+      { $unwind: { path: '$branch', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          batchNumber: 1,
+          medicineName: { $ifNull: ['$medicine.name', 'Thuốc không tồn tại'] },
+          branchName: { $ifNull: ['$branch.name', 'Chi nhánh không tồn tại'] },
+          quantity: 1,
+          initialQuantity: 1,
+          expiryDate: 1,
+          importPrice: 1,
+          isExpired: { $gte: [today, '$expiryDate'] },
+          isOutOfStock: { $eq: ['$quantity', 0] },
+          quantitySold: { $subtract: ['$initialQuantity', '$quantity'] },
+        },
+      },
+      {
+        $addFields: {
+          stockStatus: {
+            $cond: [{ $eq: ['$quantity', 0] }, 'Hết hàng', 'Còn hàng'],
+          },
+          expiryStatus: {
+            $cond: [{ $gte: [today, '$expiryDate'] }, 'Hết hạn', 'Còn hạn'],
+          },
+        },
+      },
+      { $sort: { expiryDate: 1 } },
+    ])
+
+    // Tính toán thống kê tổng hợp
+    const summary = {
+      total: result.length,
+      outOfStock: result.filter((b) => b.quantity === 0).length,
+      inStock: result.filter((b) => b.quantity > 0).length,
+      expired: result.filter((b) => b.isExpired).length,
+      expiringSoon: result.filter(
+        (b) => !b.isExpired && new Date(b.expiryDate).getTime() - today.getTime() <= thirtyDaysMs
+      ).length,
+      valid: result.filter(
+        (b) => !b.isExpired && new Date(b.expiryDate).getTime() - today.getTime() > thirtyDaysMs
+      ).length,
+    }
+
+    return {
+      summary,
+      details: result,
+    }
   }
 }
 

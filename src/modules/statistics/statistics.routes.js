@@ -196,4 +196,113 @@ router.get(
   statisticsController.getBranchRevenueByPeriod
 )
 
+// ========== SYSTEM ADMIN STATISTICS ==========
+
+/**
+ * @route   GET /api/statistics/system-admin/overall
+ * @desc    Lấy thống kê tổng quan toàn hệ thống
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate
+ */
+router.get(
+  '/system-admin/overall',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminOverallStatistics
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/branches-revenue
+ * @desc    Lấy thống kê doanh thu từng chi nhánh
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate
+ */
+router.get(
+  '/system-admin/branches-revenue',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminBranchRevenueStatistics
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/employees-revenue
+ * @desc    Lấy thống kê doanh thu từng nhân viên toàn hệ thống
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate
+ */
+router.get(
+  '/system-admin/employees-revenue',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminEmployeeRevenueStatistics
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/top-selling
+ * @desc    Lấy top thuốc bán chạy toàn hệ thống
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate, limit (default: 10)
+ */
+router.get(
+  '/system-admin/top-selling',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminTopSellingMedicines
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/revenue-by-period
+ * @desc    Lấy thống kê doanh thu theo thời gian toàn hệ thống
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate, groupBy (day|week|month|year)
+ */
+router.get(
+  '/system-admin/revenue-by-period',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminRevenueByPeriod
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/customers
+ * @desc    Lấy thống kê doanh thu theo khách hàng toàn hệ thống
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate
+ */
+router.get(
+  '/system-admin/customers',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminCustomerStatistics
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/imports
+ * @desc    Lấy thống kê tổng nhập hàng toàn hệ thống
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate
+ */
+router.get(
+  '/system-admin/imports',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminImportStatistics
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/batch-status
+ * @desc    Lấy thống kê tình trạng batch toàn hệ thống
+ * @access  Private (system-admin, admin)
+ */
+router.get(
+  '/system-admin/batch-status',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminBatchStatusStatistics
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/dashboard
+ * @desc    Lấy dashboard tổng hợp cho system admin
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate
+ */
+router.get(
+  '/system-admin/dashboard',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminDashboard
+)
+
 export default router
