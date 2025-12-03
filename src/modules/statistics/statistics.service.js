@@ -271,6 +271,143 @@ class StatisticsService {
       throw new AppError('Lỗi khi lấy thống kê theo thời gian: ' + error.message, 500)
     }
   }
+
+  // ========== SYSTEM ADMIN STATISTICS ==========
+
+  /**
+   * Lấy thống kê doanh thu từng chi nhánh (SYSTEM-ADMIN)
+   */
+  async getSystemAdminBranchRevenueStatistics(filters) {
+    try {
+      const stats = await statisticsRepository.getSystemAdminBranchRevenueStatistics(filters)
+      return {
+        success: true,
+        total: stats.length,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError(
+        'Lỗi khi lấy thống kê doanh thu chi nhánh (system admin): ' + error.message,
+        500
+      )
+    }
+  }
+
+  /**
+   * Lấy thống kê tổng quan toàn hệ thống (SYSTEM-ADMIN)
+   */
+  async getSystemAdminOverallStatistics(filters) {
+    try {
+      const stats = await statisticsRepository.getSystemAdminOverallStatistics(filters)
+      return {
+        success: true,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê tổng quan toàn hệ thống: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê doanh thu từng nhân viên toàn hệ thống (SYSTEM-ADMIN)
+   */
+  async getSystemAdminEmployeeRevenueStatistics(filters) {
+    try {
+      const stats = await statisticsRepository.getSystemAdminEmployeeRevenueStatistics(filters)
+      return {
+        success: true,
+        total: stats.length,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê doanh thu nhân viên: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê chi tiết thuốc bán chạy toàn hệ thống (SYSTEM-ADMIN)
+   */
+  async getSystemAdminTopSellingMedicines(filters) {
+    try {
+      const stats = await statisticsRepository.getSystemAdminTopSellingMedicines(filters)
+      return {
+        success: true,
+        total: stats.length,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy top thuốc bán chạy: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê doanh thu theo thời gian toàn hệ thống (SYSTEM-ADMIN)
+   */
+  async getSystemAdminRevenueByPeriod(filters) {
+    try {
+      const validGroupBy = ['day', 'week', 'month', 'year']
+      if (filters.groupBy && !validGroupBy.includes(filters.groupBy)) {
+        throw new AppError('groupBy phải là: day, week, month hoặc year', 400)
+      }
+
+      const stats = await statisticsRepository.getSystemAdminRevenueByPeriod(filters)
+      return {
+        success: true,
+        total: stats.length,
+        groupBy: filters.groupBy || 'day',
+        data: stats,
+      }
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      throw new AppError('Lỗi khi lấy thống kê doanh thu theo thời gian: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê doanh thu theo khách hàng toàn hệ thống (SYSTEM-ADMIN)
+   */
+  async getSystemAdminCustomerStatistics(filters) {
+    try {
+      const stats = await statisticsRepository.getSystemAdminCustomerStatistics(filters)
+      return {
+        success: true,
+        total: stats.length,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê khách hàng toàn hệ thống: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê tổng nhập hàng toàn hệ thống (SYSTEM-ADMIN)
+   */
+  async getSystemAdminImportStatistics(filters) {
+    try {
+      const stats = await statisticsRepository.getSystemAdminImportStatistics(filters)
+      return {
+        success: true,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê nhập hàng toàn hệ thống: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê tình trạng batch toàn hệ thống (SYSTEM-ADMIN)
+   */
+  async getSystemAdminBatchStatusStatistics() {
+    try {
+      const stats = await statisticsRepository.getSystemAdminBatchStatusStatistics()
+      return {
+        success: true,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê tình trạng batch: ' + error.message, 500)
+    }
+  }
 }
 
 export default new StatisticsService()
