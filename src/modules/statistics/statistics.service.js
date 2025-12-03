@@ -408,6 +408,48 @@ class StatisticsService {
       throw new AppError('Lỗi khi lấy thống kê tình trạng batch: ' + error.message, 500)
     }
   }
+
+  /**
+   * Lấy thống kê doanh thu tất cả chi nhánh (SYSTEM-ADMIN)
+   */
+  async getSystemAdminBranchesRevenueStatistics(filters) {
+    try {
+      const stats = await statisticsRepository.getSystemAdminBranchesRevenueStatistics(filters)
+      return {
+        success: true,
+        total: stats.length,
+        data: stats,
+      }
+    } catch (error) {
+      throw new AppError('Lỗi khi lấy thống kê doanh thu chi nhánh: ' + error.message, 500)
+    }
+  }
+
+  /**
+   * Lấy thống kê doanh thu chi tiết chi nhánh (SYSTEM-ADMIN)
+   */
+  async getSystemAdminBranchDetailedRevenueStatistics(branchId, filters) {
+    try {
+      if (!branchId) {
+        throw new AppError('ID chi nhánh không hợp lệ', 400)
+      }
+
+      const stats = await statisticsRepository.getSystemAdminBranchDetailedRevenueStatistics(
+        branchId,
+        filters
+      )
+
+      return {
+        success: true,
+        data: stats,
+      }
+    } catch (error) {
+      if (error.message.includes('không hợp lệ')) {
+        throw error
+      }
+      throw new AppError('Lỗi khi lấy thống kê doanh thu chi tiết: ' + error.message, 500)
+    }
+  }
 }
 
 export default new StatisticsService()

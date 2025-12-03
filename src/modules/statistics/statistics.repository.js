@@ -2,7 +2,8 @@
 import SalesInvoice from '../sales/sales.model.js'
 import { Import } from '../imports/imports.model.js'
 import { Batch } from '../batches/batches.model.js'
-import Customer from '../customers/customers.model.js'
+import Branch from '../branch/branch.model.js'
+import Payroll from '../payroll/payroll.model.js'
 
 class StatisticsRepository {
   /**
@@ -1519,6 +1520,236 @@ class StatisticsRepository {
     return {
       summary,
       details: result,
+    }
+  }
+
+  /**
+   * Thống kê doanh thu tất cả chi nhánh (SYSTEM-ADMIN)
+   * @param {Object} filters - { startDate, endDate }
+   * @returns {Promise<Array>} - Danh sách chi nhánh kèm doanh thu
+   */
+  async getSystemAdminBranchesRevenueStatistics(filters = {}) {
+    const matchConditions = { status: 'completed' }
+
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
+      }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: '$branch_id',
+          totalRevenue: { $sum: '$total_amount' },
+          totalInvoices: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          totalDiscount: { $sum: '$discount' },
+          totalTax: { $sum: '$tax_amount' },
+          averageInvoiceValue: { $avg: '$total_amount' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'branches',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'branchInfo',
+        },
+      },
+      { $unwind: { path: '$branchInfo', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          branchId: '$_id',
+          branchName: { $ifNull: ['$branchInfo.name', 'Chi nhánh không tồn tại'] },
+          branchAddress: { $ifNull: ['$branchInfo.address', 'N/A'] },
+          branchPhone: { $ifNull: ['$branchInfo.phone', 'N/A'] },
+          totalRevenue: { $round: ['$totalRevenue', 0] },
+          totalInvoices: 1,
+          totalQuantity: 1,
+          totalDiscount: { $round: ['$totalDiscount', 0] },
+          totalTax: { $round: ['$totalTax', 0] },
+          averageInvoiceValue: { $round: ['$averageInvoiceValue', 0] },
+          _id: 0,
+        },
+      },
+      { $sort: { totalRevenue: -1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Thống kê doanh thu chi tiết chi nhánh (SYSTEM-ADMIN)
+   * Bao gồm: doanh thu, chi tiêu (nhập hàng + lương nhân viên)
+   * @param {string} branchId - ID chi nhánh
+   * @param {Object} filters - { startDate, endDate, month }
+   * @returns {Promise<Object>} - Thống kê chi tiết
+   */
+  async getSystemAdminBranchDetailedRevenueStatistics(branchId, filters = {}) {
+    const mongoose = await import('mongoose')
+    const ObjectId = mongoose.default.Types.ObjectId
+    const branchObjectId = new ObjectId(branchId)
+
+    // 1. Tính tổng doanh thu từ các hóa đơn bán hàng
+    const invoiceMatch = { status: 'completed', branch_id: branchObjectId }
+    if (filters.startDate || filters.endDate) {
+      invoiceMatch.createdAt = {}
+      if (filters.startDate) {
+        invoiceMatch.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        invoiceMatch.createdAt.$lt = endDate
+      }
+    }
+
+    const revenueStats = await SalesInvoice.aggregate([
+      { $match: invoiceMatch },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$total_amount' },
+          totalInvoices: { $sum: 1 },
+          totalQuantity: { $sum: { $sum: '$items.quantity' } },
+          totalDiscount: { $sum: '$discount' },
+          totalTax: { $sum: '$tax_amount' },
+        },
+      },
+    ])
+
+    // 2. Tính tổng chi tiêu nhập hàng
+    const importMatch = { branch_id: branchObjectId }
+    if (filters.startDate || filters.endDate) {
+      importMatch.createdAt = {}
+      if (filters.startDate) {
+        importMatch.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        importMatch.createdAt.$lt = endDate
+      }
+    }
+
+    const importStats = await Import.aggregate([
+      { $match: importMatch },
+      {
+        $group: {
+          _id: null,
+          totalImportCost: { $sum: '$total_cost' },
+          totalImports: { $sum: 1 },
+          totalImportQuantity: { $sum: { $sum: '$items.quantity' } },
+        },
+      },
+    ])
+
+    // 3. Tính tổng lương nhân viên theo chi nhánh (từ payroll với status: approved)
+    let salaryMatch = { branch_id: branchObjectId, status: 'approved' }
+
+    if (filters.month) {
+      salaryMatch.month = filters.month
+    } else if (filters.startDate || filters.endDate) {
+      salaryMatch.createdAt = {}
+      if (filters.startDate) {
+        salaryMatch.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        salaryMatch.createdAt.$lt = endDate
+      }
+    }
+
+    const salaryStats = await Payroll.aggregate([
+      { $match: salaryMatch },
+      {
+        $group: {
+          _id: null,
+          totalSalary: { $sum: '$final_salary' },
+          totalEmployees: { $sum: 1 },
+          totalBonus: { $sum: '$bonus_amount' },
+          totalPenalty: { $sum: '$penalty_amount' },
+        },
+      },
+    ])
+
+    // 4. Lấy thông tin chi nhánh
+    const branchInfo = await Branch.findById(branchObjectId)
+
+    // Chuẩn bị data trả về
+    const revenue = revenueStats[0] || {
+      totalRevenue: 0,
+      totalInvoices: 0,
+      totalQuantity: 0,
+      totalDiscount: 0,
+      totalTax: 0,
+    }
+
+    const imports = importStats[0] || {
+      totalImportCost: 0,
+      totalImports: 0,
+      totalImportQuantity: 0,
+    }
+
+    const salary = salaryStats[0] || {
+      totalSalary: 0,
+      totalEmployees: 0,
+      totalBonus: 0,
+      totalPenalty: 0,
+    }
+
+    const totalExpenditure = imports.totalImportCost + salary.totalSalary
+    const netProfit = revenue.totalRevenue - totalExpenditure
+
+    return {
+      branchId: branchObjectId,
+      branchName: branchInfo?.name || 'Chi nhánh không tồn tại',
+      branchAddress: branchInfo?.address || 'N/A',
+      branchPhone: branchInfo?.phone || 'N/A',
+      // Doanh thu
+      revenue: {
+        totalRevenue: Math.round(revenue.totalRevenue),
+        totalInvoices: revenue.totalInvoices,
+        totalQuantity: revenue.totalQuantity,
+        totalDiscount: Math.round(revenue.totalDiscount),
+        totalTax: Math.round(revenue.totalTax),
+        averageInvoiceValue:
+          revenue.totalInvoices > 0 ? Math.round(revenue.totalRevenue / revenue.totalInvoices) : 0,
+      },
+      // Chi tiêu
+      expenditure: {
+        importCost: {
+          totalCost: Math.round(imports.totalImportCost),
+          totalImports: imports.totalImports,
+          totalQuantity: imports.totalImportQuantity,
+        },
+        salary: {
+          totalSalary: Math.round(salary.totalSalary),
+          totalEmployees: salary.totalEmployees,
+          totalBonus: Math.round(salary.totalBonus),
+          totalPenalty: Math.round(salary.totalPenalty),
+        },
+        total: Math.round(totalExpenditure),
+      },
+      // Tổng hợp
+      summary: {
+        totalRevenue: Math.round(revenue.totalRevenue),
+        totalExpenditure: Math.round(totalExpenditure),
+        netProfit: Math.round(netProfit),
+        profitMargin:
+          revenue.totalRevenue > 0
+            ? ((netProfit / revenue.totalRevenue) * 100).toFixed(2) + '%'
+            : '0%',
+      },
     }
   }
 }
