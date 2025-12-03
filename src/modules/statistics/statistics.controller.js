@@ -533,6 +533,52 @@ class StatisticsController {
       },
     })
   })
+
+  /**
+   * GET /api/statistics/system-admin/branches-revenue-detailed
+   * Lấy thống kê doanh thu tất cả chi nhánh (SYSTEM-ADMIN)
+   */
+  getSystemAdminBranchesRevenueStatistics = catchAsync(async (req, res) => {
+    const { startDate, endDate } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+
+    const result = await statisticsService.getSystemAdminBranchesRevenueStatistics(filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê doanh thu chi nhánh thành công',
+      total: result.total,
+      data: result.data,
+    })
+  })
+
+  /**
+   * GET /api/statistics/system-admin/branches-revenue-detail/:branchId
+   * Lấy thống kê doanh thu chi tiết chi nhánh (SYSTEM-ADMIN)
+   */
+  getSystemAdminBranchDetailedRevenueStatistics = catchAsync(async (req, res) => {
+    const { branchId } = req.params
+    const { startDate, endDate, month } = req.query
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+    if (month) filters.month = month
+
+    const result = await statisticsService.getSystemAdminBranchDetailedRevenueStatistics(
+      branchId,
+      filters
+    )
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thống kê doanh thu chi tiết chi nhánh thành công',
+      data: result.data,
+    })
+  })
 }
 
 export default new StatisticsController()

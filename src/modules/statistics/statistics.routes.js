@@ -2,6 +2,7 @@
 import express from 'express'
 import statisticsController from './statistics.controller.js'
 import { protect, authorizeRoles } from '../../middlewares/authMiddleware.js'
+import checkBranchAccess from '../../middlewares/branchAccessMiddleware.js'
 
 const router = express.Router()
 
@@ -116,6 +117,7 @@ router.get(
 router.get(
   '/branch/:branchId/revenue',
   authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  checkBranchAccess,
   statisticsController.getBranchRevenueStatistics
 )
 
@@ -129,6 +131,7 @@ router.get(
 router.get(
   '/branch/:branchId/employees',
   authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  checkBranchAccess,
   statisticsController.getBranchEmployeeRevenue
 )
 
@@ -142,6 +145,7 @@ router.get(
 router.get(
   '/branch/:branchId/medicines',
   authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  checkBranchAccess,
   statisticsController.getBranchSalesMedicineStatistics
 )
 
@@ -155,6 +159,7 @@ router.get(
 router.get(
   '/branch/:branchId/imports',
   authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  checkBranchAccess,
   statisticsController.getBranchImportStatistics
 )
 
@@ -167,6 +172,7 @@ router.get(
 router.get(
   '/branch/:branchId/batch-status',
   authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  checkBranchAccess,
   statisticsController.getBranchBatchStatusStatistics
 )
 
@@ -180,6 +186,7 @@ router.get(
 router.get(
   '/branch/:branchId/customers',
   authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  checkBranchAccess,
   statisticsController.getBranchCustomerStatistics
 )
 
@@ -193,6 +200,7 @@ router.get(
 router.get(
   '/branch/:branchId/revenue-by-period',
   authorizeRoles('branch-manager', 'system_admin', 'admin'),
+  checkBranchAccess,
   statisticsController.getBranchRevenueByPeriod
 )
 
@@ -303,6 +311,31 @@ router.get(
   '/system-admin/dashboard',
   authorizeRoles('system_admin', 'admin'),
   statisticsController.getSystemAdminDashboard
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/branches-revenue-detailed
+ * @desc    Lấy thống kê doanh thu tất cả chi nhánh (SYSTEM-ADMIN)
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate
+ */
+router.get(
+  '/system-admin/branches-revenue-detailed',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminBranchesRevenueStatistics
+)
+
+/**
+ * @route   GET /api/statistics/system-admin/branches-revenue-detail/:branchId
+ * @desc    Lấy thống kê doanh thu chi tiết chi nhánh (SYSTEM-ADMIN)
+ * @access  Private (system-admin, admin)
+ * @query   startDate, endDate, month
+ * @params  branchId
+ */
+router.get(
+  '/system-admin/branches-revenue-detail/:branchId',
+  authorizeRoles('system_admin', 'admin'),
+  statisticsController.getSystemAdminBranchDetailedRevenueStatistics
 )
 
 export default router
