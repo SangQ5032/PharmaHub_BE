@@ -6,6 +6,13 @@ const router = express.Router()
 
 router.use(protect)
 
+// POST: Scan barcode để lấy thông tin thuốc
+router.post(
+  '/scan-barcode',
+  authorizeRoles('employee', 'branch-manager', 'system-admin'),
+  salesController.scanMedicineBarcode
+)
+
 // POST: Tạo hoá đơn
 router.post(
   '/',
