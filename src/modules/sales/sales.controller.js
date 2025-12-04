@@ -156,6 +156,34 @@ class SalesController {
       data: invoice,
     })
   })
+
+  // Scan barcode để lấy thông tin thuốc
+  scanMedicineBarcode = asyncHandler(async (req, res) => {
+    const user = req.user
+    if (!user) {
+      throw new AppError(401, 'Không xác thực được người dùng')
+    }
+
+    const branchId = user.branch_id || user.branchId
+
+    if (!branchId) {
+      throw new AppError(400, 'Tài khoản chưa được gán chi nhánh')
+    }
+
+    const { barcode } = req.body
+
+    if (!barcode) {
+      throw new AppError(400, 'Barcode là bắt buộc')
+    }
+
+    const result = await salesService.scanMedicineByBarcode(barcode, branchId)
+
+    res.status(200).json({
+      success: true,
+      message: 'Scan barcode thành công',
+      data: result.data,
+    })
+  })
 }
 
 export default new SalesController()

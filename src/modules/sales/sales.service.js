@@ -423,6 +423,34 @@ class SalesService {
 
     return invoice
   }
+
+  // Scan barcode để lấy thông tin thuốc
+  async scanMedicineByBarcode(barcode, branchId) {
+    if (!barcode || !barcode.trim()) {
+      throw new AppError(400, 'Barcode không được để trống')
+    }
+
+    if (!branchId) {
+      throw new AppError(400, 'Không xác định được chi nhánh')
+    }
+
+    // Tìm kiếm thuốc theo barcode
+    const medicineInfo = await salesRepository.findMedicineByBarcode(barcode.trim(), branchId)
+
+    if (!medicineInfo) {
+      throw new AppError(404, 'Không tìm thấy thuốc với barcode này')
+    }
+
+    // Kiểm tra nếu thuốc này có batch và tồn kho
+    if (!medicineInfo.batches || medicineInfo.batches.length === 0) {
+      throw new AppError(400, 'Thuốc này hiện không có sẵn hoặc đã hết tồn kho trong chi nhánh')
+    }
+
+    return {
+      success: true,
+      data: medicineInfo,
+    }
+  }
 }
 
 const customerNameOrFallback = (providedName, customer) => {

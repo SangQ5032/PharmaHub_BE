@@ -105,6 +105,60 @@ class SalesRepository {
   async countInvoices(filter = {}) {
     return SalesInvoice.countDocuments(filter)
   }
+
+  // Tìm kiếm thuốc theo barcode và lấy thông tin batch + tồn kho
+  async findMedicineByBarcode(barcode, branchId) {
+    // Tìm thuốc theo barcode
+    const medicine = await Medicine.findOne({ barcode: barcode })
+      .populate('category_id', 'name description')
+      .lean()
+
+    if (!medicine) {
+      return null
+    }
+
+    // Lấy danh sách batch chứa thuốc này và còn tồn kho
+    const batches = await Batch.find({
+      medicine_id: medicine._id,
+      quantity: { $gt: 0 }, // Chỉ lấy batch còn tồn kho
+    })
+      .select('batch_number expiry_date quantity unit_price import_date')
+      .sort({ expiry_date: 1 }) // Sắp xếp theo hạn sử dụng gần nhất
+      .lean()
+
+    // Lấy tồn kho tổng hợp từ inventory
+    const inventory = await Inventory.findOne({
+      branch_id: branchId,
+      medicine_id: medicine._id,
+    })
+      .select('quantity')
+      .lean()
+
+    return {
+      medicine: {
+        _id: medicine._id,
+        name: medicine.name,
+        generic_name: medicine.generic_name,
+        brand_name: medicine.brand_name,
+        barcode: medicine.barcode,
+        dosage_form: medicine.dosage_form,
+        strength: medicine.strength,
+        unit: medicine.unit,
+        category_id: medicine.category_id,
+        retail_price: medicine.retail_price,
+        manufacturer: medicine.manufacturer,
+      },
+      batches: batches.map((batch) => ({
+        _id: batch._id,
+        batch_number: batch.batch_number,
+        expiry_date: batch.expiry_date,
+        quantity: batch.quantity,
+        unit_price: batch.unit_price,
+        import_date: batch.import_date,
+      })),
+      availableQuantity: inventory?.quantity || 0,
+    }
+  }
 }
 
 export default new SalesRepository()
