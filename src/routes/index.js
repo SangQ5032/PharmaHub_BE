@@ -14,7 +14,7 @@ import suppliersRoutes from '../modules/suppliers/suppliers.router.js'
 import workSchedulesRoutes from '../modules/work_schedules/work_schedules.routes.js'
 import attendanceRoutes from '../modules/attendance/attendance.routes.js'
 import statisticsRoutes from '../modules/statistics/statistics.routes.js'
-import salesRoutes from '../modules/sales/sales.routes.js'
+import salesRoutes, { invoicesRouter } from '../modules/sales/sales.routes.js'
 import customersRoutes from '../modules/customers/customers.routes.js'
 import payrollRoutes from '../modules/payroll/payroll.routes.js'
 
@@ -37,6 +37,7 @@ router.use('/work-schedules', workSchedulesRoutes)
 router.use('/attendance', attendanceRoutes)
 router.use('/statistics', statisticsRoutes)
 router.use('/sales', salesRoutes)
+router.use('/invoices', invoicesRouter) // Invoices sub-router
 router.use('/customers', customersRoutes)
 router.use('/payrolls', payrollRoutes)
 

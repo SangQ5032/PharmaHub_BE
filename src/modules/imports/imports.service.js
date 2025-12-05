@@ -1,9 +1,10 @@
 import importRepository from './imports.repository.js'
 import { AppError } from '../../utils/AppError.js'
+import { convertToBaseUnit, calculateUnitPrice } from '../../utils/unitConversion.js'
 
 class ImportService {
   /**
-   * Tạo phiếu nhập hàng mới
+   * Tạo phiếu nhập hàng mới (hỗ trợ đa đơn vị)
    * @param {Object} importData - Dữ liệu phiếu nhập
    * @param {String} employeeId - ID nhân viên thực hiện
    * @returns {Promise<Object>} - Phiếu nhập đã tạo
@@ -26,6 +27,11 @@ class ImportService {
       }
       if (!item.batch_number || !item.expiry_date) {
         throw new AppError(400, 'Thông tin lô hàng (batch_number, expiry_date) là bắt buộc')
+      }
+      // Validate unit
+      const validUnits = ['box', 'blister', 'tablet']
+      if (item.unit && !validUnits.includes(item.unit)) {
+        throw new AppError(400, `Đơn vị chỉ được là: ${validUnits.join(', ')}`)
       }
       // Kiểm tra expiry_date hợp lệ
       const expiryDate = new Date(item.expiry_date)
@@ -63,6 +69,8 @@ class ImportService {
       throw new AppError(404, `Các thuốc sau không tồn tại: ${missingIds.join(', ')}`)
     }
 
+    const medicineMap = new Map(medicines.map((m) => [m._id.toString(), m]))
+
     // Kiểm tra ngày hết hạn không được quá khứ
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -74,9 +82,34 @@ class ImportService {
       }
     }
 
-    // Tính tổng chi phí
-    const total_cost = items.reduce((sum, item) => {
-      return sum + item.quantity * item.unit_price
+    // Process items: convert units to base_unit, calculate retail prices
+    const processedItems = items.map((item) => {
+      const medicine = medicineMap.get(item.medicine_id.toString())
+      const unit = item.unit || 'tablet'
+
+      // Convert quantity to base units
+      const quantity_in_base_unit = convertToBaseUnit(medicine, item.quantity, unit)
+
+      // Get retail prices from medicine or use import price as fallback
+      const retail_price_for_base_unit = medicine.prices?.base_unit_price || item.unit_price
+      const retail_price_per_unit = medicine.prices?.price_per_unit || {
+        box: null,
+        blister: null,
+        tablet: retail_price_for_base_unit,
+      }
+
+      return {
+        ...item,
+        quantity_in_base_unit,
+        retail_price_for_base_unit,
+        retail_price_per_unit,
+        unit: unit,
+      }
+    })
+
+    // Tính tổng chi phí (dựa trên quantity_in_base_unit và import_price)
+    const total_cost = processedItems.reduce((sum, item) => {
+      return sum + item.quantity_in_base_unit * item.unit_price
     }, 0)
 
     // Tạo phiếu nhập
@@ -84,15 +117,20 @@ class ImportService {
       branch_id,
       supplier_id,
       employee_id: employeeId,
-      items,
+      items: processedItems,
       total_cost,
       note,
       status: 'completed',
     })
 
     // Tạo batch records và cập nhật inventory
-    await importRepository.createBatchesFromImport(branch_id, importRecord._id, items, supplier_id)
-    await importRepository.updateInventory(branch_id, items)
+    await importRepository.createBatchesFromImport(
+      branch_id,
+      importRecord._id,
+      processedItems,
+      supplier_id
+    )
+    await importRepository.updateInventory(branch_id, processedItems)
 
     // Lấy thông tin chi tiết phiếu nhập vừa tạo
     const result = await importRepository.findById(importRecord._id)

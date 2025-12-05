@@ -2,6 +2,12 @@ import mongoose from 'mongoose'
 import salesRepository from './sales.repository.js'
 import { logger } from '../../utils/logger.js'
 import { AppError } from '../../utils/AppError.js'
+import {
+  convertToBaseUnit,
+  calculateUnitPrice,
+  deductFromBatchesFEFO,
+} from '../../utils/unitConversion.js'
+import { Batch } from '../batches/batches.model.js'
 
 const PAYMENT_METHODS = ['cash', 'card', 'bank', 'e-wallet']
 
@@ -25,10 +31,12 @@ class SalesService {
       throw new AppError(400, 'Danh sách thuốc không hợp lệ')
     }
 
+    // Validate items with unit support
+    const validUnits = ['box', 'blister', 'tablet']
     const normalizedItems = items.map((item) => ({
       medicine_id: item.medicine_id,
-      batch_id: item.batch_id,
       quantity: Number(item.quantity),
+      unit: (item.unit || 'tablet').toLowerCase(),
       unit_price: item.unit_price !== undefined ? Number(item.unit_price) : undefined,
     }))
 
@@ -36,11 +44,11 @@ class SalesService {
       if (!mongoose.Types.ObjectId.isValid(item.medicine_id)) {
         throw new AppError(400, 'medicine_id không hợp lệ')
       }
-      if (!mongoose.Types.ObjectId.isValid(item.batch_id)) {
-        throw new AppError(400, 'batch_id không hợp lệ')
-      }
       if (!item.quantity || item.quantity <= 0) {
         throw new AppError(400, 'Số lượng thuốc phải lớn hơn 0')
+      }
+      if (!validUnits.includes(item.unit)) {
+        throw new AppError(400, `Đơn vị chỉ được là: ${validUnits.join(', ')}`)
       }
       if (item.unit_price !== undefined && (Number.isNaN(item.unit_price) || item.unit_price < 0)) {
         throw new AppError(400, 'Đơn giá không hợp lệ')
@@ -59,6 +67,7 @@ class SalesService {
       throw new AppError(400, 'Phương thức thanh toán không hợp lệ')
     }
 
+    // Get medicines
     const medicineIds = normalizedItems.map((item) => item.medicine_id)
     const medicines = await salesRepository.findMedicinesByIds(medicineIds)
 
@@ -70,72 +79,56 @@ class SalesService {
 
     const medicineMap = new Map(medicines.map((m) => [m._id.toString(), m]))
 
-    const expiredMedicines = medicines.filter((m) => new Date(m.expiry_date) < new Date())
-    if (expiredMedicines.length) {
-      const names = expiredMedicines.map((m) => m.name).join(', ')
-      throw new AppError(400, `Không thể bán thuốc đã hết hạn: ${names}`)
-    }
+    // Enrich items with medicine data
+    const itemsWithMedicine = normalizedItems.map((item) => ({
+      ...item,
+      medicine: medicineMap.get(item.medicine_id.toString()),
+    }))
 
-    // Lấy thông tin batch
-    const batchIds = normalizedItems.map((item) => item.batch_id)
-    const batches = await salesRepository.findBatchesByIds(batchIds)
+    // Check medicine package structure and convert to base units
+    const enrichedItemsPrep = itemsWithMedicine.map((item) => {
+      // Convert quantity to base units (with fallback if no package_structure)
+      const total_base_units = convertToBaseUnit(item.medicine, item.quantity, item.unit)
 
-    if (batches.length !== batchIds.length) {
-      const existingIds = batches.map((b) => b._id.toString())
-      const missing = batchIds.filter((id) => !existingIds.includes(id.toString()))
-      throw new AppError(404, `Không tìm thấy lô hàng với ID: ${missing.join(', ')}`)
-    }
+      // Get unit price
+      const unit_price =
+        item.unit_price !== undefined
+          ? item.unit_price
+          : calculateUnitPrice(item.medicine, item.unit)
 
-    const batchMap = new Map(batches.map((b) => [b._id.toString(), b]))
+      const line_total = unit_price * item.quantity
 
-    // Validate batch: tồn tại ở chi nhánh đúng, chưa hết hạn, có đủ số lượng
-    for (const item of normalizedItems) {
-      const batch = batchMap.get(item.batch_id.toString())
-      const medicine = medicineMap.get(item.medicine_id.toString())
-
-      if (!batch) {
-        throw new AppError(404, `Không tìm thấy lô hàng với ID: ${item.batch_id}`)
-      }
-
-      // Kiểm tra batch thuộc chi nhánh đúng
-      if (batch.branch_id.toString() !== branch_id.toString()) {
-        throw new AppError(400, `Lô hàng ${batch.batch_number} không thuộc chi nhánh hiện tại`)
-      }
-
-      // Kiểm tra batch chưa hết hạn
-      if (new Date(batch.expiry_date) < new Date()) {
-        throw new AppError(
-          400,
-          `Lô hàng ${batch.batch_number} của ${medicine.name} đã hết hạn (hết hạn: ${batch.expiry_date.toLocaleDateString('vi-VN')})`
-        )
-      }
-
-      // Kiểm tra batch có đủ số lượng
-      if (batch.quantity < item.quantity) {
-        throw new AppError(
-          400,
-          `Lô hàng ${batch.batch_number} của ${medicine.name} chỉ còn ${batch.quantity}, không đủ ${item.quantity} yêu cầu`
-        )
-      }
-    }
-
-    const enrichedItems = normalizedItems.map((item) => {
-      const medicine = medicineMap.get(item.medicine_id.toString())
-      const batch = batchMap.get(item.batch_id.toString())
-      const unitPrice = item.unit_price !== undefined ? item.unit_price : medicine.price
-      const lineTotal = unitPrice * item.quantity
       return {
         medicine_id: item.medicine_id,
-        batch_id: item.batch_id,
-        name: medicine.name,
-        batch_number: batch.batch_number,
+        medicine: item.medicine,
         quantity: item.quantity,
-        unit_price: unitPrice,
-        line_total: lineTotal,
+        unit: item.unit,
+        total_base_units,
+        unit_price,
+        line_total,
       }
     })
 
-    const subtotal = enrichedItems.reduce((sum, item) => sum + item.line_total, 0)
+    // Use FEFO to deduct from batches (multi-batch support)
+    const deductions = []
+    for (const item of enrichedItemsPrep) {
+      try {
+        const itemDeductions = await deductFromBatchesFEFO(
+          item.medicine_id,
+          branch_id,
+          item.total_base_units,
+          Batch
+        )
+        deductions.push({
+          medicine_id: item.medicine_id,
+          deductions: itemDeductions,
+        })
+      } catch (error) {
+        throw error
+      }
+    }
+
+    const subtotal = enrichedItemsPrep.reduce((sum, item) => sum + item.line_total, 0)
     if (discount > subtotal) {
       throw new AppError(400, 'Chiết khấu không thể lớn hơn tạm tính')
     }
@@ -157,6 +150,30 @@ class SalesService {
       totalAmount
     )
 
+    // Build sales items with deduction info
+    const salesItems = await Promise.all(
+      enrichedItemsPrep.map(async (item, index) => {
+        const medicine = medicineMap.get(item.medicine_id.toString())
+        const batchDeductions = deductions[index].deductions
+        const primaryBatch = batchDeductions[0] // Use first batch from deductions
+
+        // Get batch details to fill batch_number
+        const batch = await Batch.findById(primaryBatch.batch_id).select('batch_number').lean()
+
+        return {
+          medicine_id: item.medicine_id,
+          batch_id: primaryBatch.batch_id, // Primary batch
+          name: medicine.name,
+          batch_number: batch?.batch_number || '', // Filled from batch details
+          quantity: item.quantity,
+          unit: item.unit,
+          total_base_units: item.total_base_units,
+          unit_price: item.unit_price,
+          line_total: item.line_total,
+        }
+      })
+    )
+
     const session = await mongoose.startSession()
     session.startTransaction()
 
@@ -169,8 +186,7 @@ class SalesService {
         )
       }
 
-      await salesRepository.decreaseInventory(enrichedItems, session)
-
+      // Batch inventory already updated via deductFromBatchesFEFO
       const invoice = await salesRepository.createInvoice(
         {
           invoice_code: invoiceCode,
@@ -180,7 +196,7 @@ class SalesService {
           customer_name: customerDetails.customer_name,
           customer_phone: customerDetails.customer_phone,
           payment_method,
-          items: enrichedItems,
+          items: salesItems,
           subtotal,
           discount,
           tax_rate,
@@ -199,7 +215,7 @@ class SalesService {
       await session.abortTransaction()
       throw error
     } finally {
-      session.endSession()
+      await session.endSession()
     }
   }
 
@@ -218,13 +234,35 @@ class SalesService {
     if (customer_id) {
       const customer = await salesRepository.findCustomerById(customer_id)
       if (!customer) {
-        throw new AppError(404, 'Không tìm thấy khách hàng')
-      }
-      return {
-        customer_id: customer._id,
-        customer_name: customerNameOrFallback(customer_name, customer),
-        customer_phone: customer.phone,
-        shouldUpdateTotal: true,
+        // Fallback: treat as if customer_id was not provided
+        // Create new customer or use phone/name
+        if (customer_phone) {
+          const existingCustomer = await salesRepository.findCustomerByPhone(customer_phone)
+          if (existingCustomer) {
+            return {
+              customer_id: existingCustomer._id,
+              customer_name: customerNameOrFallback(customer_name, existingCustomer),
+              customer_phone: existingCustomer.phone,
+              shouldUpdateTotal: true,
+            }
+          }
+        }
+        // If no customer found and no phone provided, continue without customer
+        if (!customer_phone && !customer_name) {
+          return {
+            customer_id: null,
+            customer_name: null,
+            customer_phone: null,
+            shouldUpdateTotal: false,
+          }
+        }
+      } else {
+        return {
+          customer_id: customer._id,
+          customer_name: customerNameOrFallback(customer_name, customer),
+          customer_phone: customer.phone,
+          shouldUpdateTotal: true,
+        }
       }
     }
 

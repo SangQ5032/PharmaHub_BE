@@ -24,16 +24,31 @@ const SalesItemSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    // Số lượng người dùng nhập (theo đơn vị)
     quantity: {
       type: Number,
       required: true,
       min: [1, 'Số lượng phải lớn hơn 0'],
     },
+    // Đơn vị tính ("box", "blister", "tablet")
+    unit: {
+      type: String,
+      enum: ['box', 'blister', 'tablet'],
+      default: 'tablet',
+    },
+    // Tổng số lượng tính theo base unit (viên)
+    total_base_units: {
+      type: Number,
+      required: true,
+      min: [0, 'Base units phải >= 0'],
+    },
+    // Đơn giá tính theo unit đã chọn
     unit_price: {
       type: Number,
       required: true,
       min: [0, 'Đơn giá phải lớn hơn hoặc bằng 0'],
     },
+    // Thành tiền (quantity * unit_price)
     line_total: {
       type: Number,
       required: true,

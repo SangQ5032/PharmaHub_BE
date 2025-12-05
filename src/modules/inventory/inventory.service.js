@@ -1,5 +1,6 @@
 import inventoryRepository from './inventory.repository.js'
 import { AppError } from '../../utils/AppError.js'
+import { convertFromBaseUnit } from '../../utils/unitConversion.js'
 
 class InventoryService {
   /**
@@ -89,16 +90,48 @@ class InventoryService {
    */
   _transformInventoryData(inventory) {
     return inventory.map((item) => {
+      // Calculate quantities per unit based on base unit
+      let quantities_by_unit = {
+        box: 0,
+        blister: 0,
+        tablet: item.quantity_in_base_unit || 0,
+      }
+
+      // Convert base units to other units if medicine has package_structure
+      if (item.medicine_package_structure) {
+        try {
+          const convertBox = convertFromBaseUnit(
+            { package_structure: item.medicine_package_structure, base_unit: 'tablet' },
+            item.quantity_in_base_unit || 0,
+            'box'
+          )
+          quantities_by_unit.box = convertBox.quantity
+
+          const convertBlister = convertFromBaseUnit(
+            { package_structure: item.medicine_package_structure, base_unit: 'tablet' },
+            item.quantity_in_base_unit || 0,
+            'blister'
+          )
+          quantities_by_unit.blister = convertBlister.quantity
+        } catch (e) {
+          // If conversion fails, keep defaults
+          quantities_by_unit.box = 0
+          quantities_by_unit.blister = 0
+        }
+      }
+
       const status =
-        item.quantity === 0
+        (item.quantity_in_base_unit || 0) === 0
           ? 'out_of_stock'
-          : item.quantity <= item.medicine_warning_threshold
+          : (item.quantity_in_base_unit || 0) <= item.medicine_warning_threshold
             ? 'low_stock'
             : 'sufficient'
 
       // Tính tổng giá trị tồn kho
       const totalValue = item.batches.reduce((sum, batch) => {
-        return sum + (batch.quantity * batch.import_price || 0)
+        return (
+          sum + ((batch.quantity_in_base_unit || batch.quantity || 0) * batch.import_price || 0)
+        )
       }, 0)
 
       return {
@@ -115,11 +148,13 @@ class InventoryService {
           generic_name: item.medicine_generic_name,
           brand_name: item.medicine_brand_name,
           unit: item.medicine_unit,
+          base_unit: item.medicine_base_unit || 'tablet',
+          package_structure: item.medicine_package_structure,
+          prices: item.medicine_prices,
           category: item.medicine_category,
           description: item.medicine_description,
           dosage_form: item.medicine_dosage_form,
           strength: item.medicine_strength,
-          retail_price: item.medicine_retail_price,
           manufacturer: item.medicine_manufacturer,
           country_of_origin: item.medicine_country_of_origin,
           indications: item.medicine_indications,
@@ -132,7 +167,10 @@ class InventoryService {
           status: item.medicine_status,
           warning_threshold: item.medicine_warning_threshold,
         },
-        total_quantity: item.quantity,
+        // Total quantity in base unit (tablet)
+        total_quantity_in_base_unit: item.quantity_in_base_unit || 0,
+        // Quantities broken down by unit
+        quantities_by_unit,
         warning_threshold: item.medicine_warning_threshold,
         status,
         batches: item.batches.map((batch) => ({
@@ -140,13 +178,16 @@ class InventoryService {
           batch_number: batch.batch_number,
           expiry_date: batch.expiry_date,
           import_price: batch.import_price,
+          quantity_in_base_unit: batch.quantity_in_base_unit || 0,
+          initial_quantity_in_base_unit: batch.initial_quantity_in_base_unit || 0,
+          // Legacy fields
           quantity: batch.quantity,
           initial_quantity: batch.initial_quantity,
           supplier: {
             _id: batch.supplier_id,
             name: batch.supplier?.name || 'N/A',
           },
-          batch_value: batch.quantity * batch.import_price,
+          batch_value: (batch.quantity_in_base_unit || batch.quantity || 0) * batch.import_price,
           status: batch.status,
           imported_at: batch.createdAt,
         })),

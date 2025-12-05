@@ -33,16 +33,47 @@ const MedicineSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    // Đơn vị tính (viên, hộp, chai, ml, ...)
-    unit: {
+    // Đơn vị cơ sở (đơn vị nhỏ nhất, ví dụ: tablet/viên)
+    base_unit: {
       type: String,
-      required: [true, 'Đơn vị tính là bắt buộc'],
+      default: 'tablet',
       trim: true,
     },
-    // Quy cách đóng gói
+    // Quy cách đóng gói (legacy - keep for backward compatibility)
     packaging: {
       type: String,
       trim: true,
+    },
+    // Cấu trúc đơn vị: mô tả mối quan hệ giữa các đơn vị
+    // Ví dụ: { box: { contains: 10, child: "blister" }, blister: { contains: 10, child: "tablet" }, tablet: { contains: 1, child: null } }
+    package_structure: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    // Thông tin giá theo từng đơn vị
+    prices: {
+      // Giá của base unit (viên)
+      base_unit_price: {
+        type: Number,
+        default: 0,
+        min: [0, 'Giá base unit phải >= 0'],
+      },
+      // Giá theo từng đơn vị
+      price_per_unit: {
+        box: {
+          type: Number,
+          default: null,
+        },
+        blister: {
+          type: Number,
+          default: null,
+        },
+        tablet: {
+          type: Number,
+          default: null,
+        },
+      },
+      _id: false,
     },
     // Tham chiếu tới danh mục/loại thuốc
     category_id: {
@@ -59,22 +90,6 @@ const MedicineSchema = new mongoose.Schema(
     is_controlled: {
       type: Boolean,
       default: false,
-    },
-    // Giá bán lẻ
-    retail_price: {
-      type: Number,
-      required: [true, 'Giá bán lẻ là bắt buộc'],
-      min: [0, 'Giá bán phải lớn hơn 0'],
-    },
-    // Giá tối thiểu (tùy chọn)
-    minimum_price: {
-      type: Number,
-      default: null,
-    },
-    // Giá tối đa (tùy chọn)
-    max_price: {
-      type: Number,
-      default: null,
     },
     // Hãng sản xuất
     manufacturer: {

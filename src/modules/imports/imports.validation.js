@@ -1,14 +1,15 @@
 /**
- * Validation schemas cho import module
+ * Validation schemas cho import module (hỗ trợ đa đơn vị)
  */
 
 /**
- * Validate import item
+ * Validate import item with multi-unit support
  * @param {Object} item - Item dữ liệu
  * @returns {Object} - {valid: boolean, errors: string[]}
  */
 export const validateImportItem = (item) => {
   const errors = []
+  const validUnits = ['box', 'blister', 'tablet']
 
   if (!item.medicine_id) {
     errors.push('medicine_id là bắt buộc')
@@ -20,6 +21,11 @@ export const validateImportItem = (item) => {
 
   if (item.unit_price === undefined || isNaN(item.unit_price) || item.unit_price < 0) {
     errors.push('unit_price phải là số không âm')
+  }
+
+  // Validate unit
+  if (item.unit && !validUnits.includes(item.unit.toLowerCase())) {
+    errors.push(`unit phải là: ${validUnits.join(', ')}`)
   }
 
   if (!item.batch_number || typeof item.batch_number !== 'string') {
