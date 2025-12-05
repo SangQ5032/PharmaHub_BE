@@ -57,6 +57,7 @@ class SalesRepository {
       .populate('customer_id', 'name phone address total_spent')
       .populate('items.medicine_id', 'name unit price')
       .populate('items.batch_id', 'batch_number expiry_date')
+      .select('+items.unit') // Ensure unit field is included
       .lean()
   }
 
@@ -95,6 +96,7 @@ class SalesRepository {
       .populate('customer_id', 'name phone address total_spent')
       .populate('items.medicine_id', 'name unit price category')
       .populate('items.batch_id', 'batch_number expiry_date')
+      .select('+items.unit') // Ensure unit field is included
       .sort(sort)
       .skip(skip)
       .limit(limit)

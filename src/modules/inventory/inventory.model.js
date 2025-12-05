@@ -14,11 +14,33 @@ const InventorySchema = new mongoose.Schema(
       required: [true, 'Thuốc là bắt buộc'],
       index: true,
     },
-    quantity: {
+    // Số lượng tính theo base unit (viên)
+    quantity_in_base_unit: {
       type: Number,
-      required: [true, 'Số lượng là bắt buộc'],
+      required: [true, 'Số lượng base unit là bắt buộc'],
       min: [0, 'Số lượng không được âm'],
       default: 0,
+    },
+    // Legacy field - for backward compatibility
+    quantity: {
+      type: Number,
+      default: null,
+    },
+    // Mô tả tồn kho theo từng đơn vị (đây là computed value, chỉ dùng để lưu cache)
+    quantities_by_unit: {
+      box: {
+        type: Number,
+        default: 0,
+      },
+      blister: {
+        type: Number,
+        default: 0,
+      },
+      tablet: {
+        type: Number,
+        default: 0,
+      },
+      _id: false,
     },
     last_updated: {
       type: Date,
@@ -60,4 +82,3 @@ InventorySchema.statics.findOrCreate = async function (branchId, medicineId) {
 }
 
 export const Inventory = mongoose.model('Inventory', InventorySchema)
-

@@ -4,6 +4,7 @@
 // - Không viết truy vấn Mongoose trực tiếp (ủy quyền cho repository)
 import medicinesRepo from './medicines.repository.js'
 import { AppError } from '../../utils/AppError.js'
+import { formatMedicineWithPrices } from '../../utils/unitConversion.js'
 
 // Tạo mới 1 thuốc
 export const createMedicine = async (payload) => {
@@ -31,7 +32,9 @@ export const createMedicine = async (payload) => {
 export const getMedicineById = async (id) => {
   const medicine = await medicinesRepo.findById(id)
   if (!medicine) throw new AppError(404, 'Không tìm thấy thuốc')
-  return medicine
+
+  // Format medicine with all unit prices
+  return formatMedicineWithPrices(medicine)
 }
 
 // Lấy danh sách thuốc (kèm phân trang, search, filter)

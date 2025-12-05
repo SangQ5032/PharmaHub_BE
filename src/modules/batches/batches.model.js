@@ -29,23 +29,54 @@ const BatchSchema = new mongoose.Schema(
       type: Date,
       required: [true, 'Ngày hết hạn là bắt buộc'],
     },
-    // Giá nhập (đơn giá)
+    // Giá nhập (đơn giá tính theo base unit)
     import_price: {
       type: Number,
       required: [true, 'Giá nhập là bắt buộc'],
       min: [0, 'Giá nhập phải lớn hơn hoặc bằng 0'],
     },
-    // Số lượng hiện tại (đã bán/sử dụng)
-    quantity: {
+    // Số lượng tính theo base unit (tablet/viên) - ALWAYS use this
+    quantity_in_base_unit: {
       type: Number,
-      required: [true, 'Số lượng là bắt buộc'],
+      required: [true, 'Số lượng base unit là bắt buộc'],
       min: [0, 'Số lượng phải lớn hơn hoặc bằng 0'],
     },
-    // Số lượng ban đầu (khi nhập vào)
-    initial_quantity: {
+    // Số lượng ban đầu tính theo base unit (khi nhập vào)
+    initial_quantity_in_base_unit: {
       type: Number,
       required: [true, 'Số lượng ban đầu là bắt buộc'],
       min: [1, 'Số lượng ban đầu phải lớn hơn 0'],
+    },
+    // Legacy fields - for backward compatibility
+    quantity: {
+      type: Number,
+      default: null,
+    },
+    initial_quantity: {
+      type: Number,
+      default: null,
+    },
+    // Giá bán lẻ tính theo base unit (viên)
+    retail_price_for_base_unit: {
+      type: Number,
+      default: 0,
+      min: [0, 'Giá bán phải >= 0'],
+    },
+    // Giá bán lẻ theo từng đơn vị
+    retail_price_per_unit: {
+      box: {
+        type: Number,
+        default: null,
+      },
+      blister: {
+        type: Number,
+        default: null,
+      },
+      tablet: {
+        type: Number,
+        default: null,
+      },
+      _id: false,
     },
     // Nhà cung cấp
     supplier_id: {
