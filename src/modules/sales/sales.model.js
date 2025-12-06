@@ -115,6 +115,7 @@ const SalesInvoiceSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: [0, 'Chiết khấu không hợp lệ'],
+      description: 'Số tiền giảm giá (tự động từ total_spent hoặc manual)',
     },
     tax_rate: {
       type: Number,

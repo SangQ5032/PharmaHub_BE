@@ -12,6 +12,67 @@ import { Batch } from '../batches/batches.model.js'
 const PAYMENT_METHODS = ['cash', 'card', 'bank', 'e-wallet']
 
 class SalesService {
+  /**
+   * Tính toán chiết khấu dựa trên total_spent của khách hàng
+   * Cứ 100,000 spent → được giảm 1,000
+   *
+   * @param {string} customerId - ID khách hàng
+   * @param {number} subtotal - Tạm tính
+   * @param {number} manualDiscount - Chiết khấu manual (nếu có)
+   * @returns {Promise<Object>} - {discount_amount, max_discount_eligible, customer_discount_applied}
+   */
+  async calculateDiscount(customerId, subtotal, manualDiscount) {
+    // Nếu có giảm giá manual, ưu tiên dùng
+    if (manualDiscount && manualDiscount > 0) {
+      return {
+        discount_amount: Math.min(manualDiscount, subtotal),
+        max_discount_eligible: 0,
+        customer_discount_applied: false,
+      }
+    }
+
+    // Nếu không có customer_id, không áp dụng discount
+    if (!customerId) {
+      return {
+        discount_amount: 0,
+        max_discount_eligible: 0,
+        customer_discount_applied: false,
+      }
+    }
+
+    // Kiểm tra khách hàng
+    const customer = await salesRepository.findCustomerById(customerId)
+    if (!customer) {
+      return {
+        discount_amount: 0,
+        max_discount_eligible: 0,
+        customer_discount_applied: false,
+      }
+    }
+
+    // Tính chiết khấu tối đa dựa trên total_spent
+    // Cứ 100,000 spent → được giảm 1,000
+    const totalSpent = customer.total_spent || 0
+    const maxDiscountEligible = Math.floor(totalSpent / 100000) * 1000
+
+    // Nếu không được giảm giá, trả về 0
+    if (maxDiscountEligible <= 0) {
+      return {
+        discount_amount: 0,
+        max_discount_eligible: 0,
+        customer_discount_applied: false,
+      }
+    }
+
+    // Trả về thông tin discount tối đa có thể dùng
+    // Employee có thể chọn bao nhiêu từ 0 đến maxDiscountEligible
+    return {
+      discount_amount: 0, // Mặc định 0, cần employee chọn
+      max_discount_eligible: maxDiscountEligible,
+      customer_discount_applied: true,
+    }
+  }
+
   async createInvoice(data = {}, employeeId) {
     const branch_id = data.branch_id
     const items = data.items
@@ -129,16 +190,8 @@ class SalesService {
     }
 
     const subtotal = enrichedItemsPrep.reduce((sum, item) => sum + item.line_total, 0)
-    if (discount > subtotal) {
-      throw new AppError(400, 'Chiết khấu không thể lớn hơn tạm tính')
-    }
 
-    const taxableAmount = subtotal - discount
-    const taxAmount = (tax_rate / 100) * taxableAmount
-    const totalAmount = taxableAmount + taxAmount
-
-    const invoiceCode = await this.generateInvoiceCode()
-
+    // Resolve customer details first
     const customerDetails = await this.resolveCustomer(
       {
         customer_id: data.customer_id,
@@ -147,8 +200,21 @@ class SalesService {
         customer_address: data.customer_address,
       },
       subtotal,
-      totalAmount
+      0 // We'll calculate total later
     )
+
+    // Tính toán chiết khấu (ưu tiên manual discount, sau đó customer discount)
+    const discountInfo = await this.calculateDiscount(
+      customerDetails.customer_id,
+      subtotal,
+      discount > 0 ? discount : null
+    )
+
+    const taxableAmount = subtotal - discountInfo.discount_amount
+    const taxAmount = (tax_rate / 100) * taxableAmount
+    const totalAmount = taxableAmount + taxAmount
+
+    const invoiceCode = await this.generateInvoiceCode()
 
     // Build sales items with deduction info
     const salesItems = await Promise.all(
@@ -198,7 +264,7 @@ class SalesService {
           payment_method,
           items: salesItems,
           subtotal,
-          discount,
+          discount: discountInfo.discount_amount, // Số tiền giảm thực tế
           tax_rate,
           tax_amount: taxAmount,
           total_amount: totalAmount,

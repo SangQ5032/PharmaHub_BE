@@ -37,6 +37,14 @@ class CustomersService {
     if (!deleted) throw new AppError(404, 'Customer not found')
     return deleted
   }
+
+  async getCustomerInvoices(customerId, query = {}) {
+    const customer = await customersRepo.findById(customerId)
+    if (!customer) throw new AppError(404, 'Khách hàng không tồn tại')
+
+    const { page, limit } = query
+    return await customersRepo.getCustomerInvoices(customerId, { page, limit })
+  }
 }
 
 export default new CustomersService()

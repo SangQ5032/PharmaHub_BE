@@ -48,6 +48,16 @@ class CustomersController {
       data: null,
     })
   })
+
+  getInvoices = asyncHandler(async (req, res) => {
+    const result = await customersService.getCustomerInvoices(req.params.id, req.query)
+    res.json({
+      success: true,
+      message: 'Lấy danh sách đơn hàng của khách hàng thành công',
+      data: result.data,
+      pagination: result.pagination,
+    })
+  })
 }
 
 export default new CustomersController()

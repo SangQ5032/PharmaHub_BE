@@ -131,3 +131,41 @@ export const validateUnitAndQuantity = (unit, quantity) => {
     errors,
   }
 }
+
+/**
+ * Validate discount data when creating customer discount
+ * @param {Object} discountData - Discount data
+ * @returns {Object} - {valid: boolean, errors: string[]}
+ */
+export const validateCustomerDiscount = (discountData) => {
+  const errors = []
+  const { discount_type, discount_value, discount_max_amount } = discountData
+
+  // Validate discount_type
+  if (!discount_type) {
+    errors.push('discount_type là bắt buộc')
+  } else if (!['percentage', 'fixed'].includes(discount_type)) {
+    errors.push('discount_type phải là "percentage" hoặc "fixed"')
+  }
+
+  // Validate discount_value
+  if (discount_value === undefined || discount_value === null) {
+    errors.push('discount_value là bắt buộc')
+  } else if (isNaN(discount_value) || discount_value < 0) {
+    errors.push('discount_value phải là số không âm')
+  } else if (discount_type === 'percentage' && (discount_value < 0 || discount_value > 100)) {
+    errors.push('discount_value (percentage) phải từ 0-100')
+  }
+
+  // Validate discount_max_amount (chỉ cần cho percentage)
+  if (discount_max_amount !== undefined && discount_max_amount !== null) {
+    if (isNaN(discount_max_amount) || discount_max_amount < 0) {
+      errors.push('discount_max_amount phải là số không âm')
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  }
+}

@@ -1,4 +1,5 @@
 import Customer from './customers.model.js'
+import SalesInvoice from '../sales/sales.model.js'
 
 class CustomersRepository {
   async findAll(filter = {}, options = {}) {
@@ -51,6 +52,33 @@ class CustomersRepository {
 
   async deleteById(id) {
     return Customer.findByIdAndDelete(id).lean()
+  }
+
+  async getCustomerInvoices(customerId, options = {}) {
+    const { page = 1, limit = 20 } = options
+    const skip = (page - 1) * limit
+
+    const [data, total] = await Promise.all([
+      SalesInvoice.find({ customer_id: customerId })
+        .populate('employee_id', 'name')
+        .populate('branch_id', 'name')
+        .populate('items.medicine_id', 'name')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      SalesInvoice.countDocuments({ customer_id: customerId }),
+    ])
+
+    return {
+      data,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    }
   }
 }
 
