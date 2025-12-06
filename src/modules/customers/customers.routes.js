@@ -7,6 +7,7 @@ const router = express.Router()
 // Public read (require auth)
 router.get('/', protect, customersController.getAll)
 router.get('/:id', protect, customersController.getById)
+router.get('/:id/invoices', protect, customersController.getInvoices)
 
 // Create/update/delete (require admin or branch-manager)
 // Allow employees, branch-managers and system-admins to create/update customers
