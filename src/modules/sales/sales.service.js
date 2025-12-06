@@ -6,6 +6,8 @@ import {
   convertToBaseUnit,
   calculateUnitPrice,
   deductFromBatchesFEFO,
+  isValidUnit,
+  getValidUnits,
 } from '../../utils/unitConversion.js'
 import { Batch } from '../batches/batches.model.js'
 
@@ -92,13 +94,13 @@ class SalesService {
       throw new AppError(400, 'Danh sách thuốc không hợp lệ')
     }
 
-    // Validate items with unit support
-    const validUnits = ['box', 'blister', 'tablet']
+    // Normalize items (chỉ validate format cơ bản, validation đơn vị sẽ làm sau khi fetch medicines)
     const normalizedItems = items.map((item) => ({
       medicine_id: item.medicine_id,
       quantity: Number(item.quantity),
       unit: (item.unit || 'tablet').toLowerCase(),
       unit_price: item.unit_price !== undefined ? Number(item.unit_price) : undefined,
+      batch_id: item.batch_id,
     }))
 
     for (const item of normalizedItems) {
@@ -108,8 +110,8 @@ class SalesService {
       if (!item.quantity || item.quantity <= 0) {
         throw new AppError(400, 'Số lượng thuốc phải lớn hơn 0')
       }
-      if (!validUnits.includes(item.unit)) {
-        throw new AppError(400, `Đơn vị chỉ được là: ${validUnits.join(', ')}`)
+      if (!item.unit || typeof item.unit !== 'string' || item.unit.trim() === '') {
+        throw new AppError(400, 'Đơn vị tính không hợp lệ')
       }
       if (item.unit_price !== undefined && (Number.isNaN(item.unit_price) || item.unit_price < 0)) {
         throw new AppError(400, 'Đơn giá không hợp lệ')
@@ -139,6 +141,21 @@ class SalesService {
     }
 
     const medicineMap = new Map(medicines.map((m) => [m._id.toString(), m]))
+
+    // Validate đơn vị dựa trên package_structure của từng thuốc
+    for (const item of normalizedItems) {
+      const medicine = medicineMap.get(item.medicine_id.toString())
+      if (medicine) {
+        const unit = item.unit || medicine.base_unit || 'tablet'
+        if (!isValidUnit(medicine, unit)) {
+          const validUnits = getValidUnits(medicine)
+          throw new AppError(
+            400,
+            `Đơn vị "${unit}" không hợp lệ cho thuốc "${medicine.name}". Các đơn vị hợp lệ: ${validUnits.join(', ')}`
+          )
+        }
+      }
+    }
 
     // Enrich items with medicine data
     const itemsWithMedicine = normalizedItems.map((item) => ({

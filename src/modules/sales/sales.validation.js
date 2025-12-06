@@ -9,7 +9,6 @@
  */
 export const validateSalesItem = (item) => {
   const errors = []
-  const validUnits = ['box', 'blister', 'tablet']
 
   if (!item.medicine_id) {
     errors.push('medicine_id là bắt buộc')
@@ -19,10 +18,10 @@ export const validateSalesItem = (item) => {
     errors.push('quantity phải là số dương')
   }
 
-  // Validate unit
+  // Validate unit format (chỉ kiểm tra format, validation thực sự sẽ được thực hiện trong service khi đã có medicine)
   const unit = (item.unit || 'tablet').toLowerCase()
-  if (!validUnits.includes(unit)) {
-    errors.push(`unit phải là: ${validUnits.join(', ')}`)
+  if (!unit || typeof unit !== 'string' || unit.trim() === '') {
+    errors.push('unit phải là chuỗi không rỗng')
   }
 
   if (item.unit_price !== undefined && (isNaN(item.unit_price) || item.unit_price < 0)) {
@@ -116,10 +115,10 @@ export const validateInventoryAvailable = (requiredBaseUnits, availableBaseUnits
  */
 export const validateUnitAndQuantity = (unit, quantity) => {
   const errors = []
-  const validUnits = ['box', 'blister', 'tablet']
 
-  if (!unit || !validUnits.includes(unit.toLowerCase())) {
-    errors.push(`unit phải là: ${validUnits.join(', ')}`)
+  // Validate unit format (chỉ kiểm tra format, validation thực sự sẽ được thực hiện trong service khi đã có medicine)
+  if (!unit || typeof unit !== 'string' || unit.trim() === '') {
+    errors.push('unit phải là chuỗi không rỗng')
   }
 
   if (!quantity || isNaN(quantity) || quantity <= 0) {

@@ -14,33 +14,19 @@ const InventorySchema = new mongoose.Schema(
       required: [true, 'Thuốc là bắt buộc'],
       index: true,
     },
-    // Số lượng tính theo base unit (viên)
-    quantity_in_base_unit: {
+    // Số lượng tính theo base unit (viên) - quantity luôn lưu ở đơn vị nhỏ nhất
+    quantity: {
       type: Number,
-      required: [true, 'Số lượng base unit là bắt buộc'],
+      required: [true, 'Số lượng là bắt buộc'],
       min: [0, 'Số lượng không được âm'],
       default: 0,
     },
-    // Legacy field - for backward compatibility
-    quantity: {
-      type: Number,
-      default: null,
-    },
     // Mô tả tồn kho theo từng đơn vị (đây là computed value, chỉ dùng để lưu cache)
+    // Linh hoạt - hỗ trợ bất kỳ đơn vị nào từ package_structure
+    // Ví dụ: { box: 5, blister: 0, tablet: 0 } hoặc { box: 3, bottle: 2, tablet: 0 }
     quantities_by_unit: {
-      box: {
-        type: Number,
-        default: 0,
-      },
-      blister: {
-        type: Number,
-        default: 0,
-      },
-      tablet: {
-        type: Number,
-        default: 0,
-      },
-      _id: false,
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
     last_updated: {
       type: Date,
@@ -56,9 +42,9 @@ const InventorySchema = new mongoose.Schema(
 // Compound index để đảm bảo mỗi thuốc chỉ có 1 record trong 1 chi nhánh
 InventorySchema.index({ branch_id: 1, medicine_id: 1 }, { unique: true })
 
-// Method để cập nhật số lượng tồn kho
+// Method để cập nhật số lượng tồn kho (quantity luôn ở base unit)
 InventorySchema.methods.updateQuantity = function (amount) {
-  this.quantity += amount
+  this.quantity = (this.quantity || 0) + amount
   this.last_updated = new Date()
   return this.save()
 }

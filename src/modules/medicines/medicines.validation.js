@@ -6,17 +6,37 @@ export const createMedicineSchema = Joi.object({
   brand_name: Joi.string().trim().optional().allow('', null),
   dosage_form: Joi.string().trim().optional().allow('', null),
   strength: Joi.string().trim().optional().allow('', null),
-  unit: Joi.string().trim().required().messages({ 'any.required': 'Đơn vị tính là bắt buộc' }),
+  base_unit: Joi.string()
+    .trim()
+    .required()
+    .messages({ 'any.required': 'Đơn vị cơ sở (base_unit) là bắt buộc' }),
   packaging: Joi.string().trim().optional().allow('', null),
+  units: Joi.array()
+    .items(
+      Joi.object({
+        unit: Joi.string().trim().required().messages({ 'any.required': 'Tên đơn vị là bắt buộc' }),
+        multiplier: Joi.number()
+          .positive()
+          .required()
+          .messages({
+            'any.required': 'Multiplier là bắt buộc',
+            'number.positive': 'Multiplier phải > 0',
+          }),
+        price: Joi.number()
+          .min(0)
+          .required()
+          .messages({
+            'any.required': 'Giá theo đơn vị là bắt buộc',
+            'number.base': 'Giá phải là số',
+          }),
+      })
+    )
+    .required()
+    .messages({ 'any.required': 'Danh sách đơn vị (units) là bắt buộc' }),
+  package_structure: Joi.object().optional().allow(null),
   category_id: Joi.string().trim().optional().allow('', null),
   prescription_required: Joi.boolean().optional().default(false),
   is_controlled: Joi.boolean().optional().default(false),
-  retail_price: Joi.number()
-    .min(0)
-    .required()
-    .messages({ 'any.required': 'Giá bán lẻ là bắt buộc', 'number.base': 'Giá bán phải là số' }),
-  minimum_price: Joi.number().min(0).optional().allow(null),
-  max_price: Joi.number().min(0).optional().allow(null),
   manufacturer: Joi.string().trim().optional().allow('', null),
   country_of_origin: Joi.string().trim().optional().allow('', null),
   indications: Joi.string().trim().optional().allow('', null),
@@ -36,14 +56,33 @@ export const updateMedicineSchema = Joi.object({
   brand_name: Joi.string().trim().optional().allow('', null),
   dosage_form: Joi.string().trim().optional().allow('', null),
   strength: Joi.string().trim().optional().allow('', null),
-  unit: Joi.string().trim().optional(),
+  base_unit: Joi.string().trim().optional(),
   packaging: Joi.string().trim().optional().allow('', null),
+  units: Joi.array()
+    .items(
+      Joi.object({
+        unit: Joi.string().trim().required().messages({ 'any.required': 'Tên đơn vị là bắt buộc' }),
+        multiplier: Joi.number()
+          .positive()
+          .required()
+          .messages({
+            'any.required': 'Multiplier là bắt buộc',
+            'number.positive': 'Multiplier phải > 0',
+          }),
+        price: Joi.number()
+          .min(0)
+          .required()
+          .messages({
+            'any.required': 'Giá theo đơn vị là bắt buộc',
+            'number.base': 'Giá phải là số',
+          }),
+      })
+    )
+    .optional(),
+  package_structure: Joi.object().optional().allow(null),
   category_id: Joi.string().trim().optional().allow('', null),
   prescription_required: Joi.boolean().optional(),
   is_controlled: Joi.boolean().optional(),
-  retail_price: Joi.number().min(0).optional(),
-  minimum_price: Joi.number().min(0).optional().allow(null),
-  max_price: Joi.number().min(0).optional().allow(null),
   manufacturer: Joi.string().trim().optional().allow('', null),
   country_of_origin: Joi.string().trim().optional().allow('', null),
   indications: Joi.string().trim().optional().allow('', null),

@@ -58,20 +58,11 @@ const MedicineSchema = new mongoose.Schema(
         default: 0,
         min: [0, 'Giá base unit phải >= 0'],
       },
-      // Giá theo từng đơn vị
+      // Giá theo từng đơn vị (linh hoạt - hỗ trợ bất kỳ đơn vị nào từ package_structure)
+      // Ví dụ: { box: 100000, blister: 10000, tablet: 1000 } hoặc { box: 150000, bottle: 30000, tablet: 2000 }
       price_per_unit: {
-        box: {
-          type: Number,
-          default: null,
-        },
-        blister: {
-          type: Number,
-          default: null,
-        },
-        tablet: {
-          type: Number,
-          default: null,
-        },
+        type: mongoose.Schema.Types.Mixed,
+        default: {},
       },
       _id: false,
     },

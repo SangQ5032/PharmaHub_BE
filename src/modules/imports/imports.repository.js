@@ -88,13 +88,10 @@ class ImportRepository {
               batch_number: item.batch_number,
               expiry_date: item.expiry_date,
               import_price: item.unit_price,
-              quantity_in_base_unit: item.quantity_in_base_unit,
-              initial_quantity_in_base_unit: item.quantity_in_base_unit,
+              quantity: item.quantity, // quantity luôn lưu ở base unit (đã convert)
+              initial_quantity: item.quantity,
               retail_price_for_base_unit: item.retail_price_for_base_unit,
               retail_price_per_unit: item.retail_price_per_unit,
-              // Legacy fields for backward compatibility
-              quantity: item.quantity,
-              initial_quantity: item.quantity,
               supplier_id: supplierId,
               import_record_id: importRecordId,
               status: 'active',
@@ -133,11 +130,11 @@ class ImportRepository {
           medicine_id: item.medicine_id,
         }).session(session)
 
-        const quantityToAdd = item.quantity_in_base_unit || item.quantity
+        const quantityToAdd = item.quantity // quantity từ processedItems đã được convert về base unit
 
         if (inventory) {
-          // Cập nhật số lượng tồn kho
-          inventory.quantity_in_base_unit = (inventory.quantity_in_base_unit || 0) + quantityToAdd
+          // Cập nhật số lượng tồn kho (quantity luôn ở base unit)
+          inventory.quantity = (inventory.quantity || 0) + quantityToAdd
           inventory.last_updated = new Date()
           await inventory.save({ session })
         } else {
@@ -147,7 +144,7 @@ class ImportRepository {
               {
                 branch_id: branchId,
                 medicine_id: item.medicine_id,
-                quantity_in_base_unit: quantityToAdd,
+                quantity: quantityToAdd,
                 last_updated: new Date(),
               },
             ],

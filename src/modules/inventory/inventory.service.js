@@ -90,11 +90,12 @@ class InventoryService {
    */
   _transformInventoryData(inventory) {
     return inventory.map((item) => {
-      // Calculate quantities per unit based on base unit
+      // Calculate quantities per unit based on base unit (quantity luôn ở base unit)
+      const baseQuantity = item.quantity || 0
       let quantities_by_unit = {
         box: 0,
         blister: 0,
-        tablet: item.quantity_in_base_unit || 0,
+        tablet: baseQuantity,
       }
 
       // Convert base units to other units if medicine has package_structure
@@ -102,14 +103,14 @@ class InventoryService {
         try {
           const convertBox = convertFromBaseUnit(
             { package_structure: item.medicine_package_structure, base_unit: 'tablet' },
-            item.quantity_in_base_unit || 0,
+            baseQuantity,
             'box'
           )
           quantities_by_unit.box = convertBox.quantity
 
           const convertBlister = convertFromBaseUnit(
             { package_structure: item.medicine_package_structure, base_unit: 'tablet' },
-            item.quantity_in_base_unit || 0,
+            baseQuantity,
             'blister'
           )
           quantities_by_unit.blister = convertBlister.quantity
@@ -121,17 +122,15 @@ class InventoryService {
       }
 
       const status =
-        (item.quantity_in_base_unit || 0) === 0
+        baseQuantity === 0
           ? 'out_of_stock'
-          : (item.quantity_in_base_unit || 0) <= item.medicine_warning_threshold
+          : baseQuantity <= item.medicine_warning_threshold
             ? 'low_stock'
             : 'sufficient'
 
       // Tính tổng giá trị tồn kho
       const totalValue = item.batches.reduce((sum, batch) => {
-        return (
-          sum + ((batch.quantity_in_base_unit || batch.quantity || 0) * batch.import_price || 0)
-        )
+        return sum + ((batch.quantity || 0) * batch.import_price || 0)
       }, 0)
 
       return {
@@ -168,7 +167,7 @@ class InventoryService {
           warning_threshold: item.medicine_warning_threshold,
         },
         // Total quantity in base unit (tablet)
-        total_quantity_in_base_unit: item.quantity_in_base_unit || 0,
+        total_quantity_in_base_unit: item.quantity || 0, // quantity luôn ở base unit
         // Quantities broken down by unit
         quantities_by_unit,
         warning_threshold: item.medicine_warning_threshold,
@@ -178,16 +177,13 @@ class InventoryService {
           batch_number: batch.batch_number,
           expiry_date: batch.expiry_date,
           import_price: batch.import_price,
-          quantity_in_base_unit: batch.quantity_in_base_unit || 0,
-          initial_quantity_in_base_unit: batch.initial_quantity_in_base_unit || 0,
-          // Legacy fields
-          quantity: batch.quantity,
-          initial_quantity: batch.initial_quantity,
+          quantity: batch.quantity || 0, // quantity luôn ở base unit
+          initial_quantity: batch.initial_quantity || 0,
           supplier: {
             _id: batch.supplier_id,
             name: batch.supplier?.name || 'N/A',
           },
-          batch_value: (batch.quantity_in_base_unit || batch.quantity || 0) * batch.import_price,
+          batch_value: (batch.quantity || 0) * batch.import_price,
           status: batch.status,
           imported_at: batch.createdAt,
         })),
