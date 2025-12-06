@@ -287,7 +287,8 @@ class MedicinesRepository {
               batch_number: 1,
               expiry_date: 1,
               import_price: 1,
-              quantity: 1,
+              quantity: 1, // quantity luôn ở base unit
+              quantity: 1, // Legacy field for backward compatibility
               supplier_id: 1,
               createdAt: 1,
             },
@@ -424,12 +425,21 @@ class MedicinesRepository {
           },
         },
       },
+      // Chỉ giữ lại các documents có _id (có batches)
+      {
+        $match: {
+          _id: { $exists: true, $ne: null },
+        },
+      },
     ])
 
     // Tạo map từ branch_id -> inventory data
     const inventoryMap = {}
     inventoryByBranch.forEach((item) => {
-      inventoryMap[item._id.toString()] = item
+      // Chỉ thêm vào map nếu item có _id hợp lệ (có batches)
+      if (item && item._id) {
+        inventoryMap[item._id.toString()] = item
+      }
     })
 
     // Bước 2: Lấy tất cả chi nhánh

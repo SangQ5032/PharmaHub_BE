@@ -1,11 +1,61 @@
 /**
  * Unit Conversion Utilities for Multi-Unit Medicine System
- * Handles conversion between different units (box, blister, tablet)
- * All conversions are based on base_unit (tablet)
+ * Handles conversion between different units dynamically based on package_structure
+ * All conversions are based on base_unit
  */
 
 import mongoose from 'mongoose'
 import { AppError } from './AppError.js'
+
+/**
+ * Lấy danh sách đơn vị hợp lệ từ package_structure và base_unit
+ * @param {Object} medicine - Medicine document with package_structure
+ * @returns {Array<String>} - Array of valid unit names
+ */
+export const getValidUnits = (medicine) => {
+  if (!medicine) {
+    return ['tablet'] // fallback
+  }
+
+  const units = []
+  const baseUnit = medicine.base_unit || 'tablet'
+
+  // Luôn có base_unit
+  if (!units.includes(baseUnit)) {
+    units.push(baseUnit)
+  }
+
+  // Lấy tất cả đơn vị từ package_structure
+  if (medicine.package_structure && typeof medicine.package_structure === 'object') {
+    Object.keys(medicine.package_structure).forEach((unit) => {
+      if (!units.includes(unit)) {
+        units.push(unit)
+      }
+    })
+  }
+
+  // Fallback: nếu không có package_structure, trả về 3 đơn vị mặc định (backward compatibility)
+  if (units.length === 1 && units[0] === baseUnit) {
+    return ['box', 'blister', 'tablet']
+  }
+
+  return units
+}
+
+/**
+ * Kiểm tra đơn vị có hợp lệ không dựa trên package_structure
+ * @param {Object} medicine - Medicine document with package_structure
+ * @param {String} unit - Unit name to validate
+ * @returns {Boolean} - True if unit is valid
+ */
+export const isValidUnit = (medicine, unit) => {
+  if (!medicine || !unit || typeof unit !== 'string') {
+    return false
+  }
+
+  const validUnits = getValidUnits(medicine)
+  return validUnits.includes(unit.toLowerCase())
+}
 
 /**
  * Convert quantity from specified unit to base unit (tablet)
@@ -31,9 +81,10 @@ export const convertToBaseUnit = (medicine, quantity, unit) => {
     throw new AppError(400, 'Đơn vị tính không hợp lệ')
   }
 
-  const validUnits = ['box', 'blister', 'tablet']
-  if (!validUnits.includes(unit.toLowerCase())) {
-    throw new AppError(400, `Đơn vị chỉ được là: ${validUnits.join(', ')}`)
+  // Validate unit dựa trên package_structure thay vì hardcode
+  if (!isValidUnit(medicine, unit)) {
+    const validUnits = getValidUnits(medicine)
+    throw new AppError(400, `Đơn vị không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`)
   }
 
   // If unit is already base_unit (tablet)
@@ -57,19 +108,25 @@ export const convertToBaseUnit = (medicine, quantity, unit) => {
 
   // Navigate from requested unit down to base unit
   let currentUnit = unit.toLowerCase()
+  const baseUnit = (medicine.base_unit || 'tablet').toLowerCase()
 
-  while (currentUnit !== medicine.base_unit && currentUnit !== 'tablet') {
+  while (currentUnit !== baseUnit && currentUnit !== 'tablet') {
     const unitConfig = structure[currentUnit]
 
     if (!unitConfig || !unitConfig.contains) {
-      throw new AppError(400, `Không tìm thấy cấu trúc cho đơn vị: ${currentUnit}`)
+      throw new AppError(
+        400,
+        `Không tìm thấy cấu trúc cho đơn vị: ${currentUnit}. Các đơn vị có sẵn: ${Object.keys(structure).join(', ')}`
+      )
     }
 
     baseUnits *= unitConfig.contains
     currentUnit = unitConfig.child
 
     if (!currentUnit) {
-      currentUnit = medicine.base_unit || 'tablet'
+      currentUnit = baseUnit
+    } else {
+      currentUnit = currentUnit.toLowerCase()
     }
   }
 
@@ -101,12 +158,13 @@ export const convertFromBaseUnit = (medicine, baseUnits, unit) => {
     throw new AppError(400, 'Đơn vị tính không hợp lệ')
   }
 
-  const validUnits = ['box', 'blister', 'tablet']
-  if (!validUnits.includes(unit.toLowerCase())) {
-    throw new AppError(400, `Đơn vị chỉ được là: ${validUnits.join(', ')}`)
+  // Validate unit dựa trên package_structure thay vì hardcode
+  if (!isValidUnit(medicine, unit)) {
+    const validUnits = getValidUnits(medicine)
+    throw new AppError(400, `Đơn vị không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`)
   }
 
-  // If target unit is base_unit (tablet)
+  // If target unit is base_unit
   if (unit.toLowerCase() === medicine.base_unit || unit.toLowerCase() === 'tablet') {
     return {
       quantity: Math.floor(normalizedBaseUnits),
@@ -183,9 +241,10 @@ export const calculateUnitPrice = (medicine, unit) => {
     throw new AppError(400, 'Đơn vị tính không hợp lệ')
   }
 
-  const validUnits = ['box', 'blister', 'tablet']
-  if (!validUnits.includes(unit.toLowerCase())) {
-    throw new AppError(400, `Đơn vị chỉ được là: ${validUnits.join(', ')}`)
+  // Validate unit dựa trên package_structure thay vì hardcode
+  if (!isValidUnit(medicine, unit)) {
+    const validUnits = getValidUnits(medicine)
+    throw new AppError(400, `Đơn vị không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`)
   }
 
   const normalizedUnit = unit.toLowerCase()
@@ -258,9 +317,9 @@ export const deductFromBatchesFEFO = async (medicineId, branchId, baseUnitsNeede
     throw new AppError(400, 'Không có lô hàng nào có sẵn cho thuốc này')
   }
 
-  // Calculate total available quantity
+  // Calculate total available quantity (quantity luôn ở base unit)
   const totalAvailable = batches.reduce((sum, batch) => {
-    return sum + (Number(batch.quantity_in_base_unit) || 0)
+    return sum + (Number(batch.quantity) || 0)
   }, 0)
 
   if (totalAvailable < normalizedBaseUnitsNeeded) {
@@ -277,19 +336,19 @@ export const deductFromBatchesFEFO = async (medicineId, branchId, baseUnitsNeede
   for (const batch of batches) {
     if (remaining <= 0) break
 
-    const batchQuantity = Number(batch.quantity_in_base_unit) || 0
+    const batchQuantity = Number(batch.quantity) || 0
     const deductedAmount = Math.min(remaining, batchQuantity)
 
-    // Update batch quantity - ensure it's a valid number
-    batch.quantity_in_base_unit = Math.max(0, batchQuantity - deductedAmount)
+    // Update batch quantity - ensure it's a valid number (quantity luôn ở base unit)
+    batch.quantity = Math.max(0, batchQuantity - deductedAmount)
 
-    // Ensure initial_quantity_in_base_unit is set (for old batches without this field)
-    if (!batch.initial_quantity_in_base_unit) {
-      batch.initial_quantity_in_base_unit = Number(batch.initial_quantity) || batchQuantity
+    // Ensure initial_quantity is set (for old batches without this field)
+    if (!batch.initial_quantity) {
+      batch.initial_quantity = batchQuantity
     }
 
     // Update status if batch is now empty
-    if (batch.quantity_in_base_unit === 0) {
+    if (batch.quantity === 0) {
       batch.status = 'sold_out'
     }
 
@@ -336,7 +395,8 @@ export const formatMedicineWithPrices = (medicine) => {
     throw new AppError(400, 'Medicine không tồn tại')
   }
 
-  const validUnits = ['box', 'blister', 'tablet']
+  // Lấy danh sách đơn vị hợp lệ từ package_structure
+  const validUnits = getValidUnits(medicine)
   const unitPrices = {}
 
   for (const unit of validUnits) {
@@ -358,22 +418,24 @@ export const formatMedicineWithPrices = (medicine) => {
 }
 
 /**
- * Validate unit array from medicine
- * @param {Array} units - Units array from medicine
+ * Validate package_structure
+ * @param {Object} packageStructure - Package structure object
+ * @param {String} baseUnit - Base unit name (default: 'tablet')
  * @returns {Boolean} - True if valid
  */
-export const validatePackageStructure = (packageStructure) => {
+export const validatePackageStructure = (packageStructure, baseUnit = 'tablet') => {
   if (!packageStructure || typeof packageStructure !== 'object') {
     return false
   }
 
-  // Must have 'tablet' as base unit
-  if (!packageStructure.tablet) {
+  // Must have base_unit in structure
+  if (!packageStructure[baseUnit]) {
     return false
   }
 
-  // tablet must have contains: 1 and child: null
-  if (packageStructure.tablet.contains !== 1 || packageStructure.tablet.child !== null) {
+  // base_unit must have contains: 1 and child: null
+  const baseUnitConfig = packageStructure[baseUnit]
+  if (baseUnitConfig.contains !== 1 || baseUnitConfig.child !== null) {
     return false
   }
 
@@ -381,6 +443,20 @@ export const validatePackageStructure = (packageStructure) => {
   for (const [key, value] of Object.entries(packageStructure)) {
     if (typeof value.contains !== 'number' || value.contains <= 0) {
       return false
+    }
+
+    // Validate child reference (nếu có child, child phải tồn tại trong structure hoặc là base_unit)
+    if (value.child !== null && value.child !== baseUnit) {
+      if (!packageStructure[value.child]) {
+        return false // Child unit không tồn tại trong structure
+      }
+    }
+  }
+
+  // Check for cycles (đơn giản - không có unit nào trỏ về chính nó)
+  for (const [key, value] of Object.entries(packageStructure)) {
+    if (value.child === key) {
+      return false // Cycle detected
     }
   }
 

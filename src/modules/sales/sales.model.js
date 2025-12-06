@@ -30,10 +30,10 @@ const SalesItemSchema = new mongoose.Schema(
       required: true,
       min: [1, 'Số lượng phải lớn hơn 0'],
     },
-    // Đơn vị tính ("box", "blister", "tablet")
+    // Đơn vị tính (linh hoạt - hỗ trợ bất kỳ đơn vị nào từ package_structure)
     unit: {
       type: String,
-      enum: ['box', 'blister', 'tablet'],
+      trim: true,
       default: 'tablet',
     },
     // Tổng số lượng tính theo base unit (viên)

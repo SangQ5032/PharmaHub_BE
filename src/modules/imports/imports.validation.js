@@ -9,7 +9,6 @@
  */
 export const validateImportItem = (item) => {
   const errors = []
-  const validUnits = ['box', 'blister', 'tablet']
 
   if (!item.medicine_id) {
     errors.push('medicine_id là bắt buộc')
@@ -23,9 +22,9 @@ export const validateImportItem = (item) => {
     errors.push('unit_price phải là số không âm')
   }
 
-  // Validate unit
-  if (item.unit && !validUnits.includes(item.unit.toLowerCase())) {
-    errors.push(`unit phải là: ${validUnits.join(', ')}`)
+  // Validate unit format (chỉ kiểm tra format, validation thực sự sẽ được thực hiện trong service khi đã có medicine)
+  if (item.unit && (typeof item.unit !== 'string' || item.unit.trim() === '')) {
+    errors.push('unit phải là chuỗi không rỗng')
   }
 
   if (!item.batch_number || typeof item.batch_number !== 'string') {

@@ -93,7 +93,7 @@ class BatchesRepository {
       {
         $group: {
           _id: null,
-          total_quantity: { $sum: '$quantity' },
+          total_quantity: { $sum: '$quantity' }, // quantity luôn ở base unit
           batch_count: { $sum: 1 },
         },
       },
@@ -147,14 +147,15 @@ class BatchesRepository {
           $group: {
             _id: '$medicine_id',
             medicine: { $first: '$medicine_info' },
-            total_quantity: { $sum: '$quantity' },
+            total_quantity: { $sum: '$quantity' }, // quantity luôn ở base unit
             batches: {
               $push: {
                 _id: '$_id',
                 batch_number: '$batch_number',
                 expiry_date: '$expiry_date',
                 import_price: '$import_price',
-                quantity: '$quantity',
+                quantity: '$quantity', // quantity luôn ở base unit
+                quantity: '$quantity', // Legacy field for backward compatibility
                 supplier_name: '$supplier_info.name',
                 createdAt: '$createdAt',
               },

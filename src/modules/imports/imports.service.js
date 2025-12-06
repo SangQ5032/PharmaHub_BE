@@ -1,6 +1,11 @@
 import importRepository from './imports.repository.js'
 import { AppError } from '../../utils/AppError.js'
-import { convertToBaseUnit, calculateUnitPrice } from '../../utils/unitConversion.js'
+import {
+  convertToBaseUnit,
+  calculateUnitPrice,
+  isValidUnit,
+  getValidUnits,
+} from '../../utils/unitConversion.js'
 
 class ImportService {
   /**
@@ -27,11 +32,6 @@ class ImportService {
       }
       if (!item.batch_number || !item.expiry_date) {
         throw new AppError(400, 'Thông tin lô hàng (batch_number, expiry_date) là bắt buộc')
-      }
-      // Validate unit
-      const validUnits = ['box', 'blister', 'tablet']
-      if (item.unit && !validUnits.includes(item.unit)) {
-        throw new AppError(400, `Đơn vị chỉ được là: ${validUnits.join(', ')}`)
       }
       // Kiểm tra expiry_date hợp lệ
       const expiryDate = new Date(item.expiry_date)
@@ -71,6 +71,21 @@ class ImportService {
 
     const medicineMap = new Map(medicines.map((m) => [m._id.toString(), m]))
 
+    // Validate đơn vị dựa trên package_structure của từng thuốc
+    for (const item of items) {
+      const medicine = medicineMap.get(item.medicine_id.toString())
+      if (medicine) {
+        const unit = item.unit || medicine.base_unit || 'tablet'
+        if (!isValidUnit(medicine, unit)) {
+          const validUnits = getValidUnits(medicine)
+          throw new AppError(
+            400,
+            `Đơn vị "${unit}" không hợp lệ cho thuốc "${medicine.name}". Các đơn vị hợp lệ: ${validUnits.join(', ')}`
+          )
+        }
+      }
+    }
+
     // Kiểm tra ngày hết hạn không được quá khứ
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -85,10 +100,18 @@ class ImportService {
     // Process items: convert units to base_unit, calculate retail prices
     const processedItems = items.map((item) => {
       const medicine = medicineMap.get(item.medicine_id.toString())
-      const unit = item.unit || 'tablet'
+      const unit = item.unit || medicine.base_unit || 'tablet'
 
-      // Convert quantity to base units
-      const quantity_in_base_unit = convertToBaseUnit(medicine, item.quantity, unit)
+      // Debug: Log để kiểm tra
+      if (!medicine) {
+        throw new AppError(400, `Không tìm thấy thuốc với ID: ${item.medicine_id}`)
+      }
+
+      // Lưu số lượng đơn vị nhập gốc để tính total_cost
+      const quantity_original = item.quantity
+
+      // Convert quantity to base units - quantity sẽ lưu ở base unit
+      const quantity = convertToBaseUnit(medicine, item.quantity, unit)
 
       // Get retail prices from medicine or use import price as fallback
       const retail_price_for_base_unit = medicine.prices?.base_unit_price || item.unit_price
@@ -100,16 +123,18 @@ class ImportService {
 
       return {
         ...item,
-        quantity_in_base_unit,
+        quantity, // quantity đã được convert về base unit
+        quantity_original, // số lượng đơn vị nhập gốc (để tính total_cost)
         retail_price_for_base_unit,
         retail_price_per_unit,
         unit: unit,
       }
     })
 
-    // Tính tổng chi phí (dựa trên quantity_in_base_unit và import_price)
+    // Tính tổng chi phí (dựa trên quantity_original đơn vị nhập và unit_price)
+    // unit_price là giá cho đơn vị nhập (ví dụ: 700000/lọ), không phải giá cho base unit
     const total_cost = processedItems.reduce((sum, item) => {
-      return sum + item.quantity_in_base_unit * item.unit_price
+      return sum + item.quantity_original * item.unit_price
     }, 0)
 
     // Tạo phiếu nhập
