@@ -41,10 +41,20 @@ const BatchSchema = new mongoose.Schema(
       required: [true, 'Số lượng là bắt buộc'],
       min: [0, 'Số lượng phải lớn hơn hoặc bằng 0'],
     },
+    // Số lượng tính theo base unit (alias của quantity để match với database schema)
+    quantity_in_base_unit: {
+      type: Number,
+      min: [0, 'Số lượng phải lớn hơn hoặc bằng 0'],
+    },
     // Số lượng ban đầu (khi nhập vào) - tính theo base unit
     initial_quantity: {
       type: Number,
       required: [true, 'Số lượng ban đầu là bắt buộc'],
+      min: [1, 'Số lượng ban đầu phải lớn hơn 0'],
+    },
+    // Số lượng ban đầu tính theo base unit (alias của initial_quantity để match với database schema)
+    initial_quantity_in_base_unit: {
+      type: Number,
       min: [1, 'Số lượng ban đầu phải lớn hơn 0'],
     },
     // Giá bán lẻ tính theo base unit (viên)
@@ -84,6 +94,19 @@ const BatchSchema = new mongoose.Schema(
     collection: 'batches',
   }
 )
+
+// Pre-save hook để đồng bộ quantity_in_base_unit với quantity
+BatchSchema.pre('save', function (next) {
+  // Đồng bộ quantity_in_base_unit với quantity
+  if (this.quantity !== undefined) {
+    this.quantity_in_base_unit = this.quantity
+  }
+  // Đồng bộ initial_quantity_in_base_unit với initial_quantity
+  if (this.initial_quantity !== undefined) {
+    this.initial_quantity_in_base_unit = this.initial_quantity
+  }
+  next()
+})
 
 // Index tổng hợp để tìm kiếm nhanh
 BatchSchema.index({ branch_id: 1, medicine_id: 1 })

@@ -187,25 +187,6 @@ class SalesService {
       }
     })
 
-    // Use FEFO to deduct from batches (multi-batch support)
-    const deductions = []
-    for (const item of enrichedItemsPrep) {
-      try {
-        const itemDeductions = await deductFromBatchesFEFO(
-          item.medicine_id,
-          branch_id,
-          item.total_base_units,
-          Batch
-        )
-        deductions.push({
-          medicine_id: item.medicine_id,
-          deductions: itemDeductions,
-        })
-      } catch (error) {
-        throw error
-      }
-    }
-
     const subtotal = enrichedItemsPrep.reduce((sum, item) => sum + item.line_total, 0)
 
     // Resolve customer details first
@@ -233,34 +214,57 @@ class SalesService {
 
     const invoiceCode = await this.generateInvoiceCode()
 
-    // Build sales items with deduction info
-    const salesItems = await Promise.all(
-      enrichedItemsPrep.map(async (item, index) => {
-        const medicine = medicineMap.get(item.medicine_id.toString())
-        const batchDeductions = deductions[index].deductions
-        const primaryBatch = batchDeductions[0] // Use first batch from deductions
-
-        // Get batch details to fill batch_number
-        const batch = await Batch.findById(primaryBatch.batch_id).select('batch_number').lean()
-
-        return {
-          medicine_id: item.medicine_id,
-          batch_id: primaryBatch.batch_id, // Primary batch
-          name: medicine.name,
-          batch_number: batch?.batch_number || '', // Filled from batch details
-          quantity: item.quantity,
-          unit: item.unit,
-          total_base_units: item.total_base_units,
-          unit_price: item.unit_price,
-          line_total: item.line_total,
-        }
-      })
-    )
-
     const session = await mongoose.startSession()
     session.startTransaction()
 
     try {
+      // Use FEFO to deduct from batches (multi-batch support) - INSIDE TRANSACTION
+      const deductions = []
+      for (const item of enrichedItemsPrep) {
+        try {
+          const itemDeductions = await deductFromBatchesFEFO(
+            item.medicine_id,
+            branch_id,
+            item.total_base_units,
+            Batch,
+            session // Pass session for transaction
+          )
+          deductions.push({
+            medicine_id: item.medicine_id,
+            deductions: itemDeductions,
+          })
+        } catch (error) {
+          throw error
+        }
+      }
+
+      // Build sales items with deduction info
+      const salesItems = await Promise.all(
+        enrichedItemsPrep.map(async (item, index) => {
+          const medicine = medicineMap.get(item.medicine_id.toString())
+          const batchDeductions = deductions[index].deductions
+          const primaryBatch = batchDeductions[0] // Use first batch from deductions
+
+          // Get batch details to fill batch_number (with session for transaction)
+          const batch = await Batch.findById(primaryBatch.batch_id)
+            .session(session)
+            .select('batch_number')
+            .lean()
+
+          return {
+            medicine_id: item.medicine_id,
+            batch_id: primaryBatch.batch_id, // Primary batch
+            name: medicine.name,
+            batch_number: batch?.batch_number || '', // Filled from batch details
+            quantity: item.quantity,
+            unit: item.unit,
+            total_base_units: item.total_base_units,
+            unit_price: item.unit_price,
+            line_total: item.line_total,
+          }
+        })
+      )
+
       if (customerDetails.customer_id && customerDetails.shouldUpdateTotal) {
         await salesRepository.increaseCustomerTotalSpent(
           customerDetails.customer_id,
@@ -269,7 +273,7 @@ class SalesService {
         )
       }
 
-      // Batch inventory already updated via deductFromBatchesFEFO
+      // Create invoice with batch deductions already done in transaction
       const invoice = await salesRepository.createInvoice(
         {
           invoice_code: invoiceCode,
