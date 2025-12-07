@@ -90,8 +90,17 @@ class InventoryService {
    */
   _transformInventoryData(inventory) {
     return inventory.map((item) => {
+      // Tính tổng số lượng từ batches (real-time, đảm bảo chính xác)
+      const totalQuantityFromBatches = item.batches.reduce((sum, batch) => {
+        return sum + (Number(batch.quantity) || 0)
+      }, 0)
+
+      // Sử dụng số lượng từ batches (real-time) thay vì từ Inventory.quantity
+      // Điều này đảm bảo tính chính xác khi batches được cập nhật
+      const baseQuantity =
+        totalQuantityFromBatches > 0 ? totalQuantityFromBatches : item.quantity || 0
+
       // Calculate quantities per unit based on base unit (quantity luôn ở base unit)
-      const baseQuantity = item.quantity || 0
       let quantities_by_unit = {
         box: 0,
         blister: 0,
@@ -166,8 +175,8 @@ class InventoryService {
           status: item.medicine_status,
           warning_threshold: item.medicine_warning_threshold,
         },
-        // Total quantity in base unit (tablet)
-        total_quantity_in_base_unit: item.quantity || 0, // quantity luôn ở base unit
+        // Total quantity in base unit (tablet) - tính từ batches để đảm bảo chính xác
+        total_quantity_in_base_unit: baseQuantity,
         // Quantities broken down by unit
         quantities_by_unit,
         warning_threshold: item.medicine_warning_threshold,

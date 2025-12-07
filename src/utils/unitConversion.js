@@ -286,10 +286,17 @@ export const calculateUnitPrice = (medicine, unit) => {
  * @param {String} branchId - Branch ID
  * @param {Number} baseUnitsNeeded - Total quantity to deduct (in base units/tablets)
  * @param {Object} Batch - Batch model
+ * @param {Object} session - Mongoose session for transaction (optional)
  * @returns {Promise<Array>} - Array of deductions: [{batch_id, quantity_deducted}]
  * @throws {AppError} - If not enough stock or medicine not found
  */
-export const deductFromBatchesFEFO = async (medicineId, branchId, baseUnitsNeeded, Batch) => {
+export const deductFromBatchesFEFO = async (
+  medicineId,
+  branchId,
+  baseUnitsNeeded,
+  Batch,
+  session = null
+) => {
   // Validate inputs
   if (!mongoose.Types.ObjectId.isValid(medicineId)) {
     throw new AppError(400, 'Medicine ID không hợp lệ')
@@ -306,12 +313,19 @@ export const deductFromBatchesFEFO = async (medicineId, branchId, baseUnitsNeede
   }
 
   // Get all active batches for this medicine in this branch, ordered by expiry_date (FEFO)
-  const batches = await Batch.find({
+  let batchQuery = Batch.find({
     medicine_id: medicineId,
     branch_id: branchId,
     status: 'active',
     expiry_date: { $gte: new Date() }, // Only non-expired batches
   }).sort({ expiry_date: 1 }) // Oldest expiry first
+
+  // Use session if provided (for transaction support)
+  if (session) {
+    batchQuery = batchQuery.session(session)
+  }
+
+  const batches = await batchQuery
 
   if (!batches || batches.length === 0) {
     throw new AppError(400, 'Không có lô hàng nào có sẵn cho thuốc này')
@@ -352,7 +366,8 @@ export const deductFromBatchesFEFO = async (medicineId, branchId, baseUnitsNeede
       batch.status = 'sold_out'
     }
 
-    await batch.save()
+    // Save batch with session if provided (for transaction support)
+    await batch.save({ session })
 
     deductions.push({
       batch_id: batch._id,

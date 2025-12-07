@@ -13,6 +13,11 @@ const ImportItemSchema = new mongoose.Schema(
       required: [true, 'Số lượng là bắt buộc'],
       min: [1, 'Số lượng phải lớn hơn 0'],
     },
+    // Số lượng tính theo base unit (alias của quantity để match với database schema)
+    quantity_in_base_unit: {
+      type: Number,
+      min: [1, 'Số lượng phải lớn hơn 0'],
+    },
     // Đơn vị nhập (lo, box, blister, tablet, ...) - chỉ để tham khảo, quantity đã được convert về base unit
     unit: {
       type: String,
@@ -101,12 +106,19 @@ const ImportSchema = new mongoose.Schema(
 ImportSchema.index({ createdAt: -1 })
 ImportSchema.index({ branch_id: 1, createdAt: -1 })
 
-// Pre-save hook để tính tổng chi phí tự động
+// Pre-save hook để tính tổng chi phí tự động và đồng bộ quantity_in_base_unit
 // Lưu ý: unit_price là giá cho đơn vị nhập ban đầu, không phải giá cho base unit
 // Tổng chi phí = số lượng đơn vị nhập gốc (quantity_original) × giá đơn vị nhập (unit_price)
 // quantity trong items đã được convert về base unit, nhưng để tính total_cost cần dùng quantity_original
 ImportSchema.pre('save', function (next) {
   if (this.items && this.items.length > 0) {
+    // Đồng bộ quantity_in_base_unit với quantity cho mỗi item
+    this.items.forEach((item) => {
+      if (item.quantity !== undefined) {
+        item.quantity_in_base_unit = item.quantity
+      }
+    })
+
     this.total_cost = this.items.reduce((total, item) => {
       // Sử dụng quantity_original nếu có (số lượng đơn vị nhập gốc), nếu không thì dùng quantity (backward compatibility)
       const quantityForCost = item.quantity_original || item.quantity
