@@ -8,6 +8,40 @@ import mongoose from 'mongoose'
 import { AppError } from './AppError.js'
 
 /**
+ * Map đơn vị tiếng Việt sang tiếng Anh
+ * @param {String} unit - Đơn vị (có thể là tiếng Việt hoặc tiếng Anh)
+ * @returns {String} - Đơn vị đã được normalize về tiếng Anh
+ */
+export const normalizeUnit = (unit) => {
+  if (!unit || typeof unit !== 'string') {
+    return unit
+  }
+
+  const normalized = unit.toLowerCase().trim()
+
+  // Map unit names (có thể là tiếng Việt) sang tiếng Anh
+  const unitNameMap = {
+    // Tiếng Việt -> Tiếng Anh
+    viên: 'tablet',
+    vien: 'tablet',
+    vỉ: 'blister',
+    vi: 'blister',
+    hộp: 'box',
+    hop: 'box',
+    lọ: 'bottle',
+    lo: 'bottle',
+    chai: 'bottle',
+    // Tiếng Anh (giữ nguyên)
+    tablet: 'tablet',
+    blister: 'blister',
+    box: 'box',
+    bottle: 'bottle',
+  }
+
+  return unitNameMap[normalized] || normalized
+}
+
+/**
  * Lấy danh sách đơn vị hợp lệ từ package_structure và base_unit
  * @param {Object} medicine - Medicine document with package_structure
  * @returns {Array<String>} - Array of valid unit names
@@ -32,6 +66,8 @@ export const getValidUnits = (medicine) => {
         units.push(unit)
       }
     })
+    // Nếu có package_structure, trả về units từ structure (không fallback)
+    return units
   }
 
   // Fallback: nếu không có package_structure, trả về 3 đơn vị mặc định (backward compatibility)
@@ -45,7 +81,7 @@ export const getValidUnits = (medicine) => {
 /**
  * Kiểm tra đơn vị có hợp lệ không dựa trên package_structure
  * @param {Object} medicine - Medicine document with package_structure
- * @param {String} unit - Unit name to validate
+ * @param {String} unit - Unit name to validate (có thể là tiếng Việt hoặc tiếng Anh)
  * @returns {Boolean} - True if unit is valid
  */
 export const isValidUnit = (medicine, unit) => {
@@ -53,8 +89,23 @@ export const isValidUnit = (medicine, unit) => {
     return false
   }
 
+  const unitLower = unit.toLowerCase().trim()
   const validUnits = getValidUnits(medicine)
-  return validUnits.includes(unit.toLowerCase())
+
+  // So sánh trực tiếp với valid units (có thể là tiếng Việt hoặc tiếng Anh)
+  for (const validUnit of validUnits) {
+    const validUnitLower = validUnit.toLowerCase().trim()
+    // So sánh trực tiếp
+    if (unitLower === validUnitLower) {
+      return true
+    }
+    // So sánh sau khi normalize cả hai
+    if (normalizeUnit(unitLower) === normalizeUnit(validUnitLower)) {
+      return true
+    }
+  }
+
+  return false
 }
 
 /**
@@ -81,14 +132,21 @@ export const convertToBaseUnit = (medicine, quantity, unit) => {
     throw new AppError(400, 'Đơn vị tính không hợp lệ')
   }
 
+  // Normalize đơn vị từ tiếng Việt sang tiếng Anh
+  const normalizedUnit = normalizeUnit(unit)
+
   // Validate unit dựa trên package_structure thay vì hardcode
-  if (!isValidUnit(medicine, unit)) {
+  if (!isValidUnit(medicine, normalizedUnit)) {
     const validUnits = getValidUnits(medicine)
-    throw new AppError(400, `Đơn vị không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`)
+    throw new AppError(
+      400,
+      `Đơn vị "${unit}" không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`
+    )
   }
 
-  // If unit is already base_unit (tablet)
-  if (unit.toLowerCase() === medicine.base_unit || unit.toLowerCase() === 'tablet') {
+  // If unit is already base_unit (có thể là tiếng Việt hoặc tiếng Anh)
+  const normalizedBaseUnit = normalizeUnit(medicine.base_unit || 'tablet')
+  if (normalizedUnit === normalizedBaseUnit) {
     return normalizedQuantity
   }
 
@@ -107,26 +165,51 @@ export const convertToBaseUnit = (medicine, quantity, unit) => {
   let baseUnits = normalizedQuantity
 
   // Navigate from requested unit down to base unit
-  let currentUnit = unit.toLowerCase()
-  const baseUnit = (medicine.base_unit || 'tablet').toLowerCase()
+  // Tìm key trong structure: thử cả unit gốc và unit đã normalize
+  let currentUnit = structure[unit.toLowerCase()] ? unit.toLowerCase() : normalizedUnit
+  const baseUnit = normalizeUnit(medicine.base_unit || 'tablet')
 
-  while (currentUnit !== baseUnit && currentUnit !== 'tablet') {
-    const unitConfig = structure[currentUnit]
+  while (currentUnit !== baseUnit && normalizeUnit(currentUnit) !== baseUnit) {
+    // Tìm key trong structure: thử cả currentUnit gốc và đã normalize
+    let unitConfig = structure[currentUnit]
+    if (!unitConfig) {
+      unitConfig = structure[normalizeUnit(currentUnit)]
+    }
+    if (!unitConfig) {
+      // Thử tìm ngược lại: tìm key nào normalize ra currentUnit
+      const foundKey = Object.keys(structure).find(
+        (key) => normalizeUnit(key) === normalizeUnit(currentUnit)
+      )
+      if (foundKey) {
+        unitConfig = structure[foundKey]
+        currentUnit = foundKey // Cập nhật currentUnit để tiếp tục với key gốc
+      }
+    }
 
     if (!unitConfig || !unitConfig.contains) {
       throw new AppError(
         400,
-        `Không tìm thấy cấu trúc cho đơn vị: ${currentUnit}. Các đơn vị có sẵn: ${Object.keys(structure).join(', ')}`
+        `Không tìm thấy cấu trúc cho đơn vị: ${unit}. Các đơn vị có sẵn: ${Object.keys(structure).join(', ')}`
       )
     }
 
     baseUnits *= unitConfig.contains
-    currentUnit = unitConfig.child
+    let nextUnit = unitConfig.child
 
-    if (!currentUnit) {
+    if (!nextUnit) {
       currentUnit = baseUnit
     } else {
-      currentUnit = currentUnit.toLowerCase()
+      // Tìm key trong structure cho child unit
+      nextUnit = nextUnit.toLowerCase()
+      if (structure[nextUnit]) {
+        currentUnit = nextUnit
+      } else {
+        // Thử tìm key nào normalize ra nextUnit
+        const foundKey = Object.keys(structure).find(
+          (key) => normalizeUnit(key) === normalizeUnit(nextUnit)
+        )
+        currentUnit = foundKey || normalizeUnit(nextUnit)
+      }
     }
   }
 
@@ -158,14 +241,21 @@ export const convertFromBaseUnit = (medicine, baseUnits, unit) => {
     throw new AppError(400, 'Đơn vị tính không hợp lệ')
   }
 
+  // Normalize đơn vị từ tiếng Việt sang tiếng Anh
+  const normalizedUnit = normalizeUnit(unit)
+
   // Validate unit dựa trên package_structure thay vì hardcode
-  if (!isValidUnit(medicine, unit)) {
+  if (!isValidUnit(medicine, normalizedUnit)) {
     const validUnits = getValidUnits(medicine)
-    throw new AppError(400, `Đơn vị không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`)
+    throw new AppError(
+      400,
+      `Đơn vị "${unit}" không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`
+    )
   }
 
-  // If target unit is base_unit
-  if (unit.toLowerCase() === medicine.base_unit || unit.toLowerCase() === 'tablet') {
+  // If target unit is base_unit (có thể là tiếng Việt hoặc tiếng Anh)
+  const normalizedBaseUnit = normalizeUnit(medicine.base_unit || 'tablet')
+  if (normalizedUnit === normalizedBaseUnit) {
     return {
       quantity: Math.floor(normalizedBaseUnits),
       remainder: 0,
@@ -190,15 +280,29 @@ export const convertFromBaseUnit = (medicine, baseUnits, unit) => {
   let quantity = 0
 
   // Navigate from base unit up to requested unit
-  let currentUnit = medicine.base_unit || 'tablet'
+  // Tìm key trong structure cho base_unit (có thể là tiếng Việt)
+  // normalizedBaseUnit đã được khai báo ở trên
+  let currentUnit = structure[medicine.base_unit] ? medicine.base_unit : normalizedBaseUnit
   const path = []
 
   // Build path from base to target unit
-  while (currentUnit !== unit.toLowerCase()) {
+  // So sánh cả unit gốc và unit đã normalize
+  while (
+    currentUnit !== normalizedUnit &&
+    normalizeUnit(currentUnit) !== normalizedUnit &&
+    currentUnit !== unit.toLowerCase()
+  ) {
     // Find parent unit that contains current unit
     let found = false
     for (const [key, config] of Object.entries(structure)) {
-      if (config.child === currentUnit) {
+      // So sánh child: có thể là tiếng Việt hoặc tiếng Anh
+      const childNormalized = normalizeUnit(config.child || '')
+      const currentNormalized = normalizeUnit(currentUnit)
+      if (
+        config.child === currentUnit ||
+        childNormalized === currentNormalized ||
+        normalizeUnit(config.child) === currentNormalized
+      ) {
         path.push({ unit: key, config })
         currentUnit = key
         found = true
@@ -225,6 +329,121 @@ export const convertFromBaseUnit = (medicine, baseUnits, unit) => {
 }
 
 /**
+ * Convert unit price from specified unit to base unit price
+ * @param {Object} medicine - Medicine document with package_structure
+ * @param {Number} unitPrice - Price for the specified unit
+ * @param {String} unit - Unit type ("box", "blister", "tablet", "hộp", etc.)
+ * @returns {Number} - Price for base unit
+ * @throws {AppError} - If unit is invalid or package_structure is missing
+ */
+export const convertUnitPriceToBaseUnit = (medicine, unitPrice, unit) => {
+  // Validate inputs
+  if (!medicine) {
+    throw new AppError(400, 'Medicine không tồn tại')
+  }
+
+  const normalizedPrice = Number(unitPrice)
+  if (isNaN(normalizedPrice) || normalizedPrice < 0) {
+    throw new AppError(400, 'Giá nhập không hợp lệ')
+  }
+
+  if (!unit || typeof unit !== 'string') {
+    throw new AppError(400, 'Đơn vị tính không hợp lệ')
+  }
+
+  // Normalize đơn vị từ tiếng Việt sang tiếng Anh
+  const normalizedUnit = normalizeUnit(unit)
+
+  // If unit is already base_unit (có thể là tiếng Việt hoặc tiếng Anh)
+  const normalizedBaseUnit = normalizeUnit(medicine.base_unit || 'tablet')
+  if (normalizedUnit === normalizedBaseUnit) {
+    return normalizedPrice
+  }
+
+  // Validate unit dựa trên package_structure
+  if (!isValidUnit(medicine, normalizedUnit)) {
+    const validUnits = getValidUnits(medicine)
+    throw new AppError(
+      400,
+      `Đơn vị "${unit}" không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`
+    )
+  }
+
+  // FALLBACK: If no package_structure, return price as-is (backward compatibility)
+  if (!medicine.package_structure || typeof medicine.package_structure !== 'object') {
+    console.warn(
+      `[FALLBACK] Medicine ${medicine.name} (${medicine._id}) has no package_structure, using unit_price as-is`
+    )
+    return normalizedPrice
+  }
+
+  const structure = medicine.package_structure
+  // normalizedBaseUnit đã được khai báo ở trên
+
+  // Calculate conversion factor from unit to base unit
+  let conversionFactor = 1
+  // Tìm key trong structure: thử cả unit gốc và unit đã normalize
+  let currentUnit = structure[unit.toLowerCase()] ? unit.toLowerCase() : normalizedUnit
+
+  // Navigate from requested unit down to base unit
+  while (
+    currentUnit !== normalizedBaseUnit &&
+    normalizeUnit(currentUnit) !== normalizedBaseUnit &&
+    currentUnit !== 'tablet'
+  ) {
+    // Tìm key trong structure: thử cả currentUnit gốc và đã normalize
+    let unitConfig = structure[currentUnit]
+    if (!unitConfig) {
+      unitConfig = structure[normalizeUnit(currentUnit)]
+    }
+    if (!unitConfig) {
+      // Thử tìm ngược lại: tìm key nào normalize ra currentUnit
+      const foundKey = Object.keys(structure).find(
+        (key) => normalizeUnit(key) === normalizeUnit(currentUnit)
+      )
+      if (foundKey) {
+        unitConfig = structure[foundKey]
+        currentUnit = foundKey // Cập nhật currentUnit để tiếp tục với key gốc
+      }
+    }
+
+    if (!unitConfig || !unitConfig.contains) {
+      throw new AppError(
+        400,
+        `Không tìm thấy cấu trúc cho đơn vị: ${unit}. Các đơn vị có sẵn: ${Object.keys(structure).join(', ')}`
+      )
+    }
+
+    conversionFactor *= unitConfig.contains
+    let nextUnit = unitConfig.child
+
+    if (!nextUnit) {
+      currentUnit = normalizedBaseUnit
+    } else {
+      // Tìm key trong structure cho child unit
+      nextUnit = nextUnit.toLowerCase()
+      if (structure[nextUnit]) {
+        currentUnit = nextUnit
+      } else {
+        // Thử tìm key nào normalize ra nextUnit
+        const foundKey = Object.keys(structure).find(
+          (key) => normalizeUnit(key) === normalizeUnit(nextUnit)
+        )
+        currentUnit = foundKey || normalizeUnit(nextUnit)
+      }
+    }
+  }
+
+  // Convert price: divide by conversion factor
+  // Example: 39000 VND/hộp, 1 hộp = 10 vỉ, 1 vỉ = 10 viên
+  // conversionFactor = 10 * 10 = 100
+  // baseUnitPrice = 39000 / 100 = 390 VND/viên
+  const baseUnitPrice = normalizedPrice / conversionFactor
+
+  return Math.round(baseUnitPrice * 100) / 100 // Round to 2 decimal places
+}
+
+/**
  * Calculate unit price based on medicine pricing structure
  * @param {Object} medicine - Medicine document with prices
  * @param {String} unit - Unit type ("box", "blister", "tablet")
@@ -241,13 +460,17 @@ export const calculateUnitPrice = (medicine, unit) => {
     throw new AppError(400, 'Đơn vị tính không hợp lệ')
   }
 
-  // Validate unit dựa trên package_structure thay vì hardcode
-  if (!isValidUnit(medicine, unit)) {
-    const validUnits = getValidUnits(medicine)
-    throw new AppError(400, `Đơn vị không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`)
-  }
+  // Normalize đơn vị từ tiếng Việt sang tiếng Anh
+  const normalizedUnit = normalizeUnit(unit)
 
-  const normalizedUnit = unit.toLowerCase()
+  // Validate unit dựa trên package_structure thay vì hardcode
+  if (!isValidUnit(medicine, normalizedUnit)) {
+    const validUnits = getValidUnits(medicine)
+    throw new AppError(
+      400,
+      `Đơn vị "${unit}" không hợp lệ. Các đơn vị hợp lệ: ${validUnits.join(', ')}`
+    )
+  }
 
   // Try new format first: prices.price_per_unit
   if (medicine.prices && typeof medicine.prices === 'object') {

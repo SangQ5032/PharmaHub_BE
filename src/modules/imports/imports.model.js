@@ -107,9 +107,9 @@ ImportSchema.index({ createdAt: -1 })
 ImportSchema.index({ branch_id: 1, createdAt: -1 })
 
 // Pre-save hook để tính tổng chi phí tự động và đồng bộ quantity_in_base_unit
-// Lưu ý: unit_price là giá cho đơn vị nhập ban đầu, không phải giá cho base unit
-// Tổng chi phí = số lượng đơn vị nhập gốc (quantity_original) × giá đơn vị nhập (unit_price)
-// quantity trong items đã được convert về base unit, nhưng để tính total_cost cần dùng quantity_original
+// Lưu ý: unit_price đã được chuyển đổi về base_unit (đơn vị nhỏ nhất)
+// Tổng chi phí = số lượng base unit (quantity) × giá nhập cho base unit (unit_price)
+// Cả quantity và unit_price đều đã ở base unit, nên tính trực tiếp
 ImportSchema.pre('save', function (next) {
   if (this.items && this.items.length > 0) {
     // Đồng bộ quantity_in_base_unit với quantity cho mỗi item
@@ -120,9 +120,16 @@ ImportSchema.pre('save', function (next) {
     })
 
     this.total_cost = this.items.reduce((total, item) => {
-      // Sử dụng quantity_original nếu có (số lượng đơn vị nhập gốc), nếu không thì dùng quantity (backward compatibility)
-      const quantityForCost = item.quantity_original || item.quantity
-      return total + quantityForCost * item.unit_price
+      // Cả quantity và unit_price đều đã ở base unit
+      // Nếu có quantity_original (backward compatibility), vẫn tính theo cách cũ
+      // Nhưng ưu tiên dùng quantity × unit_price (cả hai đều ở base unit)
+      if (item.quantity_original && item.quantity_original !== item.quantity) {
+        // Backward compatibility: nếu quantity_original khác quantity, có thể là dữ liệu cũ
+        // Trong trường hợp này, unit_price có thể chưa được convert, nên dùng quantity_original
+        return total + item.quantity_original * item.unit_price
+      }
+      // Mới: cả quantity và unit_price đều ở base unit
+      return total + item.quantity * item.unit_price
     }, 0)
   }
   next()

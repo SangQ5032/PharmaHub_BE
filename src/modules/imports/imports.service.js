@@ -5,6 +5,7 @@ import {
   calculateUnitPrice,
   isValidUnit,
   getValidUnits,
+  convertUnitPriceToBaseUnit,
 } from '../../utils/unitConversion.js'
 
 class ImportService {
@@ -72,6 +73,7 @@ class ImportService {
     const medicineMap = new Map(medicines.map((m) => [m._id.toString(), m]))
 
     // Validate đơn vị dựa trên package_structure của từng thuốc
+    // (isValidUnit đã tự động normalize đơn vị từ tiếng Việt sang tiếng Anh)
     for (const item of items) {
       const medicine = medicineMap.get(item.medicine_id.toString())
       if (medicine) {
@@ -98,6 +100,7 @@ class ImportService {
     }
 
     // Process items: convert units to base_unit, calculate retail prices
+    // (convertToBaseUnit và convertUnitPriceToBaseUnit đã tự động normalize đơn vị từ tiếng Việt sang tiếng Anh)
     const processedItems = items.map((item) => {
       const medicine = medicineMap.get(item.medicine_id.toString())
       const unit = item.unit || medicine.base_unit || 'tablet'
@@ -113,8 +116,12 @@ class ImportService {
       // Convert quantity to base units - quantity sẽ lưu ở base unit
       const quantity = convertToBaseUnit(medicine, item.quantity, unit)
 
+      // Tự động chuyển đổi giá nhập từ đơn vị nhập về đơn vị nhỏ nhất (base_unit)
+      // Ví dụ: nếu người dùng nhập 39000 VND/hộp, hệ thống sẽ tự động tính ra giá cho 1 viên
+      const unit_price_in_base_unit = convertUnitPriceToBaseUnit(medicine, item.unit_price, unit)
+
       // Get retail prices from medicine or use import price as fallback
-      const retail_price_for_base_unit = medicine.prices?.base_unit_price || item.unit_price
+      const retail_price_for_base_unit = medicine.prices?.base_unit_price || unit_price_in_base_unit
       const retail_price_per_unit = medicine.prices?.price_per_unit || {
         box: null,
         blister: null,
@@ -125,16 +132,17 @@ class ImportService {
         ...item,
         quantity, // quantity đã được convert về base unit
         quantity_original, // số lượng đơn vị nhập gốc (để tính total_cost)
+        unit_price: unit_price_in_base_unit, // unit_price đã được chuyển đổi về base unit
         retail_price_for_base_unit,
         retail_price_per_unit,
         unit: unit,
       }
     })
 
-    // Tính tổng chi phí (dựa trên quantity_original đơn vị nhập và unit_price)
-    // unit_price là giá cho đơn vị nhập (ví dụ: 700000/lọ), không phải giá cho base unit
+    // Tính tổng chi phí (dựa trên quantity đã convert về base unit và unit_price đã convert về base unit)
+    // Tổng chi phí = số lượng base unit × giá nhập cho base unit
     const total_cost = processedItems.reduce((sum, item) => {
-      return sum + item.quantity_original * item.unit_price
+      return sum + item.quantity * item.unit_price
     }, 0)
 
     // Tạo phiếu nhập

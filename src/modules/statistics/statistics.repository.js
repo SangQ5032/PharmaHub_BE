@@ -12,6 +12,9 @@ class StatisticsRepository {
    * @returns {Promise<Object>} - Tổng số lượng và doanh thu
    */
   async getOverallStats(filters = {}) {
+    const mongoose = await import('mongoose')
+    const ObjectId = mongoose.default.Types.ObjectId
+
     const matchConditions = { status: 'completed' }
 
     // Lọc theo thời gian
@@ -21,26 +24,41 @@ class StatisticsRepository {
         matchConditions.createdAt.$gte = new Date(filters.startDate)
       }
       if (filters.endDate) {
-        matchConditions.createdAt.$lte = new Date(filters.endDate)
+        // Thêm 1 ngày để bao gồm cả ngày cuối
+        const endDate = new Date(filters.endDate)
+        endDate.setDate(endDate.getDate() + 1)
+        matchConditions.createdAt.$lt = endDate
       }
     }
 
-    // Lọc theo chi nhánh
+    // Lọc theo chi nhánh - chuyển đổi sang ObjectId
     if (filters.branchId) {
-      matchConditions.branch_id = filters.branchId
+      matchConditions.branch_id = new ObjectId(filters.branchId)
     }
 
-    // Lọc theo nhân viên
+    // Lọc theo nhân viên - chuyển đổi sang ObjectId
     if (filters.employeeId) {
-      matchConditions.employee_id = filters.employeeId
+      matchConditions.employee_id = new ObjectId(filters.employeeId)
     }
 
-    const result = await SalesInvoice.aggregate([
+    // Tính tổng quantity từ items
+    const quantityResult = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: null,
+          totalQuantity: { $sum: '$items.quantity' },
+        },
+      },
+    ])
+
+    // Tính tổng revenue, invoices, discount, tax từ invoice
+    const invoiceResult = await SalesInvoice.aggregate([
       { $match: matchConditions },
       {
         $group: {
           _id: null,
-          totalQuantity: { $sum: { $sum: '$items.quantity' } },
           totalRevenue: { $sum: '$total_amount' },
           totalInvoices: { $sum: 1 },
           totalDiscount: { $sum: '$discount' },
@@ -49,15 +67,32 @@ class StatisticsRepository {
       },
     ])
 
-    return (
-      result[0] || {
-        totalQuantity: 0,
-        totalRevenue: 0,
-        totalInvoices: 0,
-        totalDiscount: 0,
-        totalTax: 0,
-      }
-    )
+    // Merge kết quả
+    const quantity = quantityResult[0]?.totalQuantity || 0
+    const invoice = invoiceResult[0] || {
+      totalRevenue: 0,
+      totalInvoices: 0,
+      totalDiscount: 0,
+      totalTax: 0,
+    }
+
+    return {
+      totalQuantity: quantity,
+      totalRevenue: Math.round(invoice.totalRevenue),
+      totalInvoices: invoice.totalInvoices,
+      totalDiscount: Math.round(invoice.totalDiscount),
+      totalTax: Math.round(invoice.totalTax),
+    }
+
+    // return (
+    //   result[0] || {
+    //     totalQuantity: 0,
+    //     totalRevenue: 0,
+    //     totalInvoices: 0,
+    //     totalDiscount: 0,
+    //     totalTax: 0,
+    //   }
+    // )
   }
 
   /**
@@ -403,6 +438,108 @@ class StatisticsRepository {
         },
       },
       { $sort: { totalRevenue: -1 } },
+    ])
+
+    return result
+  }
+
+  /**
+   * Lấy doanh thu cá nhân của nhân viên (chỉ tập trung vào doanh thu)
+   * @param {string} employeeId - ID của nhân viên
+   * @param {Object} filters - { startDate, endDate, groupBy (day|week|month|year) }
+   * @returns {Promise<Object|Array>} - Doanh thu cá nhân
+   */
+  async getEmployeePersonalRevenue(employeeId, filters = {}) {
+    const matchConditions = {
+      status: 'completed',
+      employee_id: employeeId,
+    }
+
+    // Lọc theo thời gian
+    if (filters.startDate || filters.endDate) {
+      matchConditions.createdAt = {}
+      if (filters.startDate) {
+        matchConditions.createdAt.$gte = new Date(filters.startDate)
+      }
+      if (filters.endDate) {
+        matchConditions.createdAt.$lte = new Date(filters.endDate)
+      }
+    }
+
+    // Nếu không có groupBy, trả về tổng doanh thu
+    if (!filters.groupBy) {
+      const result = await SalesInvoice.aggregate([
+        { $match: matchConditions },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$total_amount' },
+            totalOrders: { $sum: 1 },
+            averageOrderValue: { $avg: '$total_amount' },
+            minOrderValue: { $min: '$total_amount' },
+            maxOrderValue: { $max: '$total_amount' },
+          },
+        },
+      ])
+
+      return (
+        result[0] || {
+          totalRevenue: 0,
+          totalOrders: 0,
+          averageOrderValue: 0,
+          minOrderValue: 0,
+          maxOrderValue: 0,
+        }
+      )
+    }
+
+    // Thống kê doanh thu theo thời gian (ngày/tuần/tháng/năm)
+    let groupId
+    switch (filters.groupBy) {
+      case 'day':
+        groupId = {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+        }
+        break
+      case 'week':
+        groupId = {
+          year: { $year: '$createdAt' },
+          week: { $week: '$createdAt' },
+        }
+        break
+      case 'month':
+        groupId = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+        }
+        break
+      case 'year':
+        groupId = { $year: '$createdAt' }
+        break
+      default:
+        groupId = { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+    }
+
+    const result = await SalesInvoice.aggregate([
+      { $match: matchConditions },
+      {
+        $group: {
+          _id: groupId,
+          totalRevenue: { $sum: '$total_amount' },
+          totalOrders: { $sum: 1 },
+          averageOrderValue: { $avg: '$total_amount' },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          period: '$_id',
+          totalRevenue: { $round: ['$totalRevenue', 0] },
+          totalOrders: 1,
+          averageOrderValue: { $round: ['$averageOrderValue', 0] },
+        },
+      },
+      { $sort: { _id: 1 } },
     ])
 
     return result
