@@ -337,7 +337,7 @@ class WorkScheduleRepository {
     const invoices = await SalesInvoice.find(invoiceFilter)
       .populate('customer_id', 'name phone address')
       .populate('items.medicine_id', 'name unit price category')
-      .populate('items.batch_id', 'batch_number expiry_date')
+      .populate('items.batch_id', 'batch_code expiry_date')
       .sort({ createdAt: -1 })
       .lean()
 

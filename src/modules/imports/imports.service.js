@@ -6,6 +6,7 @@ import {
   isValidUnit,
   getValidUnits,
   convertUnitPriceToBaseUnit,
+  getBaseUnitName,
 } from '../../utils/unitConversion.js'
 
 class ImportService {
@@ -77,7 +78,8 @@ class ImportService {
     for (const item of items) {
       const medicine = medicineMap.get(item.medicine_id.toString())
       if (medicine) {
-        const unit = item.unit || medicine.base_unit || 'tablet'
+        const baseUnitName = getBaseUnitName(medicine.base_unit)
+        const unit = item.unit || baseUnitName || 'tablet'
         if (!isValidUnit(medicine, unit)) {
           const validUnits = getValidUnits(medicine)
           throw new AppError(
@@ -103,26 +105,48 @@ class ImportService {
     // (convertToBaseUnit và convertUnitPriceToBaseUnit đã tự động normalize đơn vị từ tiếng Việt sang tiếng Anh)
     const processedItems = items.map((item) => {
       const medicine = medicineMap.get(item.medicine_id.toString())
-      const unit = item.unit || medicine.base_unit || 'tablet'
 
       // Debug: Log để kiểm tra
       if (!medicine) {
         throw new AppError(400, `Không tìm thấy thuốc với ID: ${item.medicine_id}`)
       }
 
-      // Lưu số lượng đơn vị nhập gốc để tính total_cost
+      // Lấy tên đơn vị từ object base_unit (nếu là object đã populate)
+      const baseUnitName = getBaseUnitName(medicine.base_unit)
+      const unit = item.unit || baseUnitName || 'tablet'
+
+      // Lưu số lượng đơn vị nhập gốc (để tham khảo/audit, không dùng để tính toán)
       const quantity_original = item.quantity
 
+      // DEBUG: Log để kiểm tra
+      console.log(`[DEBUG] Converting quantity for medicine ${medicine.name}:`, {
+        inputQuantity: item.quantity,
+        inputUnit: unit,
+        baseUnit: baseUnitName,
+        hasPackageStructure: !!medicine.package_structure,
+        packageStructure: medicine.package_structure,
+      })
+
       // Convert quantity to base units - quantity sẽ lưu ở base unit
+      // Ví dụ: 10 hộp → 1000 viên (nếu 1 hộp = 10 vỉ, 1 vỉ = 10 viên)
       const quantity = convertToBaseUnit(medicine, item.quantity, unit)
+
+      // DEBUG: Log kết quả conversion
+      console.log(`[DEBUG] Conversion result:`, {
+        original: quantity_original,
+        converted: quantity,
+        unit: unit,
+        isConverted: quantity !== quantity_original,
+      })
 
       // Tự động chuyển đổi giá nhập từ đơn vị nhập về đơn vị nhỏ nhất (base_unit)
       // Ví dụ: nếu người dùng nhập 39000 VND/hộp, hệ thống sẽ tự động tính ra giá cho 1 viên
       const unit_price_in_base_unit = convertUnitPriceToBaseUnit(medicine, item.unit_price, unit)
 
       // Get retail prices from medicine or use import price as fallback
-      const retail_price_for_base_unit = medicine.prices?.base_unit_price || unit_price_in_base_unit
-      const retail_price_per_unit = medicine.prices?.price_per_unit || {
+      // Ưu tiên: default_retail_price > unit_price_in_base_unit
+      const retail_price_for_base_unit = medicine.default_retail_price || unit_price_in_base_unit
+      const retail_price_per_unit = {
         box: null,
         blister: null,
         tablet: retail_price_for_base_unit,
@@ -145,23 +169,39 @@ class ImportService {
       return sum + item.quantity * item.unit_price
     }, 0)
 
+    // Generate invoice_code nếu chưa có
+    let invoice_code = importData.invoice_code
+    if (!invoice_code) {
+      // Format: IMP-YYYYMMDD-HHMMSS-XXXX (4 số ngẫu nhiên)
+      const now = new Date()
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '')
+      const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '')
+      const random = Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, '0')
+      invoice_code = `IMP-${dateStr}-${timeStr}-${random}`
+    }
+
     // Tạo phiếu nhập
     const importRecord = await importRepository.create({
       branch_id,
       supplier_id,
       employee_id: employeeId,
+      invoice_code,
       items: processedItems,
       total_cost,
       note,
       status: 'completed',
     })
 
-    // Tạo batch records và cập nhật inventory
+    // Tạo batch records, cập nhật branch_inventory, tạo stock movements và cập nhật inventory
+    // Tất cả trong một transaction để đảm bảo tính nhất quán
     await importRepository.createBatchesFromImport(
       branch_id,
       importRecord._id,
       processedItems,
-      supplier_id
+      supplier_id,
+      employeeId
     )
     await importRepository.updateInventory(branch_id, processedItems)
 

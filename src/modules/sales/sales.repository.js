@@ -7,7 +7,10 @@ import { AppError } from '../../utils/AppError.js'
 
 class SalesRepository {
   async findMedicinesByIds(ids = []) {
-    return Medicine.find({ _id: { $in: ids } }).lean()
+    return Medicine.find({ _id: { $in: ids } })
+      .populate('base_unit', 'name short_name ratio_to_base')
+      .populate('units', 'name short_name ratio_to_base')
+      .lean()
   }
 
   async findBatchesByIds(ids = []) {
@@ -56,7 +59,7 @@ class SalesRepository {
       .populate('employee_id', 'name username')
       .populate('customer_id', 'name phone address total_spent')
       .populate('items.medicine_id', 'name unit price')
-      .populate('items.batch_id', 'batch_number expiry_date')
+      .populate('items.batch_id', 'batch_code expiry_date')
       .select('+items.unit') // Ensure unit field is included
       .lean()
   }
@@ -95,7 +98,7 @@ class SalesRepository {
       .populate('employee_id', 'name username')
       .populate('customer_id', 'name phone address total_spent')
       .populate('items.medicine_id', 'name unit price category')
-      .populate('items.batch_id', 'batch_number expiry_date')
+      .populate('items.batch_id', 'batch_code expiry_date')
       .select('+items.unit') // Ensure unit field is included
       .sort(sort)
       .skip(skip)
@@ -124,7 +127,7 @@ class SalesRepository {
       medicine_id: medicine._id,
       quantity: { $gt: 0 }, // Chỉ lấy batch còn tồn kho
     })
-      .select('batch_number expiry_date quantity unit_price import_date')
+      .select('batch_code expiry_date quantity retail_price')
       .sort({ expiry_date: 1 }) // Sắp xếp theo hạn sử dụng gần nhất
       .lean()
 
@@ -152,11 +155,10 @@ class SalesRepository {
       },
       batches: batches.map((batch) => ({
         _id: batch._id,
-        batch_number: batch.batch_number,
+        batch_code: batch.batch_code,
         expiry_date: batch.expiry_date,
         quantity: batch.quantity,
-        unit_price: batch.unit_price,
-        import_date: batch.import_date,
+        retail_price: batch.retail_price,
       })),
       availableQuantity: inventory?.quantity || 0,
     }

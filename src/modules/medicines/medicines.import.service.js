@@ -171,11 +171,15 @@ const validateAndNormalizeExcelData = async (excelData) => {
       const defaultRetailPrice =
         row['Giá bán'] || row['Gia ban'] || row['default_retail_price'] || row['retail_price'] || ''
 
-      // Thời hạn sử dụng mặc định (tháng)
+      // Thời hạn sử dụng mặc định (ngày)
       const defaultExpiryDuration =
-        row['Thời hạn sử dụng (tháng)'] ||
+        row['Thời hạn sử dụng (ngày)'] ||
+        row['Thời hạn sử dụng (tháng)'] || // Hỗ trợ cũ: tự động chuyển đổi tháng sang ngày
+        row['Thoi han su dung (ngay)'] ||
         row['Thoi han su dung (thang)'] ||
-        row['default_expiry_duration_months'] ||
+        row['default_expiry_duration_days'] ||
+        row['default_expiry_duration_months'] || // Hỗ trợ cũ
+        row['expiry_duration_days'] ||
         row['expiry_duration_months'] ||
         ''
 
@@ -224,6 +228,7 @@ const validateAndNormalizeExcelData = async (excelData) => {
       // Xử lý danh sách units (có thể là chuỗi phân cách bởi dấu phẩy)
       // Tự động tạo đơn vị mới nếu chưa tồn tại
       const unitsArray = []
+      const unitRatiosMapForMedicine = new Map() // Lưu tỷ lệ riêng cho từng thuốc
       if (unitsString) {
         const unitNames = unitsString
           .toString()
@@ -239,11 +244,13 @@ const validateAndNormalizeExcelData = async (excelData) => {
           // (giả định đơn vị lớn hơn thường có tỷ lệ 10 so với đơn vị nhỏ hơn)
           const ratio = unitRatiosMap[normalizedUnitName] || 10
 
-          // Tự động tạo hoặc lấy đơn vị
+          // Tự động tạo hoặc lấy đơn vị (dùng ratio mặc định từ Unit nếu đã tồn tại)
           const unit = await getOrCreateUnit(normalizedUnitName, ratio)
 
           if (unit) {
             unitsArray.push(unit._id)
+            // Lưu tỷ lệ riêng cho thuốc này (có thể khác với ratio_to_base trong Unit)
+            unitRatiosMapForMedicine.set(unit._id.toString(), ratio)
           } else {
             warnings.push(
               `Dòng ${rowNumber}: Không thể tạo đơn vị "${normalizedUnitName}". Thuốc vẫn được tạo nhưng không có đơn vị này.`
@@ -297,12 +304,28 @@ const validateAndNormalizeExcelData = async (excelData) => {
         }
       }
 
-      // Validate và parse thời hạn sử dụng mặc định
+      // Validate và parse thời hạn sử dụng mặc định (ngày)
       let parsedExpiryDuration = null
       if (defaultExpiryDuration) {
         const duration = parseFloat(defaultExpiryDuration.toString().replace(/[^\d.-]/g, ''))
         if (!isNaN(duration) && duration > 0) {
-          parsedExpiryDuration = Math.round(duration)
+          // Kiểm tra nếu là dữ liệu cũ (từ cột "Thời hạn sử dụng (tháng)"), chuyển đổi sang ngày
+          const isOldMonthFormat =
+            row['Thời hạn sử dụng (tháng)'] ||
+            row['Thoi han su dung (thang)'] ||
+            row['default_expiry_duration_months'] ||
+            row['expiry_duration_months']
+
+          if (isOldMonthFormat) {
+            // Chuyển đổi từ tháng sang ngày (1 tháng = 30 ngày)
+            parsedExpiryDuration = Math.round(duration * 30)
+            warnings.push(
+              `Dòng ${rowNumber}: Đã chuyển đổi thời hạn sử dụng từ ${duration} tháng sang ${parsedExpiryDuration} ngày.`
+            )
+          } else {
+            // Giữ nguyên nếu là ngày
+            parsedExpiryDuration = Math.round(duration)
+          }
         } else {
           warnings.push(
             `Dòng ${rowNumber}: Thời hạn sử dụng mặc định không hợp lệ "${defaultExpiryDuration}", sẽ bỏ qua.`
@@ -318,6 +341,11 @@ const validateAndNormalizeExcelData = async (excelData) => {
         base_unit: baseUnit._id,
         units: validUnits, // Chỉ lấy các ObjectId hợp lệ
         is_active: isActive === true || isActive === 'true' || isActive === 1 || isActive === '1',
+      }
+
+      // Thêm unit_ratios nếu có (lưu tỷ lệ riêng cho từng thuốc)
+      if (unitRatiosMapForMedicine.size > 0) {
+        medicineData.unit_ratios = unitRatiosMapForMedicine
       }
 
       // Thêm các trường mới nếu có giá trị
@@ -338,7 +366,7 @@ const validateAndNormalizeExcelData = async (excelData) => {
       }
 
       if (parsedExpiryDuration !== null) {
-        medicineData.default_expiry_duration_months = parsedExpiryDuration
+        medicineData.default_expiry_duration_days = parsedExpiryDuration
       }
 
       normalizedData.push(medicineData)
@@ -360,58 +388,88 @@ const validateAndNormalizeExcelData = async (excelData) => {
  * @returns {Object} - Kết quả import
  */
 export const importMedicinesFromExcel = async (filePath) => {
-  // Đọc file Excel
-  const excelData = readExcelFile(filePath)
+  try {
+    console.log('📖 Reading Excel file:', filePath)
+    // Đọc file Excel
+    const excelData = readExcelFile(filePath)
+    console.log(`📊 Read ${excelData.length} rows from Excel`)
 
-  // Validate và chuẩn hóa dữ liệu
-  const { normalizedData, errors, warnings } = await validateAndNormalizeExcelData(excelData)
+    // Validate và chuẩn hóa dữ liệu
+    console.log('🔍 Validating and normalizing data...')
+    const { normalizedData, errors, warnings } = await validateAndNormalizeExcelData(excelData)
+    console.log(
+      `✅ Normalized ${normalizedData.length} medicines, ${errors.length} errors, ${warnings.length} warnings`
+    )
 
-  if (normalizedData.length === 0) {
-    throw new AppError(400, 'Không có dữ liệu hợp lệ để import')
-  }
+    if (normalizedData.length === 0) {
+      throw new AppError(400, 'Không có dữ liệu hợp lệ để import')
+    }
 
-  // Import vào database
-  const results = {
-    success: [],
-    failed: [],
-    errors: errors, // Lỗi chặn (blocking errors)
-    warnings: warnings, // Cảnh báo (non-blocking warnings)
-  }
+    // Import vào database
+    const results = {
+      success: [],
+      failed: [],
+      errors: errors, // Lỗi chặn (blocking errors)
+      warnings: warnings, // Cảnh báo (non-blocking warnings)
+    }
 
-  for (const medicineData of normalizedData) {
-    try {
-      // Kiểm tra xem thuốc đã tồn tại chưa (theo tên)
-      const existing = await medicinesRepo.findByName(medicineData.name)
-      if (existing) {
+    console.log('💾 Starting to save medicines to database...')
+    for (let i = 0; i < normalizedData.length; i++) {
+      const medicineData = normalizedData[i]
+      try {
+        // Kiểm tra xem thuốc đã tồn tại chưa (theo tên)
+        const existing = await medicinesRepo.findByName(medicineData.name)
+        if (existing) {
+          results.failed.push({
+            name: medicineData.name,
+            reason: 'Thuốc đã tồn tại',
+          })
+          continue
+        }
+
+        // Chuyển đổi Map thành Object nếu cần (Mongoose có thể không nhận Map trực tiếp)
+        if (medicineData.unit_ratios instanceof Map) {
+          const unitRatiosObj = {}
+          medicineData.unit_ratios.forEach((value, key) => {
+            unitRatiosObj[key] = value
+          })
+          medicineData.unit_ratios = unitRatiosObj
+        }
+
+        // Tạo thuốc mới
+        const created = await medicinesRepo.create(medicineData)
+        results.success.push({
+          _id: created._id,
+          name: created.name,
+        })
+        console.log(`✅ Created medicine ${i + 1}/${normalizedData.length}: ${medicineData.name}`)
+      } catch (error) {
+        console.error(`❌ Failed to create medicine "${medicineData.name}":`, error.message)
         results.failed.push({
           name: medicineData.name,
-          reason: 'Thuốc đã tồn tại',
+          reason: error.message,
         })
-        continue
       }
+    }
 
-      // Tạo thuốc mới
-      const created = await medicinesRepo.create(medicineData)
-      results.success.push({
-        _id: created._id,
-        name: created.name,
-      })
+    console.log(
+      `📊 Import summary: ${results.success.length} success, ${results.failed.length} failed`
+    )
+
+    // Xóa file sau khi import xong
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
+        console.log('🗑️ Deleted temporary file:', filePath)
+      }
     } catch (error) {
-      results.failed.push({
-        name: medicineData.name,
-        reason: error.message,
-      })
+      console.error('⚠️ Lỗi xóa file:', error)
     }
-  }
 
-  // Xóa file sau khi import xong
-  try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath)
-    }
+    return results
   } catch (error) {
-    console.error('Lỗi xóa file:', error)
+    console.error('❌ [medicineService] Error in importMedicinesFromExcel:', error)
+    console.error('❌ [medicineService] Error stack:', error.stack)
+    throw error
   }
-
-  return results
 }

@@ -71,6 +71,13 @@ const ImportSchema = new mongoose.Schema(
       required: [true, 'Nhân viên thực hiện là bắt buộc'],
       index: true,
     },
+    // Mã hóa đơn nhập hàng (tự động generate hoặc nhập từ bên ngoài)
+    invoice_code: {
+      type: String,
+      trim: true,
+      index: true,
+      sparse: true, // Cho phép null nhưng unique nếu có giá trị
+    },
     items: {
       type: [ImportItemSchema],
       required: [true, 'Danh sách thuốc nhập là bắt buộc'],
@@ -105,6 +112,7 @@ const ImportSchema = new mongoose.Schema(
 // Index để tìm kiếm nhanh
 ImportSchema.index({ createdAt: -1 })
 ImportSchema.index({ branch_id: 1, createdAt: -1 })
+ImportSchema.index({ invoice_code: 1 }, { unique: true, sparse: true })
 
 // Pre-save hook để tính tổng chi phí tự động và đồng bộ quantity_in_base_unit
 // Lưu ý: unit_price đã được chuyển đổi về base_unit (đơn vị nhỏ nhất)

@@ -266,12 +266,18 @@ class InventoryService {
 
     return batches.map((batch) => ({
       _id: batch._id,
-      batch_number: batch.batch_number,
+      batch_code: batch.batch_code,
       expiry_date: batch.expiry_date,
       quantity: batch.quantity,
+      initial_quantity: batch.initial_quantity,
       import_price: batch.import_price,
+      retail_price: batch.retail_price,
       supplier_id: batch.supplier_id,
+      import_record_id: batch.import_record_id,
+      unit: batch.unit,
       status: batch.status,
+      createdAt: batch.createdAt,
+      updatedAt: batch.updatedAt,
     }))
   }
 

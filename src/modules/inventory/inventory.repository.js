@@ -405,7 +405,9 @@ class InventoryRepository {
       quantity: { $gt: 0 },
       expiry_date: { $gt: new Date() },
     })
-      .select('batch_number expiry_date import_price quantity supplier_id status')
+      .select(
+        'batch_code expiry_date import_price retail_price quantity initial_quantity supplier_id import_record_id unit status createdAt updatedAt'
+      )
       .sort({ expiry_date: 1 })
       .lean()
 
