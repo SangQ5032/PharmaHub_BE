@@ -157,6 +157,31 @@ class StatisticsService {
   }
 
   /**
+   * Lấy doanh thu cá nhân của nhân viên hiện tại
+   * @param {string} employeeId - ID của nhân viên
+   * @param {Object} filters - { startDate, endDate, groupBy }
+   */
+  async getEmployeePersonalRevenue(employeeId, filters) {
+    try {
+      const validGroupBy = ['day', 'week', 'month', 'year']
+      if (filters.groupBy && !validGroupBy.includes(filters.groupBy)) {
+        throw new AppError('groupBy phải là: day, week, month hoặc year', 400)
+      }
+
+      const stats = await statisticsRepository.getEmployeePersonalRevenue(employeeId, filters)
+
+      return {
+        success: true,
+        groupBy: filters.groupBy || null,
+        data: stats,
+      }
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      throw new AppError('Lỗi khi lấy doanh thu cá nhân: ' + error.message, 500)
+    }
+  }
+
+  /**
    * Lấy thống kê doanh thu toàn cửa hàng theo chi nhánh (BRANCH-MANAGER)
    */
   async getBranchRevenueStatistics(branchId, filters) {

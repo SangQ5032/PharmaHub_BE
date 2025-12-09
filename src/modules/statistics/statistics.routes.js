@@ -105,6 +105,18 @@ router.get(
   statisticsController.getEmployeePersonalStatistics
 )
 
+/**
+ * @route   GET /api/statistics/my-revenue
+ * @desc    Lấy doanh thu cá nhân của nhân viên hiện tại
+ * @access  Private (employee, branch-manager, system-admin, admin)
+ * @query   startDate, endDate, groupBy (day|week|month|year)
+ */
+router.get(
+  '/my-revenue',
+  authorizeRoles('employee', 'branch-manager', 'system_admin', 'admin'),
+  statisticsController.getEmployeePersonalRevenue
+)
+
 // ========== BRANCH MANAGER STATISTICS ==========
 
 /**

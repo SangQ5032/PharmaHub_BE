@@ -187,6 +187,30 @@ class StatisticsController {
   })
 
   /**
+   * GET /api/statistics/my-revenue
+   * Lấy doanh thu cá nhân của nhân viên hiện tại
+   * Hỗ trợ lọc theo ngày/tháng/năm
+   */
+  getEmployeePersonalRevenue = catchAsync(async (req, res) => {
+    const { startDate, endDate, groupBy } = req.query
+    const employeeId = req.user._id
+
+    const filters = {}
+    if (startDate) filters.startDate = startDate
+    if (endDate) filters.endDate = endDate
+    if (groupBy) filters.groupBy = groupBy
+
+    const result = await statisticsService.getEmployeePersonalRevenue(employeeId, filters)
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy doanh thu cá nhân thành công',
+      groupBy: result.groupBy,
+      data: result.data,
+    })
+  })
+
+  /**
    * GET /api/statistics/branch/revenue
    * Lấy thống kê doanh thu toàn cửa hàng theo chi nhánh
    */
