@@ -11,7 +11,9 @@
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
     "format": "prettier --write .",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "seed:units": "node scripts/seed-units.js",
+    "create:sample-excel": "node scripts/create-medicines-sample-excel.js"
   },
   "keywords": [],
   "author": "",
@@ -24,7 +26,9 @@
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
-    "morgan": "^1.10.1"
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "xlsx": "^0.18.5"
   },
   "repository": {
     "type": "git",

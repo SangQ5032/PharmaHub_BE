@@ -3,6 +3,9 @@
 // - Chỉ chứa các hàm CRUD/Query, không xử lý nghiệp vụ
 import mongoose from 'mongoose'
 import { Medicine } from './medicines.model.js'
+import { BranchInventory } from '../branch_inventory/branch_inventory.model.js'
+import { Batch } from '../batches/batches.model.js'
+import Branch from '../branch/branch.model.js'
 
 class MedicinesRepository {
   // Tạo mới 1 bản ghi thuốc
@@ -12,7 +15,10 @@ class MedicinesRepository {
 
   // Tìm 1 thuốc theo id
   async findById(id) {
-    return await Medicine.findById(id).populate('category_id', 'name description').lean()
+    return await Medicine.findById(id)
+      .populate('base_unit', 'name short_name ratio_to_base')
+      .populate('units', 'name short_name ratio_to_base')
+      .lean()
   }
 
   // Lấy danh sách thuốc (có phân trang, sort, tìm kiếm)
@@ -30,10 +36,7 @@ class MedicinesRepository {
     if (search && !name) {
       mongoFilter.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { generic_name: { $regex: search, $options: 'i' } },
-        { brand_name: { $regex: search, $options: 'i' } },
-        { barcode: { $regex: search, $options: 'i' } },
-        { registration_number: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
       ]
     }
 
@@ -44,7 +47,8 @@ class MedicinesRepository {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .populate('category_id', 'name description')
+        .populate('base_unit', 'name short_name ratio_to_base')
+        .populate('units', 'name short_name ratio_to_base')
         .lean(),
       Medicine.countDocuments(mongoFilter),
     ])
@@ -63,7 +67,8 @@ class MedicinesRepository {
   // Cập nhật 1 thuốc theo id
   async updateById(id, update) {
     return await Medicine.findByIdAndUpdate(id, update, { new: true, runValidators: true })
-      .populate('category_id', 'name description')
+      .populate('base_unit', 'name short_name ratio_to_base')
+      .populate('units', 'name short_name ratio_to_base')
       .lean()
   }
 
@@ -72,78 +77,24 @@ class MedicinesRepository {
     return await Medicine.findByIdAndDelete(id).lean()
   }
 
-  // Tìm thuốc theo category_id
-  async findByCategory(categoryId, filter = {}, options = {}) {
-    const categoryObjectId = new mongoose.Types.ObjectId(categoryId)
-    const mongoFilter = { ...filter, category_id: categoryObjectId }
-    const { page = 1, limit = 10, sort = { createdAt: -1 } } = options
-    const skip = (page - 1) * limit
-
-    const [data, total] = await Promise.all([
-      Medicine.find(mongoFilter)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .populate('category_id', 'name description')
-        .lean(),
-      Medicine.countDocuments(mongoFilter),
-    ])
-
-    return {
-      data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    }
-  }
-
-  // Tìm thuốc theo status
-  async findByStatus(status, filter = {}, options = {}) {
-    const mongoFilter = { ...filter, status }
-    const { page = 1, limit = 10, sort = { createdAt: -1 } } = options
-    const skip = (page - 1) * limit
-
-    const [data, total] = await Promise.all([
-      Medicine.find(mongoFilter)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .populate('category_id', 'name description')
-        .lean(),
-      Medicine.countDocuments(mongoFilter),
-    ])
-
-    return {
-      data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    }
-  }
-
-  // Tìm thuốc theo barcode hoặc registration_number
-  async findByBarcodeOrRegNumber(barcode, regNumber) {
+  // Tìm thuốc theo tên
+  async findByName(name) {
     return await Medicine.findOne({
-      $or: [{ barcode }, { registration_number: regNumber }],
+      name: { $regex: name, $options: 'i' },
     })
-      .populate('category_id', 'name description')
+      .populate('base_unit', 'name short_name ratio_to_base')
+      .populate('units', 'name short_name ratio_to_base')
       .lean()
   }
 
-  // Lấy danh sách thuốc cần nhập hàng (dưới threshold)
-  async findLowStockMedicines(filter = {}, options = {}) {
-    const { page = 1, limit = 10, sort = { alert_threshold: 1 } } = options
+  // Lấy danh sách thuốc đang hoạt động
+  async findActiveMedicines(filter = {}, options = {}) {
+    const { page = 1, limit = 10, sort = { createdAt: -1 } } = options
     const skip = (page - 1) * limit
 
     const mongoFilter = {
       ...filter,
-      status: 'active',
+      is_active: true,
     }
 
     const [data, total] = await Promise.all([
@@ -151,7 +102,8 @@ class MedicinesRepository {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .populate('category_id', 'name description')
+        .populate('base_unit', 'name short_name ratio_to_base')
+        .populate('units', 'name short_name ratio_to_base')
         .lean(),
       Medicine.countDocuments(mongoFilter),
     ])
@@ -190,14 +142,12 @@ class MedicinesRepository {
     if (search && !name) {
       mongoSearchFilter.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { generic_name: { $regex: search, $options: 'i' } },
-        { brand_name: { $regex: search, $options: 'i' } },
-        { barcode: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
       ]
     }
 
-    if (status) {
-      mongoSearchFilter.status = status
+    if (options.is_active !== undefined) {
+      mongoSearchFilter.is_active = options.is_active === true || options.is_active === 'true'
     }
 
     const skip = (page - 1) * limit
@@ -216,11 +166,7 @@ class MedicinesRepository {
               {
                 $match: {
                   $expr: {
-                    $and: [
-                      { $eq: ['$medicine_id', '$$medicine_id'] },
-                      { $eq: ['$branch_id', branchObjectId] },
-                      { $eq: ['$status', 'active'] },
-                    ],
+                    $eq: ['$medicine_id', '$$medicine_id'],
                   },
                 },
               },
@@ -244,51 +190,24 @@ class MedicinesRepository {
           },
         },
         {
-          $lookup: {
-            from: 'categories',
-            localField: 'category_id',
-            foreignField: '_id',
-            as: 'category_info',
-          },
-        },
-        {
-          $unwind: {
-            path: '$category_info',
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-        {
           $project: {
             _id: 1,
             name: 1,
-            generic_name: 1,
-            brand_name: 1,
-            dosage_form: 1,
-            strength: 1,
-            unit: 1,
-            packaging: 1,
-            category_id: 1,
-            category_name: '$category_info.name',
-            prescription_required: 1,
-            is_controlled: 1,
-            retail_price: 1,
-            minimum_price: 1,
-            max_price: 1,
-            manufacturer: 1,
-            country_of_origin: 1,
-            barcode: 1,
-            registration_number: 1,
-            alert_threshold: 1,
-            status: 1,
+            description: 1,
+            image_url: 1,
+            base_unit: 1,
+            units: 1,
+            is_active: 1,
             total_quantity: 1,
             batch_count: 1,
             batches: {
               _id: 1,
-              batch_number: 1,
+              batch_code: 1,
               expiry_date: 1,
               import_price: 1,
-              quantity: 1, // quantity luôn ở base unit
-              quantity: 1, // Legacy field for backward compatibility
+              retail_price: 1,
+              quantity: 1,
+              unit: 1,
               supplier_id: 1,
               createdAt: 1,
             },
@@ -372,91 +291,42 @@ class MedicinesRepository {
 
     const sortStage = sortOptions[sortBy] || { 'branch.name': 1 }
 
-    // Bước 1: Lấy tồn kho theo chi nhánh
-    const inventoryByBranch = await Medicine.aggregate([
-      {
-        $match: { _id: medicineObjectId },
-      },
-      {
-        $lookup: {
-          from: 'batches',
-          let: { medicine_id: '$_id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$medicine_id', '$$medicine_id'] },
-                    { $eq: ['$status', 'active'] },
-                  ],
-                },
-              },
-            },
-            {
-              $group: {
-                _id: '$branch_id',
-                total_quantity: { $sum: '$quantity' },
-                batches: {
-                  $push: {
-                    _id: '$_id',
-                    batch_number: '$batch_number',
-                    quantity: '$quantity',
-                    expiry_date: '$expiry_date',
-                    import_price: '$import_price',
-                    supplier_id: '$supplier_id',
-                  },
-                },
-              },
-            },
-          ],
-          as: 'inventory_by_branch',
-        },
-      },
-      {
-        $unwind: {
-          path: '$inventory_by_branch',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $replaceRoot: {
-          newRoot: {
-            $mergeObjects: ['$inventory_by_branch', {}],
-          },
-        },
-      },
-      // Chỉ giữ lại các documents có _id (có batches)
-      {
-        $match: {
-          _id: { $exists: true, $ne: null },
-        },
-      },
-    ])
+    // Lấy tồn kho từ branch_inventory collection
+    const inventories = await BranchInventory.find({ medicine_id: medicineObjectId })
+      .populate('branch_id', 'name address phone')
+      .lean()
 
-    // Tạo map từ branch_id -> inventory data
-    const inventoryMap = {}
-    inventoryByBranch.forEach((item) => {
-      // Chỉ thêm vào map nếu item có _id hợp lệ (có batches)
-      if (item && item._id) {
-        inventoryMap[item._id.toString()] = item
-      }
-    })
+    // Lấy tất cả batches của thuốc này
+    const batches = await Batch.find({ medicine_id: medicineObjectId })
+      .populate('unit', 'name short_name ratio_to_base')
+      .populate('supplier_id', 'name')
+      .lean()
 
-    // Bước 2: Lấy tất cả chi nhánh
-    const Branch = mongoose.model('Branch')
-    const allBranches = await Branch.find().lean()
+    // Nhóm batches theo branch_id từ branch_inventory
+    const result = inventories.map((inventory) => {
+      const branchBatches = batches.filter((batch) => {
+        return inventory.batches.some((b) => b.toString() === batch._id.toString())
+      })
 
-    // Bước 3: Merge dữ liệu chi nhánh với tồn kho
-    const result = allBranches.map((branch) => {
-      const inventory = inventoryMap[branch._id.toString()]
+      const totalQuantity = branchBatches.reduce((sum, batch) => sum + (batch.quantity || 0), 0)
+
       return {
-        branch_id: branch._id,
-        branch_name: branch.name || 'Không xác định',
-        branch_address: branch.address || '',
-        branch_phone: branch.phone || '',
-        total_quantity: inventory?.total_quantity || 0,
-        batches: inventory?.batches || [],
-        in_stock: (inventory?.total_quantity || 0) > 0 ? 'Còn hàng' : 'Hết hàng',
+        branch_id: inventory.branch_id?._id || inventory.branch_id,
+        branch_name: inventory.branch_id?.name || 'Không xác định',
+        branch_address: inventory.branch_id?.address || '',
+        branch_phone: inventory.branch_id?.phone || '',
+        total_quantity: totalQuantity,
+        batches: branchBatches.map((b) => ({
+          _id: b._id,
+          batch_code: b.batch_code,
+          quantity: b.quantity,
+          expiry_date: b.expiry_date,
+          import_price: b.import_price,
+          retail_price: b.retail_price,
+          unit: b.unit,
+          supplier_id: b.supplier_id,
+        })),
+        in_stock: totalQuantity > 0 ? 'Còn hàng' : 'Hết hàng',
       }
     })
 
