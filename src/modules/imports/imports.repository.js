@@ -3,6 +3,8 @@ import { Inventory } from '../inventory/inventory.model.js'
 import { Medicine } from '../medicines/medicines.model.js'
 import { Supplier } from '../suppliers/suppliers.model.js'
 import { Batch } from '../batches/batches.model.js'
+import { BranchInventory } from '../branch_inventory/branch_inventory.model.js'
+import { StockMovement } from '../stock_movements/stock_movements.model.js'
 import Branch from '../branch/branch.model.js'
 import mongoose from 'mongoose'
 
@@ -69,37 +71,103 @@ class ImportRepository {
    * Tạo batch records từ phiếu nhập
    * @param {String} branchId - ID chi nhánh
    * @param {String} importRecordId - ID phiếu nhập
-   * @param {Array} items - Danh sách thuốc nhập
+   * @param {Array} items - Danh sách thuốc nhập (đã được process với medicine info)
    * @param {String} supplierId - ID nhà cung cấp
+   * @param {String} userId - ID người thực hiện
    * @returns {Promise<Array>} - Danh sách batch tạo mới
    */
-  async createBatchesFromImport(branchId, importRecordId, items, supplierId) {
+  async createBatchesFromImport(branchId, importRecordId, items, supplierId, userId) {
     const session = await mongoose.startSession()
     session.startTransaction()
 
     try {
       const batches = []
+      const batchIds = []
+
+      // Lấy thông tin medicine để có base_unit
+      const medicineIds = items.map((item) => item.medicine_id)
+      const medicines = await Medicine.find({
+        _id: { $in: medicineIds },
+      })
+        .select('base_unit')
+        .session(session)
+        .lean()
+
+      const medicineMap = new Map(medicines.map((m) => [m._id.toString(), m]))
+
       for (const item of items) {
+        const medicine = medicineMap.get(item.medicine_id.toString())
+        if (!medicine) {
+          throw new Error(`Không tìm thấy thuốc với ID: ${item.medicine_id}`)
+        }
+
+        // Tạo batch với đầy đủ thông tin
         const batch = await Batch.create(
           [
             {
               branch_id: branchId,
               medicine_id: item.medicine_id,
-              batch_number: item.batch_number,
-              expiry_date: item.expiry_date,
-              import_price: item.unit_price,
-              quantity: item.quantity, // quantity luôn lưu ở base unit (đã convert)
-              initial_quantity: item.quantity,
-              retail_price_for_base_unit: item.retail_price_for_base_unit,
-              retail_price_per_unit: item.retail_price_per_unit,
               supplier_id: supplierId,
               import_record_id: importRecordId,
+              batch_code: item.batch_number, // batch_code trong model
+              expiry_date: item.expiry_date,
+              unit: medicine.base_unit, // Set unit từ medicine.base_unit
+              quantity: item.quantity, // quantity luôn lưu ở base unit (đã convert)
+              initial_quantity: item.quantity,
+              import_price: item.unit_price, // unit_price đã được convert về base unit
+              retail_price: item.retail_price_for_base_unit || item.unit_price, // retail_price cho base unit
               status: 'active',
             },
           ],
           { session }
         )
-        batches.push(batch[0])
+
+        const createdBatch = batch[0]
+        batches.push(createdBatch)
+        batchIds.push(createdBatch._id)
+
+        // Cập nhật branch_inventory - thêm batch vào array
+        let branchInventory = await BranchInventory.findOne({
+          branch_id: branchId,
+          medicine_id: item.medicine_id,
+        }).session(session)
+
+        if (branchInventory) {
+          // Thêm batch_id vào array nếu chưa có
+          if (!branchInventory.batches.includes(createdBatch._id)) {
+            branchInventory.batches.push(createdBatch._id)
+            await branchInventory.save({ session })
+          }
+        } else {
+          // Tạo mới branch_inventory record
+          await BranchInventory.create(
+            [
+              {
+                branch_id: branchId,
+                medicine_id: item.medicine_id,
+                batches: [createdBatch._id],
+              },
+            ],
+            { session }
+          )
+        }
+
+        // Tạo stock movement record
+        await StockMovement.create(
+          [
+            {
+              type: 'import',
+              branch_id: branchId,
+              medicine_id: item.medicine_id,
+              batch_id: createdBatch._id,
+              quantity: item.quantity, // Số lượng dương (nhập vào)
+              reference: importRecordId.toString(),
+              note: `Nhập hàng - Mã lô: ${item.batch_number}`,
+              user_id: userId,
+            },
+          ],
+          { session }
+        )
       }
 
       await session.commitTransaction()
@@ -208,7 +276,10 @@ class ImportRepository {
   async validateReferences(medicineIds, supplierId, branchId) {
     const medicines = await Medicine.find({
       _id: { $in: medicineIds },
-    }).lean()
+    })
+      .populate('base_unit', 'name short_name ratio_to_base')
+      .populate('units', 'name short_name ratio_to_base')
+      .lean()
 
     const supplier = await Supplier.findById(supplierId).lean()
     const branch = await Branch.findById(branchId).lean()

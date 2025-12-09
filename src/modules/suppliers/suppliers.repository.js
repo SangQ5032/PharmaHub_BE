@@ -12,8 +12,12 @@ class SupplierRepository {
     const filter = {}
 
     // Lọc theo trạng thái
-    if (status && ['active', 'inactive'].includes(status)) {
-      filter.status = status
+    if (status) {
+      // Chuyển đổi status thành lowercase để so sánh
+      const statusLower = status.toLowerCase()
+      if (['active', 'inactive'].includes(statusLower)) {
+        filter.status = statusLower
+      }
     }
 
     // Tìm kiếm theo tên hoặc email

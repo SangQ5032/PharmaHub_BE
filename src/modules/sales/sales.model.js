@@ -19,7 +19,7 @@ const SalesItemSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    batch_number: {
+    batch_code: {
       type: String,
       required: true,
       trim: true,

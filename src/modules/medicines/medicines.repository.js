@@ -8,6 +8,41 @@ import { Batch } from '../batches/batches.model.js'
 import Branch from '../branch/branch.model.js'
 
 class MedicinesRepository {
+  // Helper: Lấy ratio từ unit_ratios (hỗ trợ cả Map và Object)
+  _getUnitRatio(unit_ratios, unitIdStr) {
+    if (!unit_ratios) return null
+    // Nếu là Map
+    if (unit_ratios instanceof Map) {
+      return unit_ratios.get(unitIdStr)
+    }
+    // Nếu là Object (từ .lean())
+    if (typeof unit_ratios === 'object' && unit_ratios !== null) {
+      return unit_ratios[unitIdStr]
+    }
+    return null
+  }
+
+  // Helper: Override ratio_to_base từ unit_ratios
+  _overrideUnitRatios(medicine) {
+    if (!medicine || !medicine.unit_ratios || !medicine.units) {
+      return medicine
+    }
+
+    medicine.units = medicine.units.map((unit) => {
+      const unitIdStr = unit._id.toString()
+      const customRatio = this._getUnitRatio(medicine.unit_ratios, unitIdStr)
+      if (customRatio !== null && customRatio !== undefined) {
+        return {
+          ...unit,
+          ratio_to_base: customRatio,
+        }
+      }
+      return unit
+    })
+
+    return medicine
+  }
+
   // Tạo mới 1 bản ghi thuốc
   async create(medicineData) {
     return await Medicine.create(medicineData)
@@ -15,10 +50,14 @@ class MedicinesRepository {
 
   // Tìm 1 thuốc theo id
   async findById(id) {
-    return await Medicine.findById(id)
+    const medicine = await Medicine.findById(id)
       .populate('base_unit', 'name short_name ratio_to_base')
       .populate('units', 'name short_name ratio_to_base')
       .lean()
+
+    if (!medicine) return null
+
+    return this._overrideUnitRatios(medicine)
   }
 
   // Lấy danh sách thuốc (có phân trang, sort, tìm kiếm)
@@ -66,10 +105,17 @@ class MedicinesRepository {
 
   // Cập nhật 1 thuốc theo id
   async updateById(id, update) {
-    return await Medicine.findByIdAndUpdate(id, update, { new: true, runValidators: true })
+    const medicine = await Medicine.findByIdAndUpdate(id, update, {
+      new: true,
+      runValidators: true,
+    })
       .populate('base_unit', 'name short_name ratio_to_base')
       .populate('units', 'name short_name ratio_to_base')
       .lean()
+
+    if (!medicine) return null
+
+    return this._overrideUnitRatios(medicine)
   }
 
   // Xóa 1 thuốc theo id
@@ -79,12 +125,16 @@ class MedicinesRepository {
 
   // Tìm thuốc theo tên
   async findByName(name) {
-    return await Medicine.findOne({
+    const medicine = await Medicine.findOne({
       name: { $regex: name, $options: 'i' },
     })
       .populate('base_unit', 'name short_name ratio_to_base')
       .populate('units', 'name short_name ratio_to_base')
       .lean()
+
+    if (!medicine) return null
+
+    return this._overrideUnitRatios(medicine)
   }
 
   // Lấy danh sách thuốc đang hoạt động
@@ -108,8 +158,11 @@ class MedicinesRepository {
       Medicine.countDocuments(mongoFilter),
     ])
 
+    // Override ratio_to_base từ unit_ratios nếu có
+    const processedData = data.map((medicine) => this._overrideUnitRatios(medicine))
+
     return {
-      data,
+      data: processedData,
       pagination: {
         page,
         limit,

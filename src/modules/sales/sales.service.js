@@ -5,6 +5,7 @@ import { AppError } from '../../utils/AppError.js'
 import {
   convertToBaseUnit,
   calculateUnitPrice,
+  calculateUnitPriceFromBatch,
   deductFromBatchesFEFO,
   isValidUnit,
   getValidUnits,
@@ -187,9 +188,10 @@ class SalesService {
       }
     })
 
-    const subtotal = enrichedItemsPrep.reduce((sum, item) => sum + item.line_total, 0)
+    // Calculate initial subtotal (will be recalculated after getting batch prices)
+    const initialSubtotal = enrichedItemsPrep.reduce((sum, item) => sum + item.line_total, 0)
 
-    // Resolve customer details first
+    // Resolve customer details first (using initial subtotal, will update total_spent later with actual total)
     const customerDetails = await this.resolveCustomer(
       {
         customer_id: data.customer_id,
@@ -197,20 +199,12 @@ class SalesService {
         customer_phone: data.customer_phone,
         customer_address: data.customer_address,
       },
-      subtotal,
-      0 // We'll calculate total later
+      initialSubtotal,
+      0 // We'll calculate total later and update customer total_spent
     )
 
-    // Tính toán chiết khấu (ưu tiên manual discount, sau đó customer discount)
-    const discountInfo = await this.calculateDiscount(
-      customerDetails.customer_id,
-      subtotal,
-      discount > 0 ? discount : null
-    )
-
-    const taxableAmount = subtotal - discountInfo.discount_amount
-    const taxAmount = (tax_rate / 100) * taxableAmount
-    const totalAmount = taxableAmount + taxAmount
+    // Note: subtotal will be recalculated after getting batch prices in transaction
+    // For now, use initial subtotal for customer discount calculation (will be updated later)
 
     const invoiceCode = await this.generateInvoiceCode()
 
@@ -238,32 +232,68 @@ class SalesService {
         }
       }
 
-      // Build sales items with deduction info
+      // Build sales items with deduction info and recalculate prices from batch
       const salesItems = await Promise.all(
         enrichedItemsPrep.map(async (item, index) => {
           const medicine = medicineMap.get(item.medicine_id.toString())
           const batchDeductions = deductions[index].deductions
           const primaryBatch = batchDeductions[0] // Use first batch from deductions
 
-          // Get batch details to fill batch_number (with session for transaction)
+          // Get batch details to fill batch_code and retail_price (with session for transaction)
           const batch = await Batch.findById(primaryBatch.batch_id)
             .session(session)
-            .select('batch_number')
+            .select('batch_code retail_price')
             .lean()
+
+          if (!batch) {
+            throw new AppError(404, `Không tìm thấy batch với ID: ${primaryBatch.batch_id}`)
+          }
+
+          // Recalculate unit_price from batch retail_price
+          // If user provided unit_price, use it; otherwise calculate from batch
+          let unit_price = item.unit_price
+          if (unit_price === undefined || unit_price === 0) {
+            try {
+              unit_price = calculateUnitPriceFromBatch(medicine, batch, item.unit)
+            } catch (error) {
+              // Fallback to medicine price if batch price calculation fails
+              console.warn(
+                `[WARNING] Cannot calculate price from batch, falling back to medicine: ${error.message}`
+              )
+              unit_price = calculateUnitPrice(medicine, item.unit)
+            }
+          }
+
+          // Recalculate line_total
+          const line_total = unit_price * item.quantity
 
           return {
             medicine_id: item.medicine_id,
             batch_id: primaryBatch.batch_id, // Primary batch
             name: medicine.name,
-            batch_number: batch?.batch_number || '', // Filled from batch details
+            batch_code: batch.batch_code || '', // Filled from batch details
             quantity: item.quantity,
             unit: item.unit,
             total_base_units: item.total_base_units,
-            unit_price: item.unit_price,
-            line_total: item.line_total,
+            unit_price: unit_price,
+            line_total: line_total,
           }
         })
       )
+
+      // Recalculate subtotal with updated prices from batch
+      const subtotal = salesItems.reduce((sum, item) => sum + item.line_total, 0)
+
+      // Recalculate discount, tax, and total with updated subtotal
+      const discountInfo = await this.calculateDiscount(
+        customerDetails.customer_id,
+        subtotal,
+        discount > 0 ? discount : null
+      )
+
+      const taxableAmount = subtotal - discountInfo.discount_amount
+      const taxAmount = (tax_rate / 100) * taxableAmount
+      const totalAmount = taxableAmount + taxAmount
 
       if (customerDetails.customer_id && customerDetails.shouldUpdateTotal) {
         await salesRepository.increaseCustomerTotalSpent(

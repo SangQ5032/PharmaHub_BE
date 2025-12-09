@@ -20,7 +20,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Hậu Giang',
     'Giá nhập': 3500,
     'Giá bán': 6000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Paracetamol 500mg',
     'Công dụng': 'Giảm đau, hạ sốt',
     'Chỉ định': 'Đau đầu, đau răng, đau cơ, sốt',
@@ -64,7 +64,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Sanofi',
     'Giá nhập': 5500,
     'Giá bán': 9500,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Ibuprofen 400mg',
     'Công dụng': 'Giảm đau, chống viêm, hạ sốt',
     'Chỉ định': 'Đau nhức, viêm khớp, đau bụng kinh, sốt',
@@ -108,7 +108,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm AstraZeneca',
     'Giá nhập': 8000,
     'Giá bán': 14000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Omeprazole 20mg',
     'Công dụng': 'Ức chế tiết acid dạ dày',
     'Chỉ định': 'Loét dạ dày, trào ngược dạ dày thực quản, hội chứng Zollinger-Ellison',
@@ -130,7 +130,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Bristol-Myers Squibb',
     'Giá nhập': 3000,
     'Giá bán': 5500,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Metformin hydrochloride 500mg',
     'Công dụng': 'Hạ đường huyết, giảm kháng insulin',
     'Chỉ định': 'Đái tháo đường type 2, hội chứng buồng trứng đa nang',
@@ -152,7 +152,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Pfizer',
     'Giá nhập': 6000,
     'Giá bán': 11000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Amlodipine besylate 5mg',
     'Công dụng': 'Hạ huyết áp, điều trị đau thắt ngực',
     'Chỉ định': 'Tăng huyết áp, đau thắt ngực, bệnh mạch vành',
@@ -174,7 +174,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Pfizer',
     'Giá nhập': 15000,
     'Giá bán': 25000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Atorvastatin calcium 20mg',
     'Công dụng': 'Hạ cholesterol, giảm nguy cơ tim mạch',
     'Chỉ định': 'Tăng cholesterol máu, phòng ngừa biến cố tim mạch',
@@ -196,7 +196,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Merck',
     'Giá nhập': 7000,
     'Giá bán': 12000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Losartan potassium 50mg',
     'Công dụng': 'Hạ huyết áp, bảo vệ thận',
     'Chỉ định': 'Tăng huyết áp, suy tim, bệnh thận do đái tháo đường',
@@ -218,7 +218,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Abbott',
     'Giá nhập': 5000,
     'Giá bán': 9000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Levothyroxine sodium 100mcg',
     'Công dụng': 'Thay thế hormone tuyến giáp',
     'Chỉ định': 'Suy giáp, bướu cổ, ung thư tuyến giáp sau phẫu thuật',
@@ -240,7 +240,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm AstraZeneca',
     'Giá nhập': 4000,
     'Giá bán': 7500,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Atenolol 50mg',
     'Công dụng': 'Hạ huyết áp, giảm nhịp tim, điều trị đau thắt ngực',
     'Chỉ định': 'Tăng huyết áp, đau thắt ngực, rối loạn nhịp tim, nhồi máu cơ tim',
@@ -263,7 +263,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Sanofi',
     'Giá nhập': 2000,
     'Giá bán': 4000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Furosemide 40mg',
     'Công dụng': 'Lợi tiểu, giảm phù, hạ huyết áp',
     'Chỉ định': 'Phù, suy tim, tăng huyết áp, suy thận',
@@ -285,7 +285,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Bristol-Myers Squibb',
     'Giá nhập': 3000,
     'Giá bán': 6000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Warfarin sodium 5mg',
     'Công dụng': 'Chống đông máu, phòng ngừa huyết khối',
     'Chỉ định': 'Rung nhĩ, huyết khối tĩnh mạch, thay van tim cơ học',
@@ -307,7 +307,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Bayer',
     'Giá nhập': 1500,
     'Giá bán': 3000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Acetylsalicylic acid 100mg',
     'Công dụng': 'Chống kết tập tiểu cầu, giảm đau, hạ sốt, chống viêm',
     'Chỉ định': 'Phòng ngừa nhồi máu cơ tim, đột quỵ, giảm đau, hạ sốt',
@@ -351,7 +351,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Pfizer',
     'Giá nhập': 6000,
     'Giá bán': 11000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Doxycycline hyclate 100mg',
     'Công dụng': 'Kháng khuẩn phổ rộng, chống sốt rét',
     'Chỉ định': 'Nhiễm khuẩn đường hô hấp, tiết niệu, da, sốt rét, mụn trứng cá',
@@ -373,7 +373,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Sanofi',
     'Giá nhập': 4000,
     'Giá bán': 7500,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Metronidazole 250mg',
     'Công dụng': 'Kháng khuẩn kỵ khí, kháng ký sinh trùng',
     'Chỉ định': 'Nhiễm khuẩn kỵ khí, amip, trùng roi, viêm dạ dày do H. pylori',
@@ -441,7 +441,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Takeda',
     'Giá nhập': 9000,
     'Giá bán': 16000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Pantoprazole sodium 40mg',
     'Công dụng': 'Ức chế tiết acid dạ dày',
     'Chỉ định': 'Loét dạ dày, trào ngược dạ dày thực quản, hội chứng Zollinger-Ellison',
@@ -486,7 +486,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Engelhard Arzneimittel',
     'Giá nhập': 45000,
     'Giá bán': 80000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Chiết xuất lá thường xuân',
     'Công dụng': 'Giảm ho, long đờm',
     'Chỉ định': 'Ho khan, ho có đờm, viêm phế quản',
@@ -530,7 +530,7 @@ const medicinesData = [
     'Nhà sản xuất': 'Công ty Dược phẩm Leo Pharma',
     'Giá nhập': 35000,
     'Giá bán': 60000,
-    'Thời hạn sử dụng (tháng)': 36,
+    'Thời hạn sử dụng (ngày)': 1080,
     'Thành phần': 'Acid fusidic 2%',
     'Công dụng': 'Kháng khuẩn tại chỗ',
     'Chỉ định': 'Nhiễm khuẩn da, mụn nhọt, viêm nang lông',
@@ -559,7 +559,7 @@ const columnWidths = [
   { wch: 30 }, // Nhà sản xuất
   { wch: 12 }, // Giá nhập
   { wch: 12 }, // Giá bán
-  { wch: 25 }, // Thời hạn sử dụng
+  { wch: 25 }, // Thời hạn sử dụng (ngày)
   { wch: 25 }, // Thành phần
   { wch: 25 }, // Công dụng
   { wch: 30 }, // Chỉ định
@@ -596,7 +596,7 @@ console.log('7. Hoạt động')
 console.log('8. Nhà sản xuất')
 console.log('9. Giá nhập')
 console.log('10. Giá bán')
-console.log('11. Thời hạn sử dụng (tháng)')
+console.log('11. Thời hạn sử dụng (ngày)')
 console.log('12. Thành phần')
 console.log('13. Công dụng')
 console.log('14. Chỉ định')
@@ -611,4 +611,6 @@ console.log('   - Hệ thống sẽ TỰ ĐỘNG TẠO đơn vị mới nếu ch
 console.log('   - Đơn vị cơ sở: tỷ lệ mặc định = 1')
 console.log('   - Các đơn vị khác: tỷ lệ mặc định = 10 (hoặc theo cột "Tỷ lệ đơn vị")')
 console.log('   - Ví dụ đơn vị đa dạng: Viên, Gói, Chai, Ống, Tuýp, Hộp, Vỉ, Thùng, v.v.')
+console.log('   - Thời hạn sử dụng: tính bằng NGÀY (ví dụ: 90, 1080, v.v.)')
+console.log('   - Hỗ trợ tự động chuyển đổi từ tháng sang ngày nếu dùng cột cũ')
 console.log('\n💡 Bạn có thể sử dụng file này để test API import thuốc!')

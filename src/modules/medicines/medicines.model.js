@@ -37,6 +37,14 @@ const MedicineSchema = new mongoose.Schema(
         ref: 'Unit',
       },
     ],
+    // Tỷ lệ chuyển đổi riêng cho từng đơn vị của thuốc này (Map<unit_id, ratio>)
+    // Ví dụ: { "unit_id_1": 100, "unit_id_2": 10 }
+    // Nếu không có, sẽ dùng ratio_to_base từ Unit model
+    unit_ratios: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
     // Trạng thái hoạt động
     is_active: {
       type: Boolean,
@@ -107,8 +115,8 @@ const MedicineSchema = new mongoose.Schema(
       type: Number,
       min: [0, 'Giá bán mặc định phải lớn hơn hoặc bằng 0'],
     },
-    // Thời hạn sử dụng mặc định (tính bằng tháng) - dùng làm tham khảo
-    default_expiry_duration_months: {
+    // Thời hạn sử dụng mặc định (tính bằng ngày) - dùng làm tham khảo
+    default_expiry_duration_days: {
       type: Number,
       min: [1, 'Thời hạn sử dụng phải lớn hơn 0'],
     },
