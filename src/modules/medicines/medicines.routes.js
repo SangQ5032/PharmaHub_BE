@@ -3,14 +3,13 @@ import express from 'express'
 import * as medicinesController from './medicines.controller.js'
 import { validateBody } from '../../middlewares/validate.js'
 import { createMedicineSchema, updateMedicineSchema } from './medicines.validation.js'
+import { uploadExcel } from '../../middlewares/upload.js'
 
 const router = express.Router()
 
 // Specific routes trước generic routes
-router.get('/by-branch/:branchId', medicinesController.getMedicinesByBranch)
-router.get('/low-stock', medicinesController.getLowStockMedicines)
-router.get('/category/:categoryId', medicinesController.getMedicinesByCategory)
-router.get('/status/:status', medicinesController.getMedicinesByStatus)
+router.get('/active', medicinesController.getActiveMedicines)
+router.post('/import', uploadExcel.single('file'), medicinesController.importMedicines)
 router.get('/:medicineId/inventory-all-branches', medicinesController.getInventoryAllBranches)
 
 // Generic routes

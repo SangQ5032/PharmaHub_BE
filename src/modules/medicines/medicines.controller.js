@@ -3,6 +3,7 @@
 // - Không viết truy vấn DB tại đây
 // - Không nhồi logic nghiệp vụ nặng tại đây
 import * as medicinesService from './medicines.service.js'
+import * as importService from './medicines.import.service.js'
 import { asyncHandler } from '../../utils/asyncHandler.js'
 
 // POST /api/medicines - tạo thuốc
@@ -61,50 +62,71 @@ export const deleteMedicine = asyncHandler(async (req, res) => {
   })
 })
 
-// GET /api/medicines/category/:categoryId - danh sách thuốc theo loại
-export const getMedicinesByCategory = asyncHandler(async (req, res) => {
-  const { categoryId } = req.params
-  const result = await medicinesService.getMedicinesByCategory(categoryId, req.query)
+// GET /api/medicines/active - danh sách thuốc đang hoạt động
+export const getActiveMedicines = asyncHandler(async (req, res) => {
+  const result = await medicinesService.getActiveMedicines(req.query)
   res.json({
     success: true,
-    message: 'Lấy danh sách thuốc theo loại thành công',
+    message: 'Lấy danh sách thuốc đang hoạt động thành công',
     data: result.data,
     pagination: result.pagination,
   })
 })
 
-// GET /api/medicines/status/:status - danh sách thuốc theo trạng thái
-export const getMedicinesByStatus = asyncHandler(async (req, res) => {
-  const { status } = req.params
-  const result = await medicinesService.getMedicinesByStatus(status, req.query)
-  res.json({
-    success: true,
-    message: 'Lấy danh sách thuốc theo trạng thái thành công',
-    data: result.data,
-    pagination: result.pagination,
+// POST /api/medicines/import - import thuốc từ file Excel
+export const importMedicines = asyncHandler(async (req, res) => {
+  // Log để debug
+  console.log('📤 Import request received:', {
+    contentType: req.headers['content-type'],
+    hasFile: !!req.file,
+    bodyKeys: Object.keys(req.body),
+    fileInfo: req.file ? { name: req.file.originalname, size: req.file.size } : null,
   })
-})
 
-// GET /api/medicines/low-stock - danh sách thuốc cần nhập hàng
-export const getLowStockMedicines = asyncHandler(async (req, res) => {
-  const result = await medicinesService.getLowStockMedicines(req.query)
+  if (!req.file) {
+    // Kiểm tra Content-Type để đưa ra message cụ thể hơn
+    const contentType = req.headers['content-type'] || ''
+    let message = 'Vui lòng chọn file Excel để import'
+
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      message =
+        'Content-Type không đúng. Vui lòng sử dụng multipart/form-data khi gửi file. Trong React Native, đảm bảo bạn sử dụng FormData và KHÔNG set header Content-Type (để fetch tự động set).'
+    } else if (contentType.includes('application/json')) {
+      message = 'Không thể gửi file dưới dạng JSON. Vui lòng sử dụng FormData để gửi file.'
+    } else if (!contentType.includes('multipart/form-data')) {
+      message = `Content-Type "${contentType}" không được hỗ trợ. Vui lòng sử dụng multipart/form-data.`
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: message,
+      hint: 'Đảm bảo bạn đang sử dụng FormData và field name là "file"',
+    })
+  }
+
+  const result = await importService.importMedicinesFromExcel(req.file.path)
+
+  // Tạo message chi tiết hơn
+  let message = `Import thành công ${result.success.length} thuốc`
+  if (result.failed.length > 0) {
+    message += `, thất bại ${result.failed.length} thuốc`
+  }
+  if (result.warnings && result.warnings.length > 0) {
+    message += `, có ${result.warnings.length} cảnh báo`
+  }
+  if (result.errors && result.errors.length > 0) {
+    message += `, có ${result.errors.length} lỗi chặn`
+  }
+
   res.json({
     success: true,
-    message: 'Lấy danh sách thuốc cần nhập hàng thành công',
-    data: result.data,
-    pagination: result.pagination,
-  })
-})
-
-// GET /api/medicines/by-branch/:branchId - danh sách thuốc theo chi nhánh (kèm lô hàng và tồn kho)
-export const getMedicinesByBranch = asyncHandler(async (req, res) => {
-  const { branchId } = req.params
-  const result = await medicinesService.getMedicinesByBranch(branchId, req.query)
-  res.json({
-    success: true,
-    message: 'Lấy danh sách thuốc theo chi nhánh thành công',
-    data: result.data,
-    pagination: result.pagination,
+    message: message,
+    data: {
+      success: result.success,
+      failed: result.failed,
+      errors: result.errors || [], // Lỗi chặn (blocking errors)
+      warnings: result.warnings || [], // Cảnh báo (non-blocking warnings)
+    },
   })
 })
 

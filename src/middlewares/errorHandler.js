@@ -1,12 +1,63 @@
 import { AppError } from '../utils/AppError.js'
 import mongoose from 'mongoose'
+import multer from 'multer'
 
 const errorHandler = (err, req, res, next) => {
   console.error('❌ Error:', err)
+  console.error('❌ Error details:', {
+    message: err.message,
+    code: err.code,
+    name: err.name,
+    statusCode: err.statusCode,
+    contentType: req.headers['content-type'],
+    hasFile: !!req.file,
+  })
+
+  // Xử lý lỗi Multer (file upload)
+  if (err instanceof multer.MulterError) {
+    let message = 'Lỗi upload file'
+    let statusCode = 400
+
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      message = 'File quá lớn. Kích thước tối đa là 10MB'
+    } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      message = 'Field name không đúng. Vui lòng sử dụng field name "file"'
+    } else {
+      message = `Lỗi upload file: ${err.message}`
+    }
+
+    return res.status(statusCode).json({
+      success: false,
+      status: 'error',
+      message: message,
+    })
+  }
+
+  // Xử lý lỗi từ multer fileFilter
+  if (
+    err.message &&
+    (err.message.includes('Chỉ chấp nhận file Excel') || err.message.includes('file Excel'))
+  ) {
+    return res.status(400).json({
+      success: false,
+      status: 'error',
+      message: err.message,
+    })
+  }
+
+  // Xử lý lỗi khi Content-Type không đúng (không phải multipart/form-data)
+  if (err.message && err.message.includes('multipart')) {
+    return res.status(400).json({
+      success: false,
+      status: 'error',
+      message: 'Content-Type phải là multipart/form-data. Vui lòng sử dụng FormData khi gửi file.',
+    })
+  }
 
   // Xử lý lỗi AppError (custom error)
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
+      success: false,
       status: 'error',
       message: err.message,
     })
