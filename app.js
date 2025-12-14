@@ -16,6 +16,9 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))
 }
 
+// Serve static uploads for avatars/images
+app.use('/uploads', express.static('uploads'))
+
 // Mount module routes
 app.use('/api', routes)
 app.get('/ping', (req, res) => {

@@ -18,6 +18,7 @@ import salesRoutes, { invoicesRouter } from '../modules/sales/sales.routes.js'
 import customersRoutes from '../modules/customers/customers.routes.js'
 import payrollRoutes from '../modules/payroll/payroll.routes.js'
 
+import profileRoutes from '../modules/profile/profile.routes.js'
 // TODO: thêm các module khác khi tạo tiếp
 
 const router = express.Router()
@@ -40,6 +41,7 @@ router.use('/sales', salesRoutes)
 router.use('/invoices', invoicesRouter) // Invoices sub-router
 router.use('/customers', customersRoutes)
 router.use('/payrolls', payrollRoutes)
+router.use('/profile', profileRoutes)
 
 // TODO: mount các module khác
 
