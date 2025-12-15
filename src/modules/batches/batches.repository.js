@@ -12,7 +12,20 @@ class BatchesRepository {
   // Tìm 1 lô hàng theo id
   async findById(id) {
     return await Batch.findById(id)
-      .populate('medicine_id', 'name generic_name brand_name unit category_id retail_price')
+      .populate({
+        path: 'medicine_id',
+        select: 'name generic_name brand_name unit category_id retail_price units base_unit',
+        populate: [
+          {
+            path: 'units',
+            select: 'name short_name ratio_to_base',
+          },
+          {
+            path: 'base_unit',
+            select: 'name short_name ratio_to_base',
+          },
+        ],
+      })
       .populate('branch_id', 'name address')
       .populate('supplier_id', 'name')
       .lean()
@@ -32,7 +45,20 @@ class BatchesRepository {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .populate('medicine_id', 'name generic_name brand_name unit category_id retail_price')
+        .populate({
+          path: 'medicine_id',
+          select: 'name generic_name brand_name unit category_id retail_price units base_unit',
+          populate: [
+            {
+              path: 'units',
+              select: 'name short_name ratio_to_base',
+            },
+            {
+              path: 'base_unit',
+              select: 'name short_name ratio_to_base',
+            },
+          ],
+        })
         .populate('supplier_id', 'name')
         .lean(),
       Batch.countDocuments(mongoFilter),
@@ -59,6 +85,20 @@ class BatchesRepository {
       medicine_id: medicineObjectId,
       status: 'active',
     })
+      .populate({
+        path: 'medicine_id',
+        select: 'name generic_name brand_name unit category_id retail_price units base_unit',
+        populate: [
+          {
+            path: 'units',
+            select: 'name short_name ratio_to_base',
+          },
+          {
+            path: 'base_unit',
+            select: 'name short_name ratio_to_base',
+          },
+        ],
+      })
       .populate('supplier_id', 'name')
       .sort({ expiry_date: 1 }) // Hiển thị lô sắp hết hạn trước
       .lean()
@@ -67,7 +107,20 @@ class BatchesRepository {
   // Cập nhật lô hàng
   async updateById(id, update) {
     return await Batch.findByIdAndUpdate(id, update, { new: true, runValidators: true })
-      .populate('medicine_id', 'name generic_name brand_name unit retail_price')
+      .populate({
+        path: 'medicine_id',
+        select: 'name generic_name brand_name unit category_id retail_price units base_unit',
+        populate: [
+          {
+            path: 'units',
+            select: 'name short_name ratio_to_base',
+          },
+          {
+            path: 'base_unit',
+            select: 'name short_name ratio_to_base',
+          },
+        ],
+      })
       .populate('supplier_id', 'name')
       .lean()
   }
