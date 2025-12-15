@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import payrollRepository from './payroll.repository.js'
 
 const LATE_PENALTY = 50000 // 50,000 VND per late shift
+const MISSED_SHIFT_PENALTY = 200000 // 200,000 VND per missed shift
 
 class PayrollService {
   /**
@@ -24,12 +25,13 @@ class PayrollService {
         throw new Error('User not found')
       }
 
-      const baseSalary = user.salary || 0
+      const baseMonthlySalary = user.salary || 0 // Lương cơ bản theo tháng (26 công)
 
       // Get all work schedules for the month
       const [startYear, startMonth] = month.split('-')
       const startDate = new Date(`${startYear}-${startMonth}-01`)
-      const endDate = new Date(startYear, startMonth, 0) // Last day of month
+      // Get last day of month: new Date(year, month, 0) where month is 1-indexed
+      const endDate = new Date(parseInt(startYear), parseInt(startMonth), 0) // Last day of month
 
       const workSchedules = await WorkSchedule.find({
         user_id,
@@ -50,27 +52,54 @@ class PayrollService {
         month
       )
 
-      // Calculate penalty
-      const penaltyAmount = lateCount * LATE_PENALTY
+      // Calculate base salary based on 26 working days (26 shifts)
+      // If worked more than 26 shifts, calculate additional salary
+      const STANDARD_SHIFTS = 26 // 26 công chuẩn
+      let baseSalary = 0
+
+      if (completedShifts <= STANDARD_SHIFTS) {
+        // Nếu làm ít hơn hoặc bằng 26 ca: tính theo tỷ lệ
+        baseSalary = (completedShifts / STANDARD_SHIFTS) * baseMonthlySalary
+      } else {
+        // Nếu làm nhiều hơn 26 ca: lương cơ bản + lương thêm
+        const salaryPerShift = baseMonthlySalary / STANDARD_SHIFTS
+        const extraShifts = completedShifts - STANDARD_SHIFTS
+        baseSalary = baseMonthlySalary + extraShifts * salaryPerShift
+      }
+
+      // Round base salary to remove decimal places
+      baseSalary = Math.round(baseSalary)
+
+      // Calculate missed shifts (shifts assigned but not checked in)
+      const missedShifts = totalShifts - completedShifts
+
+      // Calculate penalties
+      const latePenaltyAmount = lateCount * LATE_PENALTY // Phạt đi muộn
+      const missedPenaltyAmount = missedShifts * MISSED_SHIFT_PENALTY // Phạt không đi làm
+      const totalPenaltyAmount = latePenaltyAmount + missedPenaltyAmount
 
       // Calculate sales amount
       const salesAmount = await this.calculateSalesAmount(user_id, branch_id, month)
 
       // Calculate final salary
-      const finalSalary = baseSalary + salesAmount - penaltyAmount
+      const finalSalary = baseSalary + salesAmount - totalPenaltyAmount
 
       return {
         user_id,
         branch_id,
         month,
-        base_salary: baseSalary,
+        base_monthly_salary: baseMonthlySalary, // Lương cơ bản chuẩn theo tháng (26 công)
+        base_salary: baseSalary, // Lương cơ bản đã tính theo số ca thực tế (đã làm tròn)
         total_shifts: totalShifts,
         completed_shifts: completedShifts,
+        missed_shifts: missedShifts, // Số ca được giao nhưng nhân viên không checkin
         late_count: lateCount,
-        penalty_amount: penaltyAmount,
+        late_penalty_amount: latePenaltyAmount, // Phạt đi muộn
+        missed_penalty_amount: missedPenaltyAmount, // Phạt không đi làm
+        penalty_amount: totalPenaltyAmount, // Tổng phạt (muộn + không đi làm)
         bonus_amount: 0,
         sales_amount: salesAmount,
-        final_salary: Math.max(0, finalSalary), // Ensure non-negative
+        final_salary: Math.round(Math.max(0, finalSalary)), // Làm tròn và đảm bảo không âm
         status: 'pending',
         note: '',
       }
@@ -94,33 +123,85 @@ class PayrollService {
       let completedShifts = 0
       let lateCount = 0
 
+      // Get date range for the month (YYYY-MM)
+      const [year, monthStr] = month.split('-')
+
+      // Query attendances using regex to match ISO strings that start with YYYY-MM
+      // checkin_time is stored as ISO string (e.g., "2025-12-01T08:00:00.000Z")
+      const monthPattern = `^${year}-${monthStr}-`
+      const attendances = await Attendance.find({
+        user_id,
+        branch_id,
+        checkin_time: {
+          $regex: monthPattern,
+        },
+      }).sort({ checkin_time: 1 })
+
+      // Create a map of attendances by date and shift (YYYY-MM-DD_shift)
+      // Key format: "2025-12-10_morning" or "2025-12-10_afternoon"
+      const attendanceMap = new Map()
+      for (const att of attendances) {
+        if (att.checkin_time) {
+          try {
+            // Extract date part directly from ISO string to avoid timezone issues
+            // Format: "2025-12-10T03:07:00.264Z" -> "2025-12-10"
+            let dateKey = null
+            let shift = null
+
+            if (typeof att.checkin_time === 'string') {
+              // Check if it's ISO format (contains 'T')
+              if (att.checkin_time.includes('T')) {
+                dateKey = att.checkin_time.split('T')[0] // Get YYYY-MM-DD part
+                // Determine shift from checkin time (hour < 12 = morning, >= 12 = afternoon)
+                const checkinDate = new Date(att.checkin_time)
+                if (!isNaN(checkinDate.getTime())) {
+                  const hour = checkinDate.getUTCHours()
+                  shift = hour < 12 ? 'morning' : 'afternoon'
+                }
+              } else {
+                // If not ISO format, try to parse as Date
+                const checkinDate = new Date(att.checkin_time)
+                if (!isNaN(checkinDate.getTime())) {
+                  // Use UTC date to avoid timezone issues
+                  const year = checkinDate.getUTCFullYear()
+                  const month = String(checkinDate.getUTCMonth() + 1).padStart(2, '0')
+                  const day = String(checkinDate.getUTCDate()).padStart(2, '0')
+                  dateKey = `${year}-${month}-${day}`
+                  const hour = checkinDate.getUTCHours()
+                  shift = hour < 12 ? 'morning' : 'afternoon'
+                }
+              }
+            }
+
+            if (dateKey && shift) {
+              // Create key with date and shift: "2025-12-10_morning"
+              const mapKey = `${dateKey}_${shift}`
+              // If multiple attendances on same date+shift, keep the first one (earliest checkin)
+              if (!attendanceMap.has(mapKey)) {
+                attendanceMap.set(mapKey, att)
+              }
+            }
+          } catch (error) {
+            // Skip invalid date formats
+            console.warn(`Invalid checkin_time format: ${att.checkin_time}`, error)
+          }
+        }
+      }
+
+      // Check each work schedule - only count attendance if it matches both date AND shift
       for (const schedule of workSchedules) {
-        const [year, monthStr] = month.split('-')
-        const scheduleDate = new Date(schedule.date)
+        const scheduleDateKey = schedule.date // YYYY-MM-DD format
+        const scheduleShift = schedule.shift // 'morning' or 'afternoon'
+        const mapKey = `${scheduleDateKey}_${scheduleShift}`
+        const attendance = attendanceMap.get(mapKey)
 
-        // Get attendance for this date - use date range query instead of $where
-        const startOfDay = new Date(schedule.date)
-        startOfDay.setHours(0, 0, 0, 0)
-        const endOfDay = new Date(schedule.date)
-        endOfDay.setHours(23, 59, 59, 999)
-
-        const attendance = await Attendance.findOne({
-          user_id,
-          branch_id,
-          checkin_time: {
-            $gte: startOfDay,
-            $lte: endOfDay,
-          },
-        })
-
+        // Only count attendance if it matches the work schedule (both date and shift)
+        // Attendance without matching work schedule will NOT be counted
         if (attendance && attendance.checkin_time) {
           completedShifts++
 
-          // Check if late (after scheduled time)
-          const checkinTime = new Date(attendance.checkin_time)
-          const isLate = this.isLate(schedule.shift, checkinTime)
-
-          if (isLate) {
+          // Count late shifts based on status = 'late' only
+          if (attendance.status === 'late') {
             lateCount++
           }
         }
@@ -134,19 +215,23 @@ class PayrollService {
 
   /**
    * Check if employee is late
-   * @param {String} shift - "morning" (09:00-15:00) or "afternoon" (15:00-22:00)
-   * @param {Date} checkinTime
+   * @param {String} shift - "morning" (09:00) or "afternoon" (15:00)
+   * @param {Date} checkinTime - Date object from ISO string (UTC)
    * @returns {Boolean}
    */
   isLate(shift, checkinTime) {
-    const hour = checkinTime.getHours()
-    const minutes = checkinTime.getMinutes()
+    // Use UTC time since checkin_time is stored as UTC ISO string
+    // Example: "2025-12-10T03:07:00.264Z" -> 03:07 UTC
+    const hour = checkinTime.getUTCHours()
+    const minutes = checkinTime.getUTCMinutes()
     const time = hour * 60 + minutes // Convert to minutes
 
     if (shift === 'morning' || shift === 'ca_sang') {
-      return time > 9 * 60 // After 09:00
+      // Morning shift starts at 09:00 UTC
+      return time > 9 * 60 // After 09:00 UTC
     } else if (shift === 'afternoon' || shift === 'ca_chieu') {
-      return time > 15 * 60 // After 15:00
+      // Afternoon shift starts at 15:00 UTC
+      return time > 15 * 60 // After 15:00 UTC
     }
 
     return false
