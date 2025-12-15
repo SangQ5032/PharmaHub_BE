@@ -132,11 +132,15 @@ class AttendanceService {
       )
     }
 
+    // Kiểm tra xem có checkin muộn không (sử dụng lại checkinDateTime đã khai báo ở trên)
+    const isLate = this.isLate(shift, checkinDateTime)
+    const finalCheckinTime = checkinTime || new Date().toISOString()
+
     const attendanceData = {
       user_id: userId,
       branch_id: branchId,
-      checkin_time: checkinTime || new Date().toISOString(),
-      status: 'checked_in',
+      checkin_time: finalCheckinTime,
+      status: isLate ? 'late' : 'checked_in',
     }
 
     return await attendanceRepository.createAttendance(attendanceData)
@@ -161,10 +165,13 @@ class AttendanceService {
     const diffMs = checkoutDate - checkinDate
     const workingHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100 // Làm tròn 2 chữ số thập phân
 
+    // Giữ nguyên status 'late' nếu đã checkin muộn, nếu không thì set thành 'checked_out'
+    const newStatus = activeCheckin.status === 'late' ? 'late' : 'checked_out'
+
     const updateData = {
       checkout_time: checkoutTimeValue,
       working_hours: workingHours,
-      status: 'checked_out',
+      status: newStatus,
     }
 
     return await attendanceRepository.updateAttendance(activeCheckin._id, updateData)
@@ -197,6 +204,26 @@ class AttendanceService {
       throw new Error('Invalid attendance ID')
     }
     return await attendanceRepository.deleteAttendance(id)
+  }
+
+  /**
+   * Check if employee is late
+   * @param {String} shift - "morning" (09:00) or "afternoon" (15:00)
+   * @param {Date} checkinTime
+   * @returns {Boolean}
+   */
+  isLate(shift, checkinTime) {
+    const hour = checkinTime.getHours()
+    const minutes = checkinTime.getMinutes()
+    const time = hour * 60 + minutes // Convert to minutes
+
+    if (shift === 'morning' || shift === 'ca_sang') {
+      return time > 9 * 60 // After 09:00
+    } else if (shift === 'afternoon' || shift === 'ca_chieu') {
+      return time > 15 * 60 // After 15:00
+    }
+
+    return false
   }
 }
 
