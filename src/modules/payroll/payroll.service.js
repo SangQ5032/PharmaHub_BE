@@ -288,6 +288,9 @@ class PayrollService {
         )
       }
 
+      // Ensure final_salary is never negative (cannot be less than 0)
+      payrollData.final_salary = Math.max(0, payrollData.final_salary)
+
       // Create new payroll
       const payroll = await payrollRepository.create(payrollData)
       return payroll

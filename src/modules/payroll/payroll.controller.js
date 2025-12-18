@@ -30,12 +30,13 @@ export const previewPayroll = catchAsync(async (req, res, next) => {
 /**
  * POST /payrolls
  * Create a new payroll record
+ * Note: base_salary is always calculated from actual shifts worked
  */
 export const createPayroll = catchAsync(async (req, res, next) => {
-  const { user_id, branch_id, month, base_salary, bonus_amount, note } = req.body
+  const { user_id, branch_id, month, bonus_amount, note } = req.body
 
-  if (!user_id || !branch_id || !month || base_salary === undefined) {
-    throw new AppError(400, 'user_id, branch_id, month, and base_salary are required')
+  if (!user_id || !branch_id || !month) {
+    throw new AppError(400, 'user_id, branch_id, and month are required')
   }
 
   // Validate month format
@@ -43,13 +44,12 @@ export const createPayroll = catchAsync(async (req, res, next) => {
     throw new AppError(400, 'month must be in format YYYY-MM')
   }
 
-  // Calculate payroll automatically
+  // Calculate payroll automatically - base_salary is always calculated from actual shifts
   const payrollData = await payrollService.calculatePayroll(user_id, branch_id, month)
 
-  // Override with request data and add bonus
+  // Add bonus and note if provided
   const finalPayrollData = {
     ...payrollData,
-    base_salary, // Use provided base_salary
     bonus_amount: bonus_amount || 0,
     note: note || '',
   }
