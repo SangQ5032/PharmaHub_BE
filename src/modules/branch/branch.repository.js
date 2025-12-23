@@ -16,5 +16,11 @@ class BranchRepository {
   async getBranchById(id) {
     return await Branch.findById(id)
   }
+  async closeBranch(id) {
+    return await Branch.findByIdAndUpdate(id, { status: 'closed' }, { new: true })
+  }
+  async openBranch(id) {
+    return await Branch.findByIdAndUpdate(id, { status: 'active' }, { new: true })
+  }
 }
 export default new BranchRepository()

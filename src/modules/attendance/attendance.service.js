@@ -218,7 +218,7 @@ class AttendanceService {
     const time = hour * 60 + minutes // Convert to minutes
 
     if (shift === 'morning' || shift === 'ca_sang') {
-      return time > 9 * 60 // After 09:00
+      return time > 6 * 60 // After 09:00
     } else if (shift === 'afternoon' || shift === 'ca_chieu') {
       return time > 15 * 60 // After 15:00
     }

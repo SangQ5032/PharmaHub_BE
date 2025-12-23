@@ -57,7 +57,7 @@ class SalesRepository {
     return SalesInvoice.findById(id)
       .populate('branch_id', 'name address phone')
       .populate('employee_id', 'name username')
-      .populate('customer_id', 'name phone address total_spent')
+      .populate('customer_id', 'name phone address total_spent discount_balance')
       .populate('items.medicine_id', 'name unit price')
       .populate('items.batch_id', 'batch_code expiry_date')
       .select('+items.unit') // Ensure unit field is included
@@ -82,9 +82,34 @@ class SalesRepository {
   }
 
   async increaseCustomerTotalSpent(customerId, amount, session) {
+    // Tính discount_balance mới = 1% của amount mới
+    const newDiscountBalance = Math.floor(amount / 100)
+
     return Customer.findByIdAndUpdate(
       customerId,
-      { $inc: { total_spent: amount } },
+      {
+        $inc: {
+          total_spent: amount,
+          discount_balance: newDiscountBalance,
+        },
+      },
+      { new: true, session }
+    )
+  }
+
+  async decreaseCustomerDiscountBalance(customerId, amount, session) {
+    // Sử dụng aggregation pipeline để đảm bảo discount_balance không âm
+    return Customer.findByIdAndUpdate(
+      customerId,
+      [
+        {
+          $set: {
+            discount_balance: {
+              $max: [{ $subtract: ['$discount_balance', amount] }, 0],
+            },
+          },
+        },
+      ],
       { new: true, session }
     )
   }
@@ -96,7 +121,7 @@ class SalesRepository {
     return SalesInvoice.find(filter)
       .populate('branch_id', 'name address phone')
       .populate('employee_id', 'name username')
-      .populate('customer_id', 'name phone address total_spent')
+      .populate('customer_id', 'name phone address total_spent discount_balance')
       .populate('items.medicine_id', 'name unit price category')
       .populate('items.batch_id', 'batch_code expiry_date')
       .select('+items.unit') // Ensure unit field is included

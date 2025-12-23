@@ -22,6 +22,12 @@ const CustomerSchema = new mongoose.Schema(
       default: 0,
       min: [0, 'Tổng chi tiêu không hợp lệ'],
     },
+    discount_balance: {
+      type: Number,
+      default: 0,
+      min: [0, 'Số dư giảm giá không hợp lệ'],
+      description: 'Số tiền giảm giá tích lũy (1% của total_spent)',
+    },
   },
   {
     timestamps: true,

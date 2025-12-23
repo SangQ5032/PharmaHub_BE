@@ -17,5 +17,11 @@ class BranchService {
   async getBranchById(id) {
     return await branchRepository.getBranchById(id)
   }
+  async closeBranch(id) {
+    return await branchRepository.closeBranch(id)
+  }
+  async openBranch(id) {
+    return await branchRepository.openBranch(id)
+  }
 }
 export default new BranchService()

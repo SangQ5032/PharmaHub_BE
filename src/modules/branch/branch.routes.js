@@ -10,6 +10,8 @@ router.post('/', branchController.create)
 router.put('/:id', branchController.update)
 router.delete('/:id', branchController.delete)
 router.get('/:id', branchController.getById)
+router.post('/:id/close', branchController.close)
+router.post('/:id/open', branchController.open)
 
 /**
  * @route   GET /api/branches/:id/inventory

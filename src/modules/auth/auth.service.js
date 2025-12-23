@@ -3,6 +3,7 @@ import * as authRepo from './auth.repository.js'
 import config from '../../config/index.js'
 import { AppError } from '../../utils/AppError.js'
 import admin from '../../config/firebase/firebase.js'
+import Branch from '../branch/branch.model.js'
 
 /**
  * Normalize số điện thoại (loại bỏ ký tự không phải số, xử lý mã quốc gia)
@@ -74,6 +75,14 @@ export const checkFirebaseToken = async (idToken) => {
     // Kiểm tra trạng thái user (nếu có)
     if (user.status && user.status !== 'active') {
       throw new AppError(403, 'Tài khoản không hoạt động')
+    }
+
+    // Kiểm tra chi nhánh có đóng cửa không
+    if (user.branch_id) {
+      const branch = await Branch.findById(user.branch_id)
+      if (branch && branch.status === 'closed') {
+        throw new AppError(403, 'Chi nhánh đã đóng cửa')
+      }
     }
 
     // Ensure role uses hyphen format (e.g. system-admin) for consistency

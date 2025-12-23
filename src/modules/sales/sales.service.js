@@ -16,8 +16,8 @@ const PAYMENT_METHODS = ['cash', 'card', 'bank', 'e-wallet']
 
 class SalesService {
   /**
-   * Tính toán chiết khấu dựa trên total_spent của khách hàng
-   * Cứ 100,000 spent → được giảm 1,000
+   * Tính toán chiết khấu dựa trên discount_balance của khách hàng
+   * discount_balance = 1% của total_spent (100k → 1k)
    *
    * @param {string} customerId - ID khách hàng
    * @param {number} subtotal - Tạm tính
@@ -53,13 +53,11 @@ class SalesService {
       }
     }
 
-    // Tính chiết khấu tối đa dựa trên total_spent
-    // Cứ 100,000 spent → được giảm 1,000
-    const totalSpent = customer.total_spent || 0
-    const maxDiscountEligible = Math.floor(totalSpent / 100000) * 1000
+    // Sử dụng discount_balance (1% của total_spent đã tích lũy)
+    const discountBalance = customer.discount_balance || 0
 
-    // Nếu không được giảm giá, trả về 0
-    if (maxDiscountEligible <= 0) {
+    // Nếu không có discount_balance, trả về 0
+    if (discountBalance <= 0) {
       return {
         discount_amount: 0,
         max_discount_eligible: 0,
@@ -68,7 +66,9 @@ class SalesService {
     }
 
     // Trả về thông tin discount tối đa có thể dùng
-    // Employee có thể chọn bao nhiêu từ 0 đến maxDiscountEligible
+    // Employee có thể chọn bao nhiêu từ 0 đến discountBalance (nhưng không vượt quá subtotal)
+    const maxDiscountEligible = Math.min(discountBalance, subtotal)
+
     return {
       discount_amount: 0, // Mặc định 0, cần employee chọn
       max_discount_eligible: maxDiscountEligible,
@@ -79,7 +79,8 @@ class SalesService {
   async createInvoice(data = {}, employeeId) {
     const branch_id = data.branch_id
     const items = data.items
-    const discount = Number(data.discount ?? 0)
+    // Phân biệt giữa "không truyền discount" (undefined) và "truyền discount = 0"
+    const discount = data.discount !== undefined ? Number(data.discount) : undefined
     const tax_rate = Number(data.tax_rate ?? 0)
     const payment_method = (data.payment_method || 'cash').toLowerCase()
 
@@ -119,7 +120,7 @@ class SalesService {
       }
     }
 
-    if (Number.isNaN(discount) || discount < 0) {
+    if (discount !== undefined && (Number.isNaN(discount) || discount < 0)) {
       throw new AppError(400, 'Chiết khấu không hợp lệ')
     }
 
@@ -288,19 +289,58 @@ class SalesService {
       const discountInfo = await this.calculateDiscount(
         customerDetails.customer_id,
         subtotal,
-        discount > 0 ? discount : null
+        discount !== undefined && discount > 0 ? discount : null
       )
 
-      const taxableAmount = subtotal - discountInfo.discount_amount
+      // Xác định số tiền giảm giá cuối cùng
+      let finalDiscountAmount = 0
+
+      if (discount !== undefined) {
+        // Employee đã truyền discount (có thể là 0 hoặc số dương)
+        if (discount > 0) {
+          if (discountInfo.customer_discount_applied) {
+            // Employee chọn discount từ discount_balance
+            if (discount > discountInfo.max_discount_eligible) {
+              throw new AppError(
+                400,
+                `Chiết khấu không được vượt quá số dư giảm giá có sẵn: ${discountInfo.max_discount_eligible}`
+              )
+            }
+            finalDiscountAmount = Math.min(discount, subtotal)
+          } else {
+            // Manual discount, không trừ discount_balance
+            finalDiscountAmount = Math.min(discount, subtotal)
+          }
+        }
+        // Nếu discount = 0, finalDiscountAmount = 0 (không áp dụng discount)
+      } else {
+        // Employee không truyền discount, tự động áp dụng nếu có discount_balance
+        if (discountInfo.customer_discount_applied && discountInfo.max_discount_eligible > 0) {
+          // Tự động áp dụng toàn bộ discount_balance (nhưng không vượt subtotal)
+          finalDiscountAmount = discountInfo.max_discount_eligible
+        }
+      }
+
+      const taxableAmount = subtotal - finalDiscountAmount
       const taxAmount = (tax_rate / 100) * taxableAmount
       const totalAmount = taxableAmount + taxAmount
 
+      // Cập nhật customer: tăng total_spent và discount_balance
       if (customerDetails.customer_id && customerDetails.shouldUpdateTotal) {
         await salesRepository.increaseCustomerTotalSpent(
           customerDetails.customer_id,
           totalAmount,
           session
         )
+
+        // Nếu sử dụng discount từ discount_balance, trừ vào discount_balance
+        if (discountInfo.customer_discount_applied && finalDiscountAmount > 0) {
+          await salesRepository.decreaseCustomerDiscountBalance(
+            customerDetails.customer_id,
+            finalDiscountAmount,
+            session
+          )
+        }
       }
 
       // Create invoice with batch deductions already done in transaction
@@ -315,7 +355,7 @@ class SalesService {
           payment_method,
           items: salesItems,
           subtotal,
-          discount: discountInfo.discount_amount, // Số tiền giảm thực tế
+          discount: finalDiscountAmount, // Số tiền giảm thực tế
           tax_rate,
           tax_amount: taxAmount,
           total_amount: totalAmount,
@@ -404,12 +444,17 @@ class SalesService {
     const session = await mongoose.startSession()
     session.startTransaction()
     try {
+      const initialTotalSpent = totalAmount || subtotal
+      // Tính discount_balance ban đầu = 1% của total_spent
+      const initialDiscountBalance = Math.floor(initialTotalSpent / 100)
+
       const customer = await salesRepository.createCustomer(
         {
           name: customer_name,
           phone: customer_phone,
           address: customer_address,
-          total_spent: totalAmount || subtotal,
+          total_spent: initialTotalSpent,
+          discount_balance: initialDiscountBalance,
         },
         session
       )

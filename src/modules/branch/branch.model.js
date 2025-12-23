@@ -24,6 +24,11 @@ const BranchSchema = new mongoose.Schema({
       min: [0, 'Bán kính phải > 0 (tính bằng mét)'],
     },
   },
+  status: {
+    type: String,
+    enum: ['active', 'closed'],
+    default: 'active',
+  },
 })
 const Branch = mongoose.model('Branch', BranchSchema)
 

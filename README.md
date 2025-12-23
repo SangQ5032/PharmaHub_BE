@@ -111,5 +111,8 @@ Tất cả API endpoints được mount dưới prefix `/api`:
 - `/api/payrolls` - Payroll
 
 ---
-
+thông tin tài khoản: 
+0364050902: tài khoản quản lý hệ thống
+0395257193: tài khoản quản lý chi nhánh
+0869016375: tài khoản nhân viên
 Made with ❤️ by PharmaHub Team
