@@ -390,8 +390,8 @@ class WorkScheduleService {
     return await workScheduleRepository.getWorkSchedulesByBranchId(branchId)
   }
 
-  // Get attendance history for employee with work schedule comparison
-  async getAttendanceHistoryByEmployeeId(userId, page = 1, limit = 10) {
+  // Get attendance history for an employee with work schedule comparison
+  async getAttendanceHistoryByEmployeeId(userId, page = 1, limit = 10, filters = {}) {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       throw new Error('Invalid user ID')
     }
@@ -399,7 +399,55 @@ class WorkScheduleService {
     const pageNum = Math.max(1, parseInt(page, 10) || 1)
     const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10))
 
-    return await workScheduleRepository.getAttendanceHistoryByEmployeeId(userId, pageNum, limitNum)
+    // Validate filter dates if provided
+    if (filters.from_date) {
+      try {
+        this.validateDateFormat(filters.from_date)
+      } catch (error) {
+        throw new Error(`Invalid from_date: ${error.message}`)
+      }
+    }
+
+    if (filters.to_date) {
+      try {
+        this.validateDateFormat(filters.to_date)
+      } catch (error) {
+        throw new Error(`Invalid to_date: ${error.message}`)
+      }
+    }
+
+    if (filters.from_date && filters.to_date && filters.from_date > filters.to_date) {
+      throw new Error('from_date must be before to_date')
+    }
+
+    // Validate search date if provided
+    if (filters.search) {
+      try {
+        this.validateDateFormat(filters.search)
+      } catch (error) {
+        throw new Error(`Invalid search date: ${error.message}`)
+      }
+    }
+
+    // Validate shift if provided
+    if (filters.shift && !['morning', 'afternoon'].includes(filters.shift)) {
+      throw new Error('Shift must be either "morning" or "afternoon"')
+    }
+
+    // Validate status if provided
+    if (
+      filters.status &&
+      !['checked_in', 'checked_out', 'late', 'early', 'absent'].includes(filters.status)
+    ) {
+      throw new Error('Status must be one of: checked_in, checked_out, late, early, absent')
+    }
+
+    return await workScheduleRepository.getAttendanceHistoryByEmployeeId(
+      userId,
+      pageNum,
+      limitNum,
+      filters
+    )
   }
 
   // Get attendance history for branch employees with work schedule comparison
