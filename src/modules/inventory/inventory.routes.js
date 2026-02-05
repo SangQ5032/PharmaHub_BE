@@ -1,12 +1,16 @@
 import express from 'express'
 import inventoryController from './inventory.controller.js'
 import reportsRoutes from '../reports/reports.routes.js'
+import crossBranchRoutes from './cross-branch.routes.js'
 import { protect, authorizeRoles } from '../../middlewares/authMiddleware.js'
 
 const router = express.Router()
 
 // Tất cả routes đều yêu cầu authentication
 router.use(protect)
+
+// Mount cross-branch routes (phải đặt trước route '/' để tránh conflict)
+router.use('/cross-branch', crossBranchRoutes)
 
 // Mount reports routes (phải đặt trước route '/' để tránh conflict)
 router.use(reportsRoutes)
