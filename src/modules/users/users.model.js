@@ -20,6 +20,8 @@ const UserSchema = new mongoose.Schema(
     },
     branch_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', default: null },
     contact: { type: ContactSchema, default: {} },
+    avatarUrl: { type: String, default: null },
+    address: { type: String, default: '' },
     salary: { type: Number, default: 0 },
     status: { type: String, default: 'active' },
   },
